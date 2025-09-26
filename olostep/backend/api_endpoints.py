@@ -11,27 +11,35 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from typing import Any, Literal
-
-from .backend.validation import (
+from ..models.request import (
     # Scrapes
-    CreateScrapeRequest,
+    ScrapeUrlRequest,
+    # Batches
+    BatchStartRequest,
+    BatchItemsRequest,
+    # Crawls
+    CrawlStartRequest,
+    CrawlPagesRequest,
+    # Maps
+    MapCreateRequest,
+    # Retrieve
+    RetrieveGetRequest,
+)
+from ..models.response import (
+    # Scrapes
     CreateScrapeResponse,
     GetScrapeResponse,
     # Batches
-    CreateBatchRequest,
     BatchCreateResponse,
     BatchInfoResponse,
     BatchItemsResponse,
     # Crawls
-    CreateCrawlRequest,
     CreateCrawlResponse,
     CrawlInfoResponse,
     CrawlPagesResponse,
     # Maps
-    CreateMapRequest,
     MapResponse,
     # Retrieve
-    RetrieveRequest,
     RetrieveResponse,
 )
 
@@ -56,7 +64,6 @@ class EndpointContract:
     # HTTP details
     method: Method
     path: str  # e.g., "/scrapes" or "/scrapes/{scrape_id}"
-    query_parameters: list[str] = field(default_factory=list)
 
     # IO models (backend validation only)
     request_model: type[Any] | None = None
@@ -65,9 +72,15 @@ class EndpointContract:
     # Optional examples for docs/SDK help
     examples: list[dict[str, Any]] = field(default_factory=list)
 
-    def build_url(self, base_url: str, **kwargs: Any) -> str:
-        formatted_path = self.path.format(**kwargs)
-        return f"{base_url.rstrip('/')}" + formatted_path
+    def formatted_path(
+        self,
+        path_params: dict[str, Any] | None = None,
+    ) -> str:
+        path_params = path_params or {}
+        formatted_path = self.path.format(**path_params)
+        formatted_path = formatted_path.rstrip('/')
+        formatted_path = formatted_path.lstrip('/')
+        return formatted_path
 
     @property
     def path_parameters(self) -> list[str]:
@@ -84,7 +97,7 @@ SCRAPE_URL = EndpointContract(
     description="Create a new web scraping job to extract content from a URL",
     method="POST",
     path="/scrapes",
-    request_model=CreateScrapeRequest,
+    request_model=ScrapeUrlRequest,
     response_model=CreateScrapeResponse,
     examples=[
         {
@@ -128,7 +141,7 @@ BATCH_START = EndpointContract(
     description="Create a batch scraping job to process multiple URLs",
     method="POST",
     path="/batches",
-    request_model=CreateBatchRequest,
+    request_model=BatchStartRequest,
     response_model=BatchCreateResponse,
     examples=[
         {
@@ -170,8 +183,7 @@ BATCH_ITEMS = EndpointContract(
     description="Retrieve the results of individual items in a batch",
     method="GET",
     path="/batches/{batch_id}/items",
-    query_parameters=["status", "cursor", "limit"],
-    request_model=None,
+    request_model=BatchItemsRequest,
     response_model=BatchItemsResponse,
     examples=[
         {
@@ -198,7 +210,7 @@ CRAWL_START = EndpointContract(
     description="Create a web crawling job to discover and scrape linked pages",
     method="POST",
     path="/crawls",
-    request_model=CreateCrawlRequest,
+    request_model=CrawlStartRequest,
     response_model=CreateCrawlResponse,
     examples=[
         {
@@ -227,8 +239,7 @@ CRAWL_PAGES = EndpointContract(
     description="Retrieve the pages discovered during a crawl",
     method="GET",
     path="/crawls/{crawl_id}/pages",
-    query_parameters=["cursor", "limit", "search_query"],
-    request_model=None,
+    request_model=CrawlPagesRequest,
     response_model=CrawlPagesResponse,
     examples=[
         {"description": "Get all crawled pages", "path_params": {"crawl_id": "crawl_12345"}},
@@ -251,7 +262,7 @@ MAP_CREATE = EndpointContract(
     description="Extract links from a website",
     method="POST",
     path="/maps",
-    request_model=CreateMapRequest,
+    request_model=MapCreateRequest,
     response_model=MapResponse,
     examples=[
         {"description": "Basic link extraction", "request": {"url": "https://example.com"}},
@@ -279,8 +290,7 @@ RETRIEVE_GET = EndpointContract(
     description="Retrieve content by its unique identifier with specified formats",
     method="GET",
     path="/retrieve",
-    query_parameters=["retrieve_id", "formats"],
-    request_model=RetrieveRequest,  # used to validate query shape
+    request_model=RetrieveGetRequest,
     response_model=RetrieveResponse,
     examples=[
         {

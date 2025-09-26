@@ -1,50 +1,60 @@
-from . import api_endpoints  # EndpointContract definitions
-from . import errors                # SDK error types
-from . import config                # SDK config
+# Core clients
+from .clients.async_client import OlostepClient
+from .clients.sync_client import SyncOlostepClient
 
-# Backend (transport/validation)
-from . import backend
-from .backend import validation
+# Stateful result objects
+from .frontend.client_state import ScrapeResult, BatchItem, CrawlPage, Crawl, CrawlInfo, Sitemap
 
-# Clients
-from . import clients
-from .clients import async_client
-from .clients import sync_client
+# Type system
+from .models.request import (
+    Format,
+    Country,
+    RetrieveFormat,
+    WaitAction,
+    ClickAction,
+    FillInputAction,
+    ScrollAction,
+    Parser,
+    LLMExtract,
+    LinksOnPage,
+    ScreenSize,
+    Transformer,
+)
 
-# Frontend (stateful client responses + typed-dict UI)
-from . import frontend
-from .frontend import client_state
-from .frontend.typed_dict import sdk
-from .frontend.typed_dict import types
+# Error hierarchy
+from . import errors
 
-# Main exports for easy importing
-from .clients.async_client import AsyncOlostepClient
-from .clients.sync_client import OlostepClient
-from .backend.validation import Format, Country, RetrieveFormat, Status
-from .backend.transport import FakeTransport, AiohttpTransport
-from .backend.caller import EndpointCaller
-from .frontend.typed_dict.sdk import TypedDictFrontend
+__version__ = "0.9.0"
 
-__version__ = "0.1.0"
+# Get all error classes dynamically
+_error_classes = [name for name in dir(errors) if not name.startswith('_') and name.endswith('Error')]
+
 __all__ = [
-    "AsyncOlostepClient",
-    "OlostepClient", 
+    # Clients
+    "OlostepClient",
+    "SyncOlostepClient",
+    # Result objects
+    "ScrapeResult", 
+    "BatchItem", 
+    "CrawlPage", 
+    "Crawl", 
+    "CrawlInfo", 
+    "Sitemap",
+    # Types
     "Format",
-    "Country",
+    "Country", 
     "RetrieveFormat",
-    "Status",
-    "FakeTransport",
-    "AiohttpTransport",
-    "EndpointCaller",
-    "TypedDictFrontend",
-    "api_endpoints",
-    "errors",
-    "config",
-    "backend",
-    "validation",
-    "clients",
-    "frontend",
-    "client_state",
-    "sdk",
-    "types",
+    "WaitAction",
+    "ClickAction", 
+    "FillInputAction",
+    "ScrollAction",
+    "Parser",
+    "LLMExtract",
+    "LinksOnPage", 
+    "ScreenSize",
+    "Transformer",
+    # Error classes
+    *_error_classes,
+    # Version
+    "__version__",
 ]
