@@ -1,0 +1,38 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "olostep"
+version = "0.9.0"
+description = "Olostep Python SDK - Programmatic access to the web"
+authors = ["Olostep Team <team@olostep.com>"]
+readme = "README.md"
+packages = [{include = "olostep"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+httpx = {extras = ["http2"], version = "^0.28.1"}
+pydantic = "^2.11.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-asyncio = "^0.25.0"
+hypothesis = "^6.100.0"
+black = "^25.1.0"
+ruff = "^0.12.7"
+python-dotenv = "^1.1.1"
+bpython = "^0.25"
+pytest-order = "^1.3.0"
+pytest-xdist = {extras = ["psutil"], version = "^3.8.0"}
+
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+select = ['E', 'W', 'F', 'I', 'B', 'C4', 'ARG', 'SIM']
+ignore = ['W291', 'W292', 'W293', 'E501']
+line-length = 88
+target-version = "py311"

@@ -1,0 +1,28 @@
+Things tThings to change:
+client.scrape.get / client.scrape.url()
+should be:
+client.scrape(scrape_id) / client.scrape.new()
+cursor on map?
+
+logging setup
+
+url_to_scrape
+
+how to expose beta features?
+
+If an i is not found throw a uservisible error stating that it's not found AND give a hint by asking if the attempted retreive is older then 7d
+
+provide webhook format check.
+provide URL validation
+ 
+the sdk should act as a repository over a rdbms (since you mentioned programatic access to the web)
+
+python sdk matching the key value proposition
+
+the serp scraper
+
+- **Error**: `501` status with capacity limit message
+auto exponential backoff plus exposing a config arg for it
+central session renewal if error
+
+
