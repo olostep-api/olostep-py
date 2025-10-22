@@ -18,9 +18,36 @@ class OlostepClient:
     Default async client that wires the transport, caller, and namespaced frontend.
     This is the main client for the Olostep SDK.
 
-    Usage:
-        async with OlostepClient(api_key=...) as c:
-            res = await c.scrape.url(url_to_scrape="https://example.com", formats=[...])
+    The client supports two usage patterns:
+
+    1. **Context Manager (Recommended for one-off usage):**
+       Automatically handles resource cleanup when exiting the context.
+
+       ```python
+       async with OlostepClient(api_key="your-api-key") as client:
+           result = await client.scrape.url(
+               url_to_scrape="https://example.com",
+               formats=["html", "markdown"]
+           )
+       # Transport is automatically closed here
+       ```
+
+    2. **Explicit Close (For long-lived services):**
+       Requires manual resource cleanup using the close() method.
+
+       ```python
+       client = OlostepClient(api_key="your-api-key")
+       try:
+           result = await client.scrape.url(
+               url_to_scrape="https://example.com",
+               formats=["html", "markdown"]
+           )
+       finally:
+           await client.close()  # Manually close the transport
+       ```
+
+    For most use cases, prefer the context manager pattern as it ensures
+    proper resource cleanup and is less error-prone.
     """
 
     def __init__(
@@ -49,7 +76,27 @@ class OlostepClient:
     async def __aenter__(self) -> "OlostepClient":
         return self
 
+    async def close(self) -> None:
+        """
+        Close the underlying transport connection.
+
+        This method closes the HTTP transport and releases associated resources.
+        Only needed if not using the client as an async context manager.
+
+        For one-off usage, prefer the context manager pattern:
+
+            async with OlostepClient(api_key="...") as client:
+                result = await client.scrape.url("https://example.com")
+
+        For long-lived services, use explicit close:
+
+            client = OlostepClient(api_key="...")
+            try:
+                result = await client.scrape.url("https://example.com")
+            finally:
+                await client.close()
+        """
+        await self._transport.close()
+
     async def __aexit__(self, exc_type, exc, tb) -> None:  # type: ignore[no-untyped-def]
-        closer = getattr(self._transport, "close", None)
-        if callable(closer):
-            await closer()  # type: ignore[misc]
+        await self.close()
