@@ -87,11 +87,15 @@ class HttpxTransport(Transport):
     ) -> RawAPIResponse:
         """
         Make an HTTP request with retry logic, exponential backoff, and increasing timeouts.
-        
+
         Retries up to max_connection_retries times if network-level errors occur.
         Uses exponential backoff: 1s, 2s, 4s, ... delays between retries.
         Increases timeout by 15 seconds per retry attempt.
+
+        Args:
+            request: RawAPIRequest object containing method, url, json, query, and headers
         """
+
         max_retries = self._max_connection_retries
         base_delay = 1.0
         timeout_bump_per_attempt = 15.0

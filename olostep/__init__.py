@@ -24,7 +24,7 @@ from .models.request import (
 # Error hierarchy
 from . import errors
 
-__version__ = "0.9.0"
+__version__ = "0.10.0"
 
 # Get all error classes dynamically
 _error_classes = [name for name in dir(errors) if not name.startswith('_') and name.endswith('Error')]
@@ -34,23 +34,23 @@ __all__ = [
     "OlostepClient",
     "SyncOlostepClient",
     # Result objects
-    "ScrapeResult", 
-    "BatchItem", 
-    "CrawlPage", 
-    "Crawl", 
-    "CrawlInfo", 
+    "ScrapeResult",
+    "BatchItem",
+    "CrawlPage",
+    "Crawl",
+    "CrawlInfo",
     "Sitemap",
     # Types
     "Format",
-    "Country", 
+    "Country",
     "RetrieveFormat",
     "WaitAction",
-    "ClickAction", 
+    "ClickAction",
     "FillInputAction",
     "ScrollAction",
     "Parser",
     "LLMExtract",
-    "LinksOnPage", 
+    "LinksOnPage",
     "ScreenSize",
     "Transformer",
     # Error classes

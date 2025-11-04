@@ -1,28 +1,107 @@
-Things tThings to change:
-client.scrape.get / client.scrape.url()
-should be:
-client.scrape(scrape_id) / client.scrape.new()
+
 cursor on map?
 
-logging setup
 
-url_to_scrape
+continue with making coersion stand alone and testable, then to crawl menu
 
-how to expose beta features?
+flag that batch info returns "batch_id" which is redundand and unique to the 
+endpoint. all other just return id.
+
+
+Client state
+* Retrievable should be a type
+* BatchItem has a nameing conflict with BatchItem from requests
+
+
+
+add a deprication warning for formats to CrawlPagesQueryParams
+formats
+enum<string>[]
+Deprecated: Use /retrieve endpoint with retrieve_id.
+
+Array of formats to fetch (e.g., ["html", "markdown"]).
+
+
+test if the caller rejects invalid query params in validation
+
+
+
 
 If an i is not found throw a uservisible error stating that it's not found AND give a hint by asking if the attempted retreive is older then 7d
 
-provide webhook format check.
-provide URL validation
- 
-the sdk should act as a repository over a rdbms (since you mentioned programatic access to the web)
 
-python sdk matching the key value proposition
+document this:
+        elif response.status_code == 503:
+            # only obseved on batch start with parser and invalid country. 
+            # need investigation.
+
+
 
 the serp scraper
+
+add sdk errors for:  401 (blacklisted domain), 403 (approval for feature required)
+
+modify the trasport to not hold the api key but instead get it as part of invoke
 
 - **Error**: `501` status with capacity limit message
 auto exponential backoff plus exposing a config arg for it
 central session renewal if error
 
 
+documenting the fact that filtering on batch items with failed returns in progress results
+{
+  "timestamp": "2025-09-19T23:30:41.166169",
+  "level": "DEBUG",
+  "logger": "olostep.io",
+  "message": "API RESPONSE req_79d0f3b42f62",
+  "request_id": "req_79d0f3b42f62",
+  "response_time_ms": 287.81914710998535,
+  "I": {
+    "method": "GET",
+    "url": "https://api.olostep.com/v1/batches/batch_qskthobhb2/items",
+    "query": {
+      "status": "failed"
+    },
+    "headers": {
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate",
+      "connection": "keep-alive",
+      "authorization": "Bearer [REDACTED]",
+      "content-type": "application/json",
+      "user-agent": "olostep-python-sdk/0.1.0"
+    },
+    "json": null
+  },
+  "O": {
+    "status_code": 200,
+    "headers": {
+      "date": "Fri, 19 Sep 2025 21:30:41 GMT",
+      "content-type": "application/json; charset=utf-8",
+      "content-length": "194",
+      "x-amzn-requestid": "3306fed0-521d-4426-9d8f-792ce0dd608f",
+      "x-amzn-remapped-content-length": "194",
+      "x-amzn-remapped-connection": "keep-alive",
+      "x-amz-apigw-id": "RKy8NGykIAMEfxA=",
+      "vary": "Accept-Encoding",
+      "x-powered-by": "Express",
+      "etag": "W/\"c2-u0DcdJhcpM65FGe3jqs1lGS/Lj8\"",
+      "x-amzn-remapped-date": "Fri, 19 Sep 2025 21:30:41 GMT"
+    },
+    "body": {
+      "id": "batch_qskthobhb2",
+      "object": "batch",
+      "status": "in_progress",
+      "items": [
+        {
+          "custom_id": "item1",
+          "url": "https://example.com/"
+        },
+        {
+          "custom_id": "item2",
+          "url": "https://example2.com/"
+        }
+      ],
+      "items_count": 2
+    }
+  }
+},

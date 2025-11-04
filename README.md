@@ -1,38 +1,91 @@
-# Olostep Python SDK (official)
+<div align="center">
+  <img src="https://www.olostep.com/images/olostep-logo-cropped.svg" alt="Olostep Logo" width="150"/>
+  <br>
 
-Olostep provides a **programmatic layer to access and interact with the web**.  
-Fetch clean, ready-to-use data for your AI from any website in **1–5 seconds**, and scale up to **100K parallel requests in minutes**. You can:  
-
-- **Scrape** websites with various output formats incl. structured data.
-- **Batch** scrape hundreds of websites
-- **Crawl** websites
-- Create massive **sitemaps** in seconds
-  
-[Get a free API key here](https://www.olostep.com/?utm_source=python_readme)
-
-## Python SDK vs API
-
-The Olostep Python SDK offers features and ergonomics beyond the [REST API](https://docs.olostep.com):  
-
-It streamlines web data access with a type-safe, stateful, and ergonomic experience not available in the REST API.
+  <h2>Olostep Python SDK</h2>
 
 
-- **Discoverable and predictable interface**: Dot-notation namespaces, stateful return objects (IDs, cursors), convenience methods and rich `__repr__`s.
-- **Async-first, Sync-friendly**: The SDK is async by default (but also provides a sync facade) This allows you async performance over an otherwise high latency sync API.
-- **Type Safety & Input Coercion**: The client uses Pydantic to validate inputs and coerce them where possible. It also provides you with full type hints. It also catches errors before the request is being sent to the API (can be disabled).
-- **Elegant Pagination**: `async for x in y.(batch_size=10):` for `batch` and `crawl` and `sitemap` handles all pagination.
-- **Wait Methods**: `.wait_till_done()` for `batch` and `crawl` workflows.
-- **Automatic retries**, improved errors and connection handling for high latency and throughput. 
-- **Python 3.11+**.
+  ✨ [Get a free API key](https://www.olostep.com/?utm_source=python_sdk_readme) • [Full Documentation](https://docs.olostep.com?utm_source=python_sdk_readme) • [GitHub Issues](https://github.com/olostep-api/olostep-py/issues) ✨
 
 
 
-## Quick start
+
+  <br>
+
+  <p><strong>Programmatic web access for AI applications</strong>
+  <br>
+  Fetch clean, structured data from any website in 1–5 seconds<br>Scale to 100K+ parallel requests with enterprise reliability</p>
+  <br>
+</div>
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Why Choose the Python SDK?](#why-choose-the-python-sdk)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Usage Examples](#usage-examples)
+- [API Reference](#api-reference)
+- [Advanced Features](#advanced-features)
+- [Error Handling](#error-handling)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Overview
+
+Olostep provides a **programmatic layer to access and interact with the web**.
+Fetch clean, ready-to-use data for your AI from any website in **1–5 seconds**, and scale up to **100K parallel requests in minutes**. You can:
+
+- **Scrape** websites with various output formats including structured data
+- **Batch** scrape hundreds of websites simultaneously
+- **Crawl** websites with intelligent filtering and depth control
+- Create massive **sitemaps** in seconds for comprehensive site mapping
+
+## Why Choose the Python SDK?
+
+The Olostep Python SDK offers significant advantages over direct API usage:
+
+| Feature | SDK Advantage | Direct API |
+|---------|---------------|------------|
+| **Interface** | Discoverable dot-notation namespaces | REST endpoints |
+| **Type Safety** | Full Pydantic validation & type hints | Manual validation |
+| **State Management** | Stateful return objects with rich `__repr__`s | Manual state tracking |
+| **Error Handling** | Automatic retries & connection management | Manual implementation |
+| **Pagination** | Elegant `async for` loops | Manual cursor handling |
+| **Input Coercion** | Smart type coercion & validation | Manual data preparation |
+| **Performance** | Async-first with sync facade | HTTP request overhead |
+
+### Key Benefits
+
+- **Developer Experience**: Type-safe, ergonomic Python API with intelligent input handling
+- **Production Ready**: Automatic retries, connection pooling, and error recovery
+- **AI-Optimized**: Clean, structured data extraction perfect for LLM applications
+- **Enterprise Scale**: Handle 100K+ concurrent requests with robust error handling
+- **Future-Proof**: Built on modern Python patterns (async/await, type hints, dataclasses)
 
 
+
+## Installation
+
+### PyPI (Recommended)
 ```bash
-$ pip install olostep
+pip install olostep
 ```
+
+### From Source
+```bash
+git clone https://github.com/olostep-api/olostep-py.git
+cd olostep-python
+pip install -e .
+```
+
+### Requirements
+- Python 3.11+
+- API key from [olostep.com](https://www.olostep.com/?utm_source=python_sdk_readme)
+
+## Quick Start
 
 ```python
 """ 
@@ -43,246 +96,154 @@ The quickstart uses the async/await interface as it's the default and generally 
 
 from olostep import OlostepClient
 
-# Provide the API key either via passing in the 'api_key' parameter or 
-# by setting the OLOSTEP_API_KEY environment variable  
+# Provide the API key either via passing in the 'api_key' parameter or
+# by setting the OLOSTEP_API_KEY environment variable
+
+# RESOURCE MANAGEMENT
+# ===================
+# The SDK supports two usage patterns for resource management:
+
+# 1. Context Manager (Recommended for one-off usage):
+#    Automatically handles resource cleanup
+async with OlostepClient(api_key="YOUR_REAL_KEY") as client:
+    scrape_result = await client.scrape.create(url_to_scrape="https://example.com")
+# Transport is automatically closed here
+
+# 2. Explicit Close (For long-lived services):
+#    Requires manual resource cleanup
 client = OlostepClient(api_key="YOUR_REAL_KEY")
+try:
+    scrape_result = await client.scrape.create(url_to_scrape="https://example.com")
+finally:
+    await client.close()  # Manually close the transport
 
 
 
-# MINIMAL SCRAPE EXAMPLE
+## Usage Examples
 
-scrape_result = await client.scrape("https://example.com")
-# -> ScrapeResult(id='scrape_123', available=['html_content', 'markdown_content'])
+### Basic Web Scraping
 
+```python
+import asyncio
+from olostep import OlostepClient
 
+async def main():
+    async with OlostepClient(api_key="your-api-key") as client:
+        # Simple scraping
+        result = await client.scrape.create(url_to_scrape="https://example.com")
+        print(f"Scraped {len(result.html_content)} characters")
 
-# MINIMAL BATCH EXAMPLE
+        # Multiple formats
+        result = await client.scrape.create(
+            url_to_scrape="https://example.com",
+            formats=["html", "markdown"]
+        )
+        print(f"HTML: {len(result.html_content)} chars")
+        print(f"Markdown: {len(result.markdown_content)} chars")
 
-batch = await client.batch(["https://site1.com", "https://site2.com"])
-# -> Batch(id='batch_123', urls=2)
+asyncio.run(main())
+```
 
-# waits for all the batch jobs to finish, then starts fetching the results in batches
+### Batch Processing
+
+```python
+# Process multiple URLs efficiently
+batch = await client.batch.start(
+    urls=["https://site1.com", "https://site2.com", "https://site3.com"]
+)
+
+# Wait for completion and process results
 async for item in batch.items():
     content = await item.retrieve(["html"])
-    print(f"{item.url}: {len(content.html_content)} bytes")
+    print(f"Processed {item.url}: {len(content.html_content)} bytes")
+```
 
+### Smart Web Crawling
 
-
-# MINIMAL CRAWL EXAMPLE
-
-crawl = await client.crawl("https://example.com", max_pages=100)
-# -> Crawl(id='crawl_123', urls=100)
-
+```python
+# Crawl with intelligent filtering
+crawl = await client.crawl.start(
+    start_url="https://example.com",
+    max_pages=100,
+    include_urls=["/articles/**", "/blog/**"],
+    exclude_urls=["/admin/**"]
+)
 
 async for page in crawl.pages():
     content = await page.retrieve(["html"])
-    print(f"{page.url}: {len(content.html_content)} bytes")
+    print(f"Crawled: {page.url}")
+```
+
+### Site Mapping
+
+```python
+# Extract all links from a website
+sitemap = await client.sitemap.create(url_to_map="https://example.com")
+
+# Get all discovered URLs
+urls = []
+async for url in sitemap.urls():
+    urls.append(url)
+    if len(urls) >= 10:  # Limit for demo
+        break
+
+print(f"Found {len(urls)} URLs")
+```
 
 
 
-# SYNC (FACADE) CLIENT
-# this client is just a wrapper around the async client.
-# The interface is the same, just don't use await.
-# If you can use the OlostepClient instead, do so.
+
+
+
+
+## API Reference
+
+### Core Clients
+
+#### OlostepClient (Async)
+The main async client for high-performance applications.
+
+```python
+from olostep import OlostepClient
+
+# Context manager (recommended)
+async with OlostepClient(api_key="your-key") as client:
+    result = await client.scrape.create(url_to_scrape="https://example.com")
+
+# Explicit resource management
+client = OlostepClient(api_key="your-key")
+try:
+    result = await client.scrape.create(url_to_scrape="https://example.com")
+finally:
+    await client.close()
+```
+
+#### SyncOlostepClient
+Synchronous wrapper for blocking applications.
+
+```python
 from olostep import SyncOlostepClient
 
-client = SyncOlostepClient(api_key="YOUR_REAL_KEY")
-
-scrape_result = client.scrape("https://example.com")
-# -> ScrapeResult(id='scrape_123', available=['html_content', 'markdown_content'])
+client = SyncOlostepClient(api_key="your-key")
+result = client.scrape.create(url_to_scrape="https://example.com")
+# No explicit close needed for sync client
 ```
 
-## API Design
+### Method Structure
 
-The SDK provides a clean, Pythonic interface organized into logical namespaces. Each operation returns stateful objects with ergonomic methods for follow-up operations.
+The SDK provides a clean, Pythonic interface organized into logical namespaces:
 
+| Namespace | Purpose | Key Methods |
+|-----------|---------|-------------|
+| `scrape` | Single URL extraction | `create()`, `get()` |
+| `batch` | Multi-URL processing | `start()`, `info()`, `items()` |
+| `crawl` | Website traversal | `start()`, `pages()` |
+| `sitemap` | Link extraction | `create()`, `urls()` |
+| `retrieve` | Content retrieval | `get()` |
 
-#### Scraping
-```python
-from olostep import OlostepClient
-from olostep import Country, FillInputAction, Format, LLMExtract, LinksOnPage, ScreenSize, Transformer, WaitAction
+Each operation returns stateful objects with ergonomic methods for follow-up operations.
 
-client = OlostepClient(api_key="YOUR_REAL_KEY")
-
-
-# Minimal: Just scrape a URL
-result = await client.scrape("https://example.com")
-# ScrapeResult(id='scrape_123', available=['html_content', 'markdown_content'])
-
-# Maximal: Full control over scraping behavior
-result = await client.scrape(
-    "https://example.com",
-    wait_before_scraping=3000,
-    formats=[Format.HTML, Format.MARKDOWN],
-    remove_css_selectors=["script", ".popup"],
-    actions=[
-        WaitAction(milliseconds=1500), 
-        FillInputAction(selector="searchbox", value="olostep")
-    ],
-    country=Country.US,
-    transformer=Transformer("postlight"),
-    remove_images=True,
-    remove_class_names=["ad"],
-    parser="VALID_PARSER", #check website for valid parsers
-    llm_extract=LLMExtract(schema="YOUR_SCHEMA"),
-    links_on_page=LinksOnPage(
-        absolute_links=False, 
-        query_to_order_links_by='cars', 
-        include_links=["/events/**", "/offers/**"],
-        exclude_links=[".pdf"]
-    ),
-    screen_size=ScreenSize(screen_width=1920, screen_height=1080),
-    metadata={"custom": "sidecart_data"} # Not supported yet
-)
-```
-
-#### Batch Processing
-```python
-from olostep import OlostepClient
-from olostep import BatchItem, Country
-
-client = OlostepClient(api_key="YOUR_REAL_KEY")
-
-
-# Minimal: Process a list of URLs
-batch = await client.batch(["https://site1.com", "https://site2.com"])
-# Batch(id='batch_123', urls=2)
-
-# Maximal: Advanced batch with custom IDs and options
-batch = await client.batch(
-    [
-        BatchItem(url="https://www.google.com/search?q=olostep"),
-        BatchItem(url="https://www.google.com/search?q=olostep+api", custom_id="news_2")
-    ],
-    country=Country.US,
-    parser_id="@olostep/google-search"
-)
-
-# This is optional but you can check on the process of your batch at any time with:
-info = await batch.info()  
-# -> BatchInfo(id='batch_123', status='in_progress', completed=1/2, age=2h ago)
-
-# Also optional: Wait for completion.
-# Pass in `check_every_n_secs=` to change interval, default 10 
-await batch.wait_till_done()
-
-
-# Note: batch.items() automatically checks if the batch is completed before starting to return elements (can be disabled by passing in `wait_for_completion=False`)
-async for item in batch.items(batch_size=10):
-    content = await item.retrieve(["html", "json"]) # json from the parser
-    print(f"{item.custom_id}: {len(content.html_content)} bytes")
-
-# Alternative: Direct API access (stateless)
-async for item in client.batch.items(batch_id='a_batch_id', batch_size=10):
-    content = await item.retrieve(["html", "json"])
-    print(f"{item.custom_id}: {len(content.html_content)} bytes")
-```
-
-#### Web Crawling
-```python
-# Minimal: Crawl a site with default settings
-crawl = await client.crawl("https://example.com", max_pages=100)
-# Crawl(id='crawl_123', urls=100)
-
-# Maximal: Advanced crawling with filters and limits
-crawl = await client.crawl(
-    "https://example.com",
-    max_pages=1000,
-    max_depth=3,
-    include_urls=["/articles/**", "/news/**"],
-    exclude_urls=["/ads/**", "/tracking/**"],
-    include_external=False,
-    include_subdomain=True,
-    search_query="hot shingles",
-    top_n=50
-)
-
-# This is optional but you can check on the process of your crawl at any time with:
-info = await crawl.info()  # CrawlInfo(id='crawl_123', status='in_progress', pages_count=42, age=15m ago)
-
-# Also optional: Wait for completion.
-# Pass in `check_every_n_secs=` to change interval, default 10 
-await crawl.wait_till_done()
-
-# Note: crawl.pages automatically checks if the batch is completed before starting to return elements (can be disabled by passing in `wait_for_completion=False`)
-async for page in crawl.pages():
-    content = await page.retrieve(["html"])
-    print(f"{page.url}: {len(content.html_content)} bytes")
-
-# Alternative: Direct API access (stateless)
-async for page in client.crawl.pages(crawl_id='a_crawl_id'):
-    content = await page.retrieve(["html"])
-    print(f"{page.url}: {len(content.html_content)} bytes")
-
-```
-
-#### Site Mapping
-```python
-# Minimal: Extract all links from a site
-sitemap = await client.sitemap("https://example.com")
-# Sitemap(id='map_123', urls_count=150, has_more=True)
-
-# Maximal: Advanced link extraction with filters
-sitemap = await client.sitemap(
-    "https://example.com",
-    search_query="documentation",
-    top_n=500,
-    include_subdomain=True,
-    include_urls=["/docs/**", "/api/**"],
-    exclude_urls=["/admin/**", "/private/**"]
-)
-
-# Seamless iteration over all URLs (auto-pagination)
-all_urls = []
-async for url in sitemap.urls(): # async generator
-    print(f"Found URL: {url}")
-    all_urls.append(url) 
-# Note: This can yield tens of thousands of URLs. If you can don't 
-#       create a list but use the generator as such.
-
-
-```
-
-#### Data Retrieval
-```python
-# Notes: 
-#   * You should generally not need to use this endpoint as the other endpoints generate stateful return objects that can retrieve content.
-#   * Not all formats are available all the time
-
-# Minimal: Get content by retrieve ID
-result = await client.retrieve("ret_123")
-# ScrapeResult(id='ret_123', available=[...])
-
-# Maximal: Get multiple formats
-result = await client.retrieve("ret_123", ["html", "markdown", "text", "json"])
-# ScrapeResult(id='ret_123', available=['html_content', 'markdown_content', 'text_content', 'json_content'])
-
-
-
-```
-
-
-### Method Shorthands
-
-The SDK provides convenient shorthand methods for common operations:
-
-```python
-# These are equivalent:
-await client.scrape("https://example.com")           # shorthand
-await client.scrape.create("https://example.com")   # explicit method
-
-await client.batch(["url1", "url2"])                # shorthand  
-await client.batch.start(["url1", "url2"])          # explicit method
-
-await client.crawl("https://example.com")           # shorthand
-await client.crawl.start("https://example.com")     # explicit method
-
-await client.sitemap("https://example.com")         # shorthand
-await client.sitemap.create("https://example.com")  # explicit method
-
-await client.retrieve("ret_123")                     # shorthand
-await client.retrieve.get("ret_123")                # explicit method
-```
+## Advanced Features
 
 ### Smart Input Coercion
 
@@ -290,55 +251,204 @@ The SDK intelligently handles various input formats for maximum convenience:
 
 ```python
 # Formats: string, list, or enum
-await client.scrape("https://example.com", formats="html")
-await client.scrape("https://example.com", formats=["html", "markdown"])
-
+await client.scrape.create(url_to_scrape="https://example.com", formats="html")
+await client.scrape.create(url_to_scrape="https://example.com", formats=["html", "markdown"])
 
 # Countries: case-insensitive strings or enums
-await client.scrape("https://example.com", country="us")
-await client.scrape("https://example.com", country=Country.US)
+await client.scrape.create(url_to_scrape="https://example.com", country="us")
+await client.scrape.create(url_to_scrape="https://example.com", country=Country.US)
 
 # Lists: single values or lists
-await client.batch("https://example.com")    # Single URL
-await client.batch(["https://a.com", "https://b.com"])  # Multiple URLs
+await client.batch.start(urls="https://example.com")    # Single URL
+await client.batch.start(urls=["https://a.com", "https://b.com"])  # Multiple URLs
 ```
 
-  
+### Advanced Scraping Options
 
-### Logging & Error Handling
-
-The SDK root logger is predictably called `olostep`. Granular sub-loggers exist.  
-The recommended log level is `INFO` or higher.
-`DEBUG` really means debug and is very detailed.
-
-
-Handling the error behavior of the API can quite complex. The SDK handles error detection for you and returns the following errors:
-
-Our exception hierarchy:
+```python
+# Full control over scraping behavior
+result = await client.scrape.create(
+    url_to_scrape="https://example.com",
+    wait_before_scraping=3000,
+    formats=[Format.HTML, Format.MARKDOWN],
+    remove_css_selectors=["script", ".popup"],
+    actions=[
+        WaitAction(milliseconds=1500),
+        FillInputAction(selector="searchbox", value="olostep")
+    ],
+    parser="@olostep/google-news",
+    country=Country.US,
+    remove_images=True
+)
 ```
-* Olostep_BaseError -------------------------------------- <- Catch base class for all errors
-  x Olostep_APIConnectionError --------------------------- <- No connection to the API
-  x OlostepServerError_BaseError ------------------------- <- Server-issued errors (still detected in client ofc)
-    + OlostepServerError_TemporaryIssue
-      - OlostepServerError_NetworkBusy
-      - OlostepServerError_InternalNetworkIssue
-    + OlostepServerError_RequestUnprocessable
-      - OlostepServerError_ParserNotFound
-      - OlostepServerError_OutOfResources
-    + OlostepServerError_BlacklistedDomain
-    + OlostepServerError_FeatureApprovalRequired
-    + OlostepServerError_AuthFailed
-    + OlostepServerError_CreditsExhausted
-    + OlostepServerError_InvalidEndpointCalled
-    + OlostepServerError_ResourceNotFound
-    + OlostepServerError_NoResultInResponse
-    + OlostepServerError_UnknownIssue
-  x OlostepClientError_BaseError ------------------------- <- Client-issued errors
-    + OlostepClientError_RequestValidationFailed
-    + OlostepClientError_ResponseValidationFailed
-    + OlostepClientError_NoAPIKey
-    + OlostepClientError_AsyncContext
-    + OlostepClientError_BetaFeatureAccessRequired
-    + OlostepClientError_Timeout
 
+### Batch Processing with Custom IDs
+
+```python
+batch = await client.batch.start(
+    urls=[
+        BatchItem(url="https://www.google.com/search?q=olostep"),
+        BatchItem(url="https://www.google.com/search?q=olostep+api", custom_id="news_2")
+    ],
+    country=Country.US,
+    parser_id="@olostep/google-search"
+)
+
+# Process results by custom ID
+async for item in batch.items():
+    if item.custom_id == "news_2":
+        content = await item.retrieve(["html"])
+        print(f"News search: {len(content.html_content)} bytes")
 ```
+
+### Intelligent Crawling
+
+```python
+# Crawl with intelligent filtering
+crawl = await client.crawl.start(
+    start_url="https://example.com",
+    max_pages=1000,
+    max_depth=3,
+    include_urls=["/articles/**", "/news/**"],
+    exclude_urls=["/ads/**", "/tracking/**"],
+    include_external=False,
+    include_subdomain=True,
+)
+
+async for page in crawl.pages():
+    content = await page.retrieve(["html"])
+    print(f"Crawled: {page.url}")
+```
+
+### Site Mapping with Filters
+
+```python
+# Extract all links with advanced filtering
+sitemap = await client.sitemap.create(
+    url_to_map="https://example.com",
+    search_query="documentation",
+    top_n=500,
+    include_subdomain=True,
+    include_urls=["/docs/**", "/api/**"],
+    exclude_urls=["/admin/**", "/private/**"]
+)
+
+# Get filtered URLs
+urls = []
+async for url in sitemap.urls():
+    urls.append(url)
+
+print(f"Found {len(urls)} relevant URLs")
+```
+
+### Content Retrieval
+
+```python
+# Get content by retrieve ID
+result = await client.retrieve.get(retrieve_id="ret_123")
+
+# Get multiple formats
+result = await client.retrieve.get(retrieve_id="ret_123", formats=["html", "markdown", "text", "json"])
+```
+
+## Error Handling
+
+### Common Issues
+
+#### Connection Errors
+```python
+# Enable detailed logging for debugging
+import logging
+logging.getLogger("olostep").setLevel(logging.DEBUG)
+
+# Check your API key and network connectivity
+try:
+    result = await client.scrape.create(url_to_scrape="https://example.com")
+except OlostepAPIConnectionError as e:
+    print(f"Connection failed: {e}")
+    # Check your API key and network
+```
+
+#### Rate Limiting
+```python
+# The SDK handles rate limiting automatically with exponential backoff
+# Custom backoff for specific use cases:
+import asyncio
+
+async def scrape_with_backoff(url, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return await client.scrape.create(url_to_scrape=url)
+        except RateLimitError:
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2 ** attempt)
+            else:
+                raise
+```
+
+### Getting Help
+
+- [Full Documentation](https://docs.olostep.com)
+- [Report Issues](https://github.com/olostep-api/olostep-py/issues/issues)
+- [Community Slack](https://join.slack.com/t/olostep-users/shared_invite/zt-2pn2ce0uu-~591qIdhAfJy~LXCWQS5UQ)
+- [Support Email](mailto:info@olostep.com)
+
+## Contributing
+
+We love contributions! Here's how you can help improve the Olostep Python SDK:
+
+### Development Setup
+```bash
+git clone https://github.com/olostep-api/olostep-py/issues.git
+cd olostep-python
+pip install -e ".[dev]"
+```
+
+### Running Tests
+```bash
+# Run all tests
+pytest
+
+# Run specific test categories
+pytest tests/unit/
+
+# DO NOT RUN THE API CONTRACT TEST!
+```
+
+### Code Style
+```bash
+# Format code
+black olostep/
+isort olostep/
+
+# Lint code
+ruff check olostep/
+mypy olostep/
+```
+
+### Submitting Changes
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-enhancement`)
+3. Make your changes with comprehensive tests
+4. Run the full test suite
+5. Update documentation for API changes
+6. Submit a pull request with a clear description
+
+### Guidelines
+- Follow PEP 8 and existing code style
+- Add type hints for new functions
+- Write comprehensive tests for new functionality
+- Update documentation for API changes
+- Use conventional commit messages
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built with ❤️ by the Olostep team**
+
+</div>
