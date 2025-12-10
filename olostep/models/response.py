@@ -373,6 +373,7 @@ class AnswersResult(OlostepResponseBaseModel):
     """Result object containing the answer data."""
     json_content: dict[str, Any] | None = None
     json_hosted_url: str | None = None
+    sources: list[str] | None = None
 
     @field_validator('json_content', mode='before')
     @classmethod
