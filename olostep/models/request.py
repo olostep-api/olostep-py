@@ -455,7 +455,14 @@ class ScrapeGetRequest(BaseRequestModel):
 
 
 class BatchItem(OlostepBaseModel):
-    """Individual item in a batch."""
+    """Individual item in a batch.
+
+    NOTE: This class serves as a Pydantic validation model for API requests.
+    There is a separate frontend wrapper class called BatchItemResult in
+    olostep.frontend.client_state that handles API responses. The naming was
+    separated to avoid conflicts between the request model (BatchItem) and
+    the response wrapper (BatchItemResult).
+    """
     url: HttpUrl
     custom_id: str | None = None
     

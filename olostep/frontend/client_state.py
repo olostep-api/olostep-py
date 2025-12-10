@@ -246,13 +246,17 @@ class RetrievableID:
             return True
 
 
-class BatchItem:
+class BatchItemResult:
     """Represents a single item in a batch processing operation.
-    
-    Each BatchItem corresponds to one URL that was processed as part of a batch.
+
+    Each BatchItemResult corresponds to one URL that was processed as part of a batch.
     It provides access to the URL, custom ID, and allows retrieving the scraped
     content for that specific item.
-    
+
+    NOTE: This class was renamed from BatchItem to BatchItemResult to avoid naming
+    conflicts with the BatchItem model in olostep.models.request. The frontend wrapper
+    (BatchItemResult) handles API responses, while the model (BatchItem) validates API requests.
+
     Attributes:
         url: The URL that was processed.
         retrieve_id: Unique identifier for retrieving the scraped content.
@@ -260,8 +264,8 @@ class BatchItem:
     """
     
     def __init__(self, caller: EndpointCaller, item: BatchItemsResponseListItem) -> None:
-        """Initialize BatchItem from API response.
-        
+        """Initialize BatchItemResult from API response.
+
         Args:
             caller: EndpointCaller for making API requests.
             item: Batch item data from API response.
@@ -273,20 +277,20 @@ class BatchItem:
         self.custom_id = item.custom_id or ""
 
     def __repr__(self) -> str:
-        """Return a string representation of the BatchItem.
-        
+        """Return a string representation of the BatchItemResult.
+
         Returns:
             str: String representation showing url, retrieve_id, and custom_id.
         """
-        return f"BatchItem(url={self.url!r}, retrieve_id={self.retrieve_id!r}, custom_id={self.custom_id!r})"
+        return f"BatchItemResult(url={self.url!r}, retrieve_id={self.retrieve_id!r}, custom_id={self.custom_id!r})"
 
     def __str__(self) -> str:
-        """Return a human-readable string representation of the BatchItem.
-        
+        """Return a human-readable string representation of the BatchItemResult.
+
         Returns:
             str: Human-readable string showing custom_id, url, and retrieve_id.
         """
-        return f"BatchItem {self.custom_id or '-'} -> {self.url} ({self.retrieve_id})"
+        return f"BatchItemResult {self.custom_id or '-'} -> {self.url} ({self.retrieve_id})"
 
 
 
@@ -469,10 +473,10 @@ class Batch:
         """
         return await self._info(self._caller, self.id)
 
-    def items(self, *, batch_size: int = 50, status: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[BatchItem]:
+    def items(self, *, batch_size: int = 50, status: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[BatchItemResult]:
         """Return an async iterator for elegant pagination over all batch items.
         
-        Returns an async iterator that yields BatchItem objects for all items
+        Returns an async iterator that yields BatchItemResult objects for all items
         in this batch. Handles pagination automatically and can filter by status.
         Optionally waits for batch completion before starting iteration.
         
@@ -486,7 +490,7 @@ class Batch:
                 and may return partial results.
                 
         Yields:
-            BatchItem: Individual batch items with URL, retrieve_id, and custom_id.
+            BatchItemResult: Individual batch items with URL, retrieve_id, and custom_id.
                 Each item can be used to retrieve scraped content.
                 
         Raises:
@@ -541,7 +545,7 @@ class Batch:
             await asyncio.sleep(check_every_n_secs)
 
     @classmethod
-    async def _items_async_iterator(cls, caller: EndpointCaller, batch_id: str, *, batch_size: int = 50, status: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[BatchItem]:
+    async def _items_async_iterator(cls, caller: EndpointCaller, batch_id: str, *, batch_size: int = 50, status: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[BatchItemResult]:
         """Internal async iterator that handles pagination automatically."""
         if wait_for_completion:
             await cls._wait_till_done_(caller, batch_id)
@@ -565,7 +569,7 @@ class Batch:
                 break
             
             for item_data in data.items:
-                yield BatchItem(caller, item_data)
+                yield BatchItemResult(caller, item_data)
             
             if data.cursor is None:
                 logger.debug(f"Pagination for batch {batch_id!r} complete: no more items")

@@ -3,7 +3,7 @@ from .clients.async_client import OlostepClient
 from .clients.sync_client import SyncOlostepClient
 
 # Stateful result objects
-from .frontend.client_state import ScrapeResult, BatchItem, CrawlPage, Crawl, CrawlInfo, Sitemap
+from .frontend.client_state import ScrapeResult, BatchItemResult, CrawlPage, Crawl, CrawlInfo, Sitemap
 
 # Type system
 from .models.request import (
@@ -35,7 +35,7 @@ __all__ = [
     "SyncOlostepClient",
     # Result objects
     "ScrapeResult",
-    "BatchItem",
+    "BatchItemResult",
     "CrawlPage",
     "Crawl",
     "CrawlInfo",

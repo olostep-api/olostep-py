@@ -11,7 +11,7 @@ from olostep.frontend.client_state import (
     ScrapeResult,
     Batch,
     BatchInfo,
-    BatchItem,
+    BatchItemResult,
     Crawl,
     CrawlInfo,
     CrawlPage,

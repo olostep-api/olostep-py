@@ -10,7 +10,7 @@ import asyncio
 
 from olostep.errors import OlostepClientError_Timeout
 from olostep.frontend.client_state import (
-    ScrapeResult, Batch, BatchInfo, BatchItem,
+    ScrapeResult, Batch, BatchInfo, BatchItemResult,
     Crawl, CrawlInfo, CrawlPage, Sitemap#, RetrievableID
 )
 from olostep.frontend.retrieve_menu import RetrieveMenu
@@ -353,11 +353,11 @@ class TestBatchInfo:
 #         assert "cursor=none" in str_repr
 
 
-class TestBatchItem:
-    """Test BatchItem stateful object creation and behavior."""
+class TestBatchItemResult:
+    """Test BatchItemResult stateful object creation and behavior."""
 
     def test_batch_item_creation_from_response(self):
-        """Test BatchItem creation from BatchItemsResponseListItem."""
+        """Test BatchItemResult creation from BatchItemsResponseListItem."""
         item_data = {
             "url": "https://example.com/1",
             "retrieve_id": "ret_1",
@@ -367,10 +367,10 @@ class TestBatchItem:
         class MockCaller:
             pass
         caller = MockCaller()
-        batch_item = BatchItem(caller, item)
-        
+        batch_item = BatchItemResult(caller, item)
+
         # Verify it can be created
-        assert isinstance(batch_item, BatchItem)
+        assert isinstance(batch_item, BatchItemResult)
         
         # Verify fields are set correctly
         assert batch_item.url == "https://example.com/1"
@@ -378,21 +378,21 @@ class TestBatchItem:
         assert batch_item.custom_id == "item_1"
 
     def test_batch_item_retrieve_returns_scrape_result(self):
-        """Test that BatchItem.retrieve() returns a ScrapeResult."""
+        """Test that BatchItemResult.retrieve() returns a ScrapeResult."""
         item_data = {
             "url": "https://example.com/1",
             "retrieve_id": "ret_12345",
             "custom_id": "item_1"
         }
         item = BatchItemsResponseListItem(**item_data)
-        
+
         class MockCaller:
             async def invoke(self, contract, **kwargs):
                 # Return a RetrieveResponse when retrieve is called
                 return RetrieveResponse(**RETRIEVE_RESPONSE)
-        
+
         caller = MockCaller()
-        batch_item = BatchItem(caller, item)
+        batch_item = BatchItemResult(caller, item)
         
         # Test retrieve method
         import asyncio
@@ -415,18 +415,18 @@ class TestBatchItem:
         class MockCaller:
             pass
         caller = MockCaller()
-        batch_item = BatchItem(caller, item)
+        batch_item = BatchItemResult(caller, item)
         
         # Test __repr__
         repr_str = repr(batch_item)
-        assert "BatchItem" in repr_str
+        assert "BatchItemResult" in repr_str
         assert "https://example.com/1" in repr_str
         assert "ret_1" in repr_str
         assert "item_1" in repr_str
         
         # Test __str__
         str_repr = str(batch_item)
-        assert "BatchItem" in str_repr
+        assert "BatchItemResult" in str_repr
         assert "item_1" in str_repr
         assert "https://example.com/1" in str_repr
         assert "ret_1" in str_repr

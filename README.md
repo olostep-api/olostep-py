@@ -285,13 +285,12 @@ result = await client.scrape.create(
 ### Batch Processing with Custom IDs
 
 ```python
-batch = await client.batch.start(
-    urls=[
-        BatchItem(url="https://www.google.com/search?q=olostep"),
-        BatchItem(url="https://www.google.com/search?q=olostep+api", custom_id="news_2")
-    ],
-    country=Country.US,
-    parser_id="@olostep/google-search"
+batch = await client.batch([
+    {"url": "https://www.google.com/search?q=olostep", "custom_id": "news_1"},
+    {"url": "https://www.google.com/search?q=olostep+api", "custom_id": "news_2"}
+],
+country=Country.US,
+parser_id="@olostep/google-search"
 )
 
 # Process results by custom ID

@@ -9,8 +9,8 @@ from .._log import get_logger
 
 from ..backend.caller import EndpointCaller
 from ..backend.api_endpoints import BATCH_START, BATCH_INFO, BATCH_ITEMS
-from ..frontend.client_state import Batch, BatchInfo, BatchItem
-from ..frontend.input_coersion import coerce_to_list, coerce_to_key_in_dict
+from ..frontend.client_state import Batch, BatchInfo, BatchItemResult
+from ..frontend.input_coersion import coerce_to_batch_items, coerce_to_key_in_dict
 from ..models.request import Country, Parser, BatchItem, LinksOnPage
 from ..models.response import BatchCreateResponse, BatchInfoResponse, BatchItemsResponse
 
@@ -88,7 +88,7 @@ class BatchMenu:
         """
 
         body_params = {
-            "items": coerce_to_list(urls),
+            "items": coerce_to_batch_items(urls),
             "country": country,
             "parser": coerce_to_key_in_dict(parser, "id"),
             "links_on_page": links_on_page,
@@ -147,10 +147,10 @@ class BatchMenu:
         batch_size: int = 50,
         status: str | None = None,
         wait_for_completion: bool = True,
-    ) -> AsyncIterator[BatchItem]:
+    ) -> AsyncIterator[BatchItemResult]:
         """Get an async iterator for batch items with automatic pagination.
         
-        Returns an async iterator that yields BatchItem objects for all items
+        Returns an async iterator that yields BatchItemResult objects for all items
         in the specified batch. Handles pagination automatically and can filter
         by status. Optionally waits for batch completion before starting iteration.
         
@@ -166,7 +166,7 @@ class BatchMenu:
                 and may return partial results.
                 
         Yields:
-            BatchItem: Individual batch items with URL, retrieve_id, and custom_id.
+            BatchItemResult: Individual batch items with URL, retrieve_id, and custom_id.
                 Each item can be used to retrieve scraped content.
                 
         Raises:
