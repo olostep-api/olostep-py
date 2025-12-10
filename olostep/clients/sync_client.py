@@ -366,8 +366,28 @@ class _SyncStateProxy:
 
             # Check if result is a coroutine (async method)
             if asyncio.iscoroutine(result):
-                # This is an async method - execute it synchronously
-                result = self._sync_client._run(result)
+                # This is an async method - execute it with fresh transport
+                # Create a fresh async client to avoid using closed transport
+                async def _fresh_call():
+                    async with OlostepClient(
+                        api_key=self._sync_client._api_key,
+                        base_url=self._sync_client._base_url,
+                        transport=self._sync_client._transport,
+                    ) as fresh_client:
+                        # Get the fresh caller from the new client
+                        fresh_caller = fresh_client._caller
+                        # Replace the caller in the state object temporarily
+                        original_caller = self._async_state._caller
+                        self._async_state._caller = fresh_caller
+                        try:
+                            # Execute the coroutine with the fresh caller
+                            return await result
+                        finally:
+                            # Restore the original caller
+                            self._async_state._caller = original_caller
+                
+                # Execute with fresh transport
+                result = self._sync_client._run(_fresh_call())
 
             # Handle async iterators (like items(), pages(), urls())
             # Check this before state objects since async iterators might also be state objects
@@ -375,7 +395,7 @@ class _SyncStateProxy:
             if (hasattr(result, '__aiter__') and
                 hasattr(result, '__anext__') and
                 not getattr(result.__class__, '__module__', '').startswith('unittest.mock')):
-                return self._wrap_async_iterator(result)
+                return self._wrap_async_iterator(result, method_name, args, kwargs)
 
             # Check if result is a nested state object that needs wrapping
             if self._is_state_object(result):
@@ -402,7 +422,7 @@ class _SyncStateProxy:
         self._wrapped_cache[obj_id] = wrapper
         return wrapper
 
-    def _wrap_async_iterator(self, async_iter: Any) -> Any:
+    def _wrap_async_iterator(self, async_iter: Any, method_name: str, args: tuple, kwargs: dict) -> Any:
         """Wrap async iterators to make them synchronous.
 
         Converts async iterators (like batch.items(), crawl.pages(), sitemap.urls())
@@ -410,22 +430,46 @@ class _SyncStateProxy:
         """
 
         class SyncIterator:
-            def __init__(self, async_iter, sync_client):
+            def __init__(self, async_iter, sync_client, state_obj, method_name, args, kwargs):
                 self._async_iter = async_iter
                 self._sync_client = sync_client
+                self._state_obj = state_obj
+                self._method_name = method_name
+                self._args = args
+                self._kwargs = kwargs
                 self._items = None  # Cache for collected items
                 self._index = 0
 
             def __iter__(self):
                 # Collect all items synchronously on first iteration
                 if self._items is None:
-                    # Run the async collection synchronously
+                    # Run the async collection with fresh transport
                     async def _collect_all():
-                        items = []
-                        async for item in self._async_iter:
-                            # Wrap state objects in sync proxies
-                            items.append(self._sync_client._wrap_state_object(item))
-                        return items
+                        async with OlostepClient(
+                            api_key=self._sync_client._api_key,
+                            base_url=self._sync_client._base_url,
+                            transport=self._sync_client._transport,
+                        ) as fresh_client:
+                            # Get the fresh caller from the new client
+                            fresh_caller = fresh_client._caller
+
+                            # Temporarily replace the caller in the original state object
+                            original_caller = self._state_obj._caller
+                            self._state_obj._caller = fresh_caller
+                            try:
+                                # Create a fresh async iterator by calling the method again
+                                # This ensures the iterator uses the fresh caller
+                                fresh_method = getattr(self._state_obj, self._method_name)
+                                fresh_async_iter = fresh_method(*self._args, **self._kwargs)
+                                
+                                items = []
+                                async for item in fresh_async_iter:
+                                    # Wrap state objects in sync proxies
+                                    items.append(self._sync_client._wrap_state_object(item))
+                                return items
+                            finally:
+                                # Restore the original caller
+                                self._state_obj._caller = original_caller
 
                     # Execute the coroutine synchronously
                     self._items = self._sync_client._run(_collect_all())
@@ -444,7 +488,7 @@ class _SyncStateProxy:
                 self._index += 1
                 return item
 
-        return SyncIterator(async_iter, self._sync_client)
+        return SyncIterator(async_iter, self._sync_client, self._async_state, method_name, args, kwargs)
 
     def __dir__(self) -> list[str]:
         """Return directory including methods from async state object."""
@@ -500,6 +544,10 @@ class SyncSitemap(_SyncStateProxy):
     """Synchronous version of Sitemap state object."""
     pass
 
+class SyncCrawlPage(_SyncStateProxy):
+    """Synchronous version of CrawlPage state object."""
+    pass
+
 
 # Mapping of async state classes to their sync wrappers
 _STATE_WRAPPERS = {
@@ -508,6 +556,7 @@ _STATE_WRAPPERS = {
     BatchItemResult: SyncBatchItemResult,
     Crawl: SyncCrawl,
     Sitemap: SyncSitemap,
+    CrawlPage: SyncCrawlPage,
     # Add more as needed
 }
 

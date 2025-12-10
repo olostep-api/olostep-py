@@ -385,6 +385,18 @@ class BatchInfo:
         """
         return _format_time_delta(self.created)
 
+    @property
+    def time_since_start(self) -> float:
+        """Get time since batch started in seconds.
+        
+        Returns:
+            float: Number of seconds since the batch was created.
+        """
+        now = datetime.now(timezone.utc)
+        created_time = datetime.fromtimestamp(self.created / 1000, tz=timezone.utc)
+        elapsed = now - created_time
+        return elapsed.total_seconds()
+
 
 class Batch:
     """Represents a batch processing operation for multiple URLs.
