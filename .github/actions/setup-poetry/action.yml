@@ -31,5 +31,4 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
-        export PATH="$HOME/.local/bin:$PATH"
         poetry install --no-interaction
