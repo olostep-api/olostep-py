@@ -88,3 +88,36 @@ class AnswersMenu:
         return AnswersResult(res)
 
     __call__ = create  # shorthand for create
+
+    async def get(self, answer_id: str) -> AnswersResult:
+        """Get an existing answer result by ID.
+
+        Retrieves a previously created answer result using its unique identifier.
+        Useful for accessing answer results that were created earlier or
+        by other processes.
+
+        Args:
+            answer_id: The unique identifier of the answer to retrieve.
+                This is returned when creating an answer with the create() method.
+
+        Returns:
+            AnswersResult: The answer content and metadata.
+
+        Raises:
+            Exception: If the API request fails.
+
+        Examples:
+            # Get existing answer result
+            result = await client.answers.get("answer_123")
+            print(f"Task: {result.task}")
+            print(f"Content: {result.json_content}")
+        """
+        from ..backend.api_endpoints import ANSWERS_GET
+
+        path_params = {"answer_id": answer_id}
+        res: AnswersResponse = await self._caller.invoke(
+            ANSWERS_GET,
+            path_params=path_params,
+            validate_request=self._validate_request
+        )
+        return AnswersResult(res)

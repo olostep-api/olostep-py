@@ -21,12 +21,13 @@ from olostep.models.response import AnswersResponse
 from olostep.errors import OlostepClientError_RequestValidationFailed, OlostepServerError_RequestUnprocessable, OlostepServerError_NoResultInResponse, OlostepServerError_TemporaryIssue, OlostepServerError_UnknownIssue, OlostepServerError_NetworkBusy, OlostepServerError_ResourceNotFound
 
 from tests.fixtures.api.requests.answers import (
-    MINIMAL_REQUEST_BODY, TASK, JSON_FORMAT
+    MINIMAL_REQUEST_BODY, TASK, JSON_FORMAT, GET_ANSWER_REQUEST_ID
 )
 from tests.conftest import extract_request_parameters, retry_request
 
 
 ANSWERS_CREATE_CONTRACT = CONTRACTS[('answers', 'create')]
+ANSWERS_GET_CONTRACT = CONTRACTS[('answers', 'get')]
 
 BASE_URL = "https://api.olostep.com/v1"
 
@@ -303,3 +304,81 @@ class TestAnswersCreate:
         except OlostepServerError_TemporaryIssue:
             # API raised a temporary error - skip this test
             pytest.skip("API raised a temporary error")
+
+
+class TestAnswersGet:
+    """Test cases for GET /answers/{answer_id} endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_get_existing_answer(self, endpoint_caller):
+        """Test getting an existing answer by ID"""
+        # First, create an answer using MINIMAL_REQUEST_BODY
+        create_body_params = MINIMAL_REQUEST_BODY
+
+        validated_request = endpoint_caller.validate_request(
+            ANSWERS_CREATE_CONTRACT, body_params=create_body_params
+        )
+
+        create_request = endpoint_caller._prepare_request(
+            ANSWERS_CREATE_CONTRACT, **validated_request
+        )
+
+        try:
+            create_response = await endpoint_caller._transport.request(create_request)
+            create_model = endpoint_caller._handle_response(create_request, create_response, ANSWERS_CREATE_CONTRACT)
+            assert isinstance(create_model, AnswersResponse)
+            answer_id = create_model.id
+        except OlostepServerError_TemporaryIssue:
+            pytest.skip("API raised a temporary error during answer creation")
+
+        # Now get the answer using the ID from GET_ANSWER_REQUEST_ID fixture
+        answer_id_param_name = GET_ANSWER_REQUEST_ID["param_name"]
+        get_path_params = {answer_id_param_name: answer_id}
+
+        validated_request = endpoint_caller.validate_request(
+            ANSWERS_GET_CONTRACT, path_params=get_path_params
+        )
+
+        validated_path = validated_request["path_params"]
+        assert answer_id_param_name in validated_path
+        assert validated_path[answer_id_param_name] == answer_id
+
+        get_request = endpoint_caller._prepare_request(
+            ANSWERS_GET_CONTRACT, **validated_request
+        )
+
+        try:
+            get_response = await endpoint_caller._transport.request(get_request)
+            get_model = endpoint_caller._handle_response(get_request, get_response, ANSWERS_GET_CONTRACT)
+            assert isinstance(get_model, AnswersResponse)
+            assert get_model.id == answer_id
+            assert get_model.object == "answer"
+            assert get_model.task is not None
+        except OlostepServerError_TemporaryIssue:
+            pytest.skip("API raised a temporary error during answer retrieval")
+
+    @pytest.mark.asyncio
+    async def test_get_nonexistent_answer(self, endpoint_caller):
+        """Test getting a non-existent answer by ID"""
+        # Try to get an answer with an invalid ID from GET_ANSWER_REQUEST_ID fixture
+        answer_id_param_name = GET_ANSWER_REQUEST_ID["param_name"]
+        invalid_answer_id = GET_ANSWER_REQUEST_ID["param_values"]["invalids"][0]
+        get_path_params = {answer_id_param_name: invalid_answer_id}
+
+        validated_request = endpoint_caller.validate_request(
+            ANSWERS_GET_CONTRACT, path_params=get_path_params
+        )
+
+        validated_path = validated_request["path_params"]
+        assert answer_id_param_name in validated_path
+        assert validated_path[answer_id_param_name] == invalid_answer_id
+
+        get_request = endpoint_caller._prepare_request(
+            ANSWERS_GET_CONTRACT, **validated_request
+        )
+
+        get_response = await endpoint_caller._transport.request(get_request)
+
+        # Should raise an error for non-existent answer
+        with pytest.raises(OlostepServerError_ResourceNotFound):
+            endpoint_caller._handle_response(get_request, get_response, ANSWERS_GET_CONTRACT)

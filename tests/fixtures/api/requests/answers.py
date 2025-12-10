@@ -41,3 +41,16 @@ JSON_FORMAT = {
         ],
     },
 }
+
+# =============================================================================
+# --- Get Answer Request Fixtures ---
+# =============================================================================
+
+GET_ANSWER_REQUEST_ID = {
+    "param_name": "answer_id",
+    "param_type": str,
+    "param_values": {
+        #"valids": is a dynamic value,
+        "invalids": ["non_existing_answer_id"],
+    },
+}

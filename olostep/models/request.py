@@ -858,3 +858,16 @@ class AnswersBodyParams(BodyParams):
 class AnswersRequest(BaseRequestModel):
     """Request for POST /answers."""
     body_params: AnswersBodyParams
+
+
+# =============================================================================
+# ANSWERS GET MODELS
+# =============================================================================
+
+class AnswersGetPathParams(PathParams):
+    """Path parameters for GET /answers/{answer_id}."""
+    answer_id: str
+
+class AnswersGetRequest(BaseRequestModel):
+    """Request for GET /answers/{answer_id}."""
+    path_params: AnswersGetPathParams

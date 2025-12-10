@@ -26,6 +26,7 @@ from ..models.request import (
     RetrieveGetRequest,
     # Answers
     AnswersRequest,
+    AnswersGetRequest,
 )
 from ..models.response import (
     # Scrapes
@@ -339,6 +340,19 @@ ANSWERS_CREATE = EndpointContract(
     ],
 )
 
+ANSWERS_GET = EndpointContract(
+    key=("answers", "get"),
+    name="Get Answer",
+    description="Retrieve the results of a completed answer generation job",
+    method="GET",
+    path="/answers/{answer_id}",
+    request_model=AnswersGetRequest,
+    response_model=AnswersResponse,
+    examples=[
+        {"description": "Retrieve answer results", "path_params": {"answer_id": "answer_12345"}},
+    ],
+)
+
 
 # =============================================================================
 # REGISTRY
@@ -358,6 +372,7 @@ CONTRACTS: dict[tuple[str, str], EndpointContract] = {
         MAP_CREATE,
         RETRIEVE_GET,
         ANSWERS_CREATE,
+        ANSWERS_GET,
     ]
 }
 
