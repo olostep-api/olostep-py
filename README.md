@@ -48,7 +48,7 @@ Based on user feedback, release 1.0.0 will not only include more features but al
 # Change: The async client now uses the "Async" prefix much like other SDKs of similar design. We also took the opportunity to drop the "Client" part
 
 # Old
-from olostep import OlostepClient, SyncOlostepClient
+from olostep import AsyncOlostep, Olostep
 
 # New
 from olostep import AsyncOlostep, Olostep
@@ -252,18 +252,20 @@ from olostep import Olostep, Country
 client = Olostep(api_key="your-api-key")
 
 batch = client.batches.create([
-    {"url": "https://www.google.com/search?q=olostep", "custom_id": "news_1"},
-    {"url": "https://www.google.com/search?q=olostep+api", "custom_id": "news_2"}
+    {"url": "https://www.google.com/search?q=python", "custom_id": "search_1"},
+    {"url": "https://www.google.com/search?q=javascript", "custom_id": "search_2"},
+    {"url": "https://www.google.com/search?q=typescript", "custom_id": "search_3"}
 ],
 country=Country.US,
 parser_id="@olostep/google-search"
 )
 
 # Process results by custom ID
+# When using a parser, retrieve JSON content instead of HTML
 for item in batch.items():
-    if item.custom_id == "news_2":
-        content = item.retrieve(["html"])
-        print(f"News search: {len(content.html_content)} bytes")
+    if item.custom_id == "search_2":
+        content = item.retrieve(["json"])
+        print(f"Search result: {content.json_content}")
 ```
 
 ### Intelligent Crawling
@@ -275,7 +277,7 @@ client = Olostep(api_key="your-api-key")
 
 # Crawl with intelligent filtering
 crawl = client.crawls.create(
-    start_url="https://example.com",
+    start_url="https://www.bbc.com",
     max_pages=1000,
     max_depth=3,
     include_urls=["/articles/**", "/news/**"],
@@ -298,12 +300,10 @@ client = Olostep(api_key="your-api-key")
 
 # Extract all links with advanced filtering
 maps = client.maps.create(
-    url_to_map="https://example.com",
-    search_query="documentation",
-    top_n=500,
+    url_to_map="https://www.bbc.com",
     include_subdomain=True,
-    include_urls=["/docs/**", "/api/**"],
-    exclude_urls=["/admin/**", "/private/**"]
+    include_urls=["/articles/**", "/news/**"],
+    exclude_urls=["/ads/**", "/tracking/**"]
 )
 
 # Get filtered URLs
@@ -321,8 +321,14 @@ from olostep import Olostep
 
 client = Olostep(api_key="your-api-key")
 
-# Get answer by answer ID
-answer = client.answers.get(answer_id="ans_123")
+# First create an answer
+created_answer = client.answers.create(
+    url="https://example.com",
+    question="What is the main topic of this page?"
+)
+
+# Then retrieve it using the ID
+answer = client.answers.get(answer_id=created_answer.id)
 print(f"Answer: {answer.answer}")
 ```
 

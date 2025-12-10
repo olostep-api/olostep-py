@@ -47,7 +47,11 @@ client = Olostep(api_key="your-api-key")
 
 # Process multiple URLs efficiently
 batch = client.batches.create(
-    urls=["https://site1.com", "https://site2.com", "https://site3.com"]
+    urls=[
+        "https://www.google.com/search?q=python",
+        "https://www.google.com/search?q=javascript",
+        "https://www.google.com/search?q=typescript"
+    ]
 )
 
 # Wait for completion and process results
@@ -65,7 +69,7 @@ client = Olostep(api_key="your-api-key")
 
 # Crawl with intelligent filtering
 crawl = client.crawls.create(
-    start_url="https://example.com",
+    start_url="https://www.bbc.com",
     max_pages=100,
     include_urls=["/articles/**", "/blog/**"],
     exclude_urls=["/admin/**"]

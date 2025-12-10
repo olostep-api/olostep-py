@@ -64,7 +64,11 @@ async def main():
     async with AsyncOlostep(api_key="your-api-key") as client:
         # Process multiple URLs efficiently
         batch = await client.batches.create(
-            urls=["https://site1.com", "https://site2.com", "https://site3.com"]
+            urls=[
+                "https://www.google.com/search?q=python",
+                "https://www.google.com/search?q=javascript",
+                "https://www.google.com/search?q=typescript"
+            ]
         )
 
         # Wait for completion and process results
@@ -85,7 +89,7 @@ async def main():
     async with AsyncOlostep(api_key="your-api-key") as client:
         # Crawl with intelligent filtering
         crawl = await client.crawls.create(
-            start_url="https://example.com",
+            start_url="https://www.bbc.com",
             max_pages=100,
             include_urls=["/articles/**", "/blog/**"],
             exclude_urls=["/admin/**"]
