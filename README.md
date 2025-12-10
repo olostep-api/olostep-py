@@ -66,20 +66,20 @@ from olostep import AsyncOlostep, Olostep
 # Change: All endpoint namespaces are now plural for consistency. Also, sitemap was renamed to maps.
 
 # Old
-result = await client.scrape.create(url)
-batch = await client.batch.create(urls)
-crawl = await client.crawl.create(url)
-sitemap = await client.sitemap.create(url)
-content = await client.retrieve.get(retrieve_id)
-answers = await client.answers.create(task="What is this page about?")
+result = (await) client.scrape.ENDPOINT
+batch = (await) client.batch.ENDPOINT
+crawl = (await) client.crawl.ENDPOINT
+sitemap = (await) client.sitemap.ENDPOINT
+content = (await) client.retrieve.ENDPOINT
+answers = (await) client.answers.ENDPOINT
 
 # New
-result = await client.scrapes.create(url)
-batch = await client.batches.create(urls)
-crawl = await client.crawls.create(url)
-maps = await client.maps.create(url)
-content = await client.retrieve.get(retrieve_id)
-answers = await client.answers.create(task="What is this page about?")
+result = (await) client.scrapes.ENDPOINT
+batch = (await) client.batches.ENDPOINT
+crawl = (await) client.crawls.ENDPOINT
+maps = (await) client.maps.ENDPOINT
+content = (await) client.retrieve.ENDPOINT
+answers = (await) client.answers.ENDPOINT
 ```
 
 ### Endpoint Methods
@@ -88,12 +88,12 @@ answers = await client.answers.create(task="What is this page about?")
 # Change: All creation methods now use .create() for consistency. Previously, batch and crawl used .start(). Scrape, answers, and sitemap/maps already used .create() and remain unchanged.
 
 # Old
-batch = await client.batch.start(urls)
-crawl = await client.crawl.start(url)
+batch = (await) client.batch.start(urls)
+crawl = (await) client.crawl.start(url)
 
 # New
-batch = await client.batches.create(urls)
-crawl = await client.crawls.create(url)
+batch = (await) client.batches.create(urls)
+crawl = (await) client.crawls.create(url)
 ```
 
 ## Installation
