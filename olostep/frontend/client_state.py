@@ -181,6 +181,13 @@ class AnswersResult:
             self.sources = result.sources
         else:
             self.sources = []
+    
+    @property
+    def answer(self) -> str | None:
+        """Alias for json_content to match documentation API."""
+        if isinstance(self.json_content, str):
+            return self.json_content
+        return str(self.json_content) if self.json_content is not None else None
 
     def __repr__(self) -> str:
         """Return a string representation of the AnswersResult.
@@ -337,7 +344,7 @@ class BatchItemResult:
         c = CONTRACTS[("retrieve", "get")]
         # todo: if we had request validation for all endpoints we could put coersion into the models and
         # have endpoints like this support coersion for e.g. formats too.
-        query_params = {
+        query_params: dict[str, Any] = {
             "retrieve_id": self.retrieve_id,
         }
         if formats is not None:

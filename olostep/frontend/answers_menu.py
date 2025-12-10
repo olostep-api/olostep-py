@@ -29,8 +29,10 @@ class AnswersMenu:
 
     async def create(
         self,
-        task: str,
+        task: str | None = None,
         *,
+        url: str | None = None,
+        question: str | None = None,
         json_format: dict[str, Any] | None = None,
         validate_request: bool | None = None,
     ) -> AnswersResult:
@@ -41,6 +43,10 @@ class AnswersMenu:
 
         Args:
             task: The task to be performed (e.g., "list all products on the website").
+            url: URL to answer questions about (for documentation compatibility).
+            question: Question to ask about the URL (for documentation compatibility).
+                If both url and question are provided, task is constructed as "question URL: url".
+                If task is also provided, ValueError is raised.
             json_format: Optional JSON schema for structured output.
                 Should be a dictionary specifying the desired format with empty values as placeholders.
             validate_request: Override the global validation setting for this request.
@@ -68,6 +74,18 @@ class AnswersMenu:
             )
             print(f"Products: {result.json_content}")
         """
+        # Normalize url/question to task (for documentation compatibility)
+        if task is not None and (url is not None or question is not None):
+            raise ValueError("Cannot specify both 'task' and ('url'/'question') parameters. Use only one.")
+        if task is None:
+            if url is not None and question is not None:
+                task = f"{question} URL: {url}"
+            elif question is not None:
+                task = question
+            elif url is not None:
+                raise ValueError("'question' parameter is required when 'url' is provided.")
+            else:
+                raise ValueError("Either 'task' or ('url' and 'question') parameters must be provided.")
 
         body_params = {
             "task": task,
