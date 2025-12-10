@@ -98,6 +98,7 @@ todo.txt
 OFFER.md
 observations.md
 scripts/
+design_docs/
 
 # Runtime logs and temporary files
 tests/runtime/
