@@ -10,13 +10,13 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel
 
-from olostep.backend.transport_protocol import Transport, RawAPIResponse
+from olostep.backend.transport_protocol import Transport, RawAPIResponse, RawAPIRequest
 from olostep.backend.api_endpoints import CONTRACTS, EndpointContract
 
 
 class FakeTransport(Transport):
     """Simple fake transport for basic testing."""
-    
+
     def __init__(
         self,
         responses: dict[tuple[str, str], dict[str, Any]] | None = None,
@@ -28,16 +28,14 @@ class FakeTransport(Transport):
 
     async def request(
         self,
-        method: str,
-        url: str,
-        *,
-        json: dict[str, Any] | None,
-        params: dict[str, Any] | None,
-        headers: dict[str, str] | None = None,
+        request: RawAPIRequest,
     ) -> RawAPIResponse:
-        split = urlsplit(url)
+
+        # Convert query to params for existing logic
+        params = request.query
+        split = urlsplit(request.url)
         path = split.path
-        key = (method.upper(), path)
+        key = (request.method.upper(), path)
 
         if key in self._fail:
             cfg = self._fail[key]
@@ -243,6 +241,10 @@ class FakeTransport(Transport):
             body="{}"
         )
 
+    async def close(self) -> None:
+        """Close method for protocol compliance. No-op for fake transport."""
+        pass
+
 
 class FakeTransportSmart(Transport):
     """Schema-driven smart fake transport for advanced testing."""
@@ -426,19 +428,17 @@ class FakeTransportSmart(Transport):
 
     async def request(
         self,
-        method: str,
-        url: str,
-        *,
-        json: dict[str, Any] | None,
-        params: dict[str, Any] | None,
-        headers: dict[str, str] | None = None,
+        request: RawAPIRequest,
     ) -> RawAPIResponse:
-        split = urlsplit(url)
+
+        # Convert query to params for existing logic
+        params = request.query
+        split = urlsplit(request.url)
         path = split.path
 
         # overrides / failures by exact (method, path)
-        if (method.upper(), path) in self._fail:
-            cfg = self._fail[(method.upper(), path)]
+        if (request.method.upper(), path) in self._fail:
+            cfg = self._fail[(request.method.upper(), path)]
             if "exception" in cfg:
                 exc = cfg["exception"]
                 if exc == "connection":
@@ -454,18 +454,18 @@ class FakeTransportSmart(Transport):
                 headers={},
                 body=_json.dumps(body) if isinstance(body, dict) else str(body)
             )
-        if (method.upper(), path) in self._overrides:
+        if (request.method.upper(), path) in self._overrides:
             return RawAPIResponse(
                 status_code=200,
                 headers={},
-                body=_json.dumps(self._overrides[(method.upper(), path)])
+                body=_json.dumps(self._overrides[(request.method.upper(), path)])
             )
 
         # match contract
         matched: EndpointContract | None = None
         path_params: dict[str, str] = {}
         for c, rx in self._compiled:
-            if c.method.upper() != method.upper():
+            if c.method.upper() != request.method.upper():
                 continue
             m = rx.match(path)
             if m:
@@ -487,3 +487,7 @@ class FakeTransportSmart(Transport):
             headers={},
             body=model.model_dump_json()  # type: ignore[call-arg]
         )
+
+    async def close(self) -> None:
+        """Close method for protocol compliance. No-op for fake transport."""
+        pass

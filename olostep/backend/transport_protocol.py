@@ -5,15 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+__all__ = ["Transport", "RawAPIRequest", "RawAPIResponse"]
+
 
 @dataclass
 class RawAPIRequest:
     """Raw API request containing method, url, query, json, and headers."""
     method: str
     url: str
-    query: dict[str, Any] | None
-    json: dict[str, Any] | None
-    headers: dict[str, str] | None
+    query: dict[str, Any] | None = None
+    json: dict[str, Any] | None = None
+    headers: dict[str, str] | None = None
 
 @dataclass
 class RawAPIResponse:
@@ -25,21 +27,27 @@ class RawAPIResponse:
 
 class Transport(Protocol):
     """Protocol defining the interface for HTTP transport implementations."""
-    
+
     async def request(
         self,
         request: RawAPIRequest,
     ) -> RawAPIResponse:
         """
         Make an HTTP request.
-        
+
         Args:
-            method: HTTP method (GET, POST, etc.)
-            url: Request URL (with path and query parameters)
-            json: JSON payload for request body
-            headers: Additional headers
-            
+            request: RawAPIRequest object containing method, url, json, query, and headers
+
         Returns:
             RawAPIResponse containing status_code, headers, and response_text
+        """
+        ...
+
+    async def close(self) -> None:
+        """
+        Close any resources used by the transport.
+
+        This method should be implemented by all transport implementations
+        to ensure proper cleanup of connections, sessions, or other resources.
         """
         ...

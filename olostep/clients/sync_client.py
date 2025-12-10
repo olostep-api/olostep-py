@@ -3,6 +3,38 @@ Synchronous facade over the async Olostep client.
 
 Runs async methods in an event loop and exposes the same dot-notation namespaces.
 Use this when you need synchronous access to the Olostep API.
+
+The sync client supports two usage patterns:
+
+1. **Direct Usage (Recommended for one-off calls):**
+   No explicit resource management needed since each operation creates
+   a new async client internally.
+
+   ```python
+   client = SyncOlostepClient(api_key="your-api-key")
+   result = client.scrape.url(
+       url_to_scrape="https://example.com",
+       formats=["html", "markdown"]
+   )
+   # No explicit close needed
+   ```
+
+2. **Explicit Close (For long-lived services):**
+   Call close() for consistency, though currently a no-op.
+
+   ```python
+   client = SyncOlostepClient(api_key="your-api-key")
+   try:
+       result = client.scrape.url(
+           url_to_scrape="https://example.com",
+           formats=["html", "markdown"]
+       )
+   finally:
+       client.close()  # For future compatibility
+   ```
+
+For most use cases, the direct usage pattern is sufficient since each
+operation is self-contained and resources are cleaned up automatically.
 """
 from __future__ import annotations
 
@@ -48,6 +80,29 @@ class SyncOlostepClient:
 
     def __dir__(self) -> list[str]:
         return ["scrape", "batch", "crawl", "sitemap", "retrieve"]
+
+    def close(self) -> None:
+        """
+        Close any shared resources used by the sync client.
+
+        Currently a no-op since each operation creates a new async client,
+        but provided for future compatibility if connection pooling or caching
+        is implemented.
+
+        For one-off usage, no explicit close is needed:
+
+            client = SyncOlostepClient(api_key="...")
+            result = client.scrape.url("https://example.com")
+
+        For long-lived services where you want to ensure cleanup:
+
+            client = SyncOlostepClient(api_key="...")
+            try:
+                result = client.scrape.url("https://example.com")
+            finally:
+                client.close()
+        """
+        pass
 
     def _run(self, coro: Any) -> Any:
         try:

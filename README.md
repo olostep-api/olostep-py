@@ -43,22 +43,39 @@ The quickstart uses the async/await interface as it's the default and generally 
 
 from olostep import OlostepClient
 
-# Provide the API key either via passing in the 'api_key' parameter or 
-# by setting the OLOSTEP_API_KEY environment variable  
+# Provide the API key either via passing in the 'api_key' parameter or
+# by setting the OLOSTEP_API_KEY environment variable
+
+# RESOURCE MANAGEMENT
+# ===================
+# The SDK supports two usage patterns for resource management:
+
+# 1. Context Manager (Recommended for one-off usage):
+#    Automatically handles resource cleanup
+async with OlostepClient(api_key="YOUR_REAL_KEY") as client:
+    scrape_result = await client.scrape.create(url_to_scrape="https://example.com")
+# Transport is automatically closed here
+
+# 2. Explicit Close (For long-lived services):
+#    Requires manual resource cleanup
 client = OlostepClient(api_key="YOUR_REAL_KEY")
+try:
+    scrape_result = await client.scrape.create(url_to_scrape="https://example.com")
+finally:
+    await client.close()  # Manually close the transport
 
 
 
 # MINIMAL SCRAPE EXAMPLE
 
-scrape_result = await client.scrape("https://example.com")
+scrape_result = await client.scrape.create(url_to_scrape="https://example.com")
 # -> ScrapeResult(id='scrape_123', available=['html_content', 'markdown_content'])
 
 
 
 # MINIMAL BATCH EXAMPLE
 
-batch = await client.batch(["https://site1.com", "https://site2.com"])
+batch = await client.batch.start(urls=["https://site1.com", "https://site2.com"])
 # -> Batch(id='batch_123', urls=2)
 
 # waits for all the batch jobs to finish, then starts fetching the results in batches
@@ -70,7 +87,7 @@ async for item in batch.items():
 
 # MINIMAL CRAWL EXAMPLE
 
-crawl = await client.crawl("https://example.com", max_pages=100)
+crawl = await client.crawl.start(start_url="https://example.com", max_pages=100)
 # -> Crawl(id='crawl_123', urls=100)
 
 
@@ -86,9 +103,24 @@ async for page in crawl.pages():
 # If you can use the OlostepClient instead, do so.
 from olostep import SyncOlostepClient
 
-client = SyncOlostepClient(api_key="YOUR_REAL_KEY")
+# RESOURCE MANAGEMENT FOR SYNC CLIENT
+# ===================================
+# The sync client supports two usage patterns:
 
-scrape_result = client.scrape("https://example.com")
+# 1. Direct Usage (Recommended for one-off calls):
+#    No explicit resource management needed
+client = SyncOlostepClient(api_key="YOUR_REAL_KEY")
+scrape_result = client.scrape.create(url_to_scrape="https://example.com")
+# No explicit close needed
+
+# 2. Explicit Close (For long-lived services):
+#    Call close() for consistency (currently a no-op)
+client = SyncOlostepClient(api_key="YOUR_REAL_KEY")
+try:
+    scrape_result = client.scrape.create(url_to_scrape="https://example.com")
+finally:
+    client.close()  # No-op. For future compatibility
+
 # -> ScrapeResult(id='scrape_123', available=['html_content', 'markdown_content'])
 ```
 
@@ -106,12 +138,12 @@ client = OlostepClient(api_key="YOUR_REAL_KEY")
 
 
 # Minimal: Just scrape a URL
-result = await client.scrape("https://example.com")
+result = await client.scrape.create(url_to_scrape="https://example.com")
 # ScrapeResult(id='scrape_123', available=['html_content', 'markdown_content'])
 
 # Maximal: Full control over scraping behavior
-result = await client.scrape(
-    "https://example.com",
+result = await client.scrape.create(
+    url_to_scrape="https://example.com",
     wait_before_scraping=3000,
     formats=[Format.HTML, Format.MARKDOWN],
     remove_css_selectors=["script", ".popup"],
@@ -145,12 +177,12 @@ client = OlostepClient(api_key="YOUR_REAL_KEY")
 
 
 # Minimal: Process a list of URLs
-batch = await client.batch(["https://site1.com", "https://site2.com"])
+batch = await client.batch.start(urls=["https://site1.com", "https://site2.com"])
 # Batch(id='batch_123', urls=2)
 
 # Maximal: Advanced batch with custom IDs and options
-batch = await client.batch(
-    [
+batch = await client.batch.start(
+    urls=[
         BatchItem(url="https://www.google.com/search?q=olostep"),
         BatchItem(url="https://www.google.com/search?q=olostep+api", custom_id="news_2")
     ],
@@ -181,12 +213,12 @@ async for item in client.batch.items(batch_id='a_batch_id', batch_size=10):
 #### Web Crawling
 ```python
 # Minimal: Crawl a site with default settings
-crawl = await client.crawl("https://example.com", max_pages=100)
+crawl = await client.crawl.start(start_url="https://example.com", max_pages=100)
 # Crawl(id='crawl_123', urls=100)
 
 # Maximal: Advanced crawling with filters and limits
-crawl = await client.crawl(
-    "https://example.com",
+crawl = await client.crawl.start(
+    start_url="https://example.com",
     max_pages=1000,
     max_depth=3,
     include_urls=["/articles/**", "/news/**"],
@@ -219,12 +251,12 @@ async for page in client.crawl.pages(crawl_id='a_crawl_id'):
 #### Site Mapping
 ```python
 # Minimal: Extract all links from a site
-sitemap = await client.sitemap("https://example.com")
+sitemap = await client.sitemap.create(url_to_map="https://example.com")
 # Sitemap(id='map_123', urls_count=150, has_more=True)
 
 # Maximal: Advanced link extraction with filters
-sitemap = await client.sitemap(
-    "https://example.com",
+sitemap = await client.sitemap.create(
+    url_to_map="https://example.com",
     search_query="documentation",
     top_n=500,
     include_subdomain=True,
@@ -250,11 +282,11 @@ async for url in sitemap.urls(): # async generator
 #   * Not all formats are available all the time
 
 # Minimal: Get content by retrieve ID
-result = await client.retrieve("ret_123")
+result = await client.retrieve.get(retrieve_id="ret_123")
 # ScrapeResult(id='ret_123', available=[...])
 
 # Maximal: Get multiple formats
-result = await client.retrieve("ret_123", ["html", "markdown", "text", "json"])
+result = await client.retrieve.get(retrieve_id="ret_123", formats=["html", "markdown", "text", "json"])
 # ScrapeResult(id='ret_123', available=['html_content', 'markdown_content', 'text_content', 'json_content'])
 
 
@@ -267,21 +299,12 @@ result = await client.retrieve("ret_123", ["html", "markdown", "text", "json"])
 The SDK provides convenient shorthand methods for common operations:
 
 ```python
-# These are equivalent:
-await client.scrape("https://example.com")           # shorthand
-await client.scrape.create("https://example.com")   # explicit method
-
-await client.batch(["url1", "url2"])                # shorthand  
-await client.batch.start(["url1", "url2"])          # explicit method
-
-await client.crawl("https://example.com")           # shorthand
-await client.crawl.start("https://example.com")     # explicit method
-
-await client.sitemap("https://example.com")         # shorthand
-await client.sitemap.create("https://example.com")  # explicit method
-
-await client.retrieve("ret_123")                     # shorthand
-await client.retrieve.get("ret_123")                # explicit method
+# Method naming convention:
+await client.scrape.create(url_to_scrape="https://example.com")   # explicit method
+await client.batch.start(urls=["url1", "url2"])                  # explicit method
+await client.crawl.start(start_url="https://example.com")         # explicit method
+await client.sitemap.create(url_to_map="https://example.com")     # explicit method
+await client.retrieve.get(retrieve_id="ret_123")                  # explicit method
 ```
 
 ### Smart Input Coercion
@@ -290,17 +313,17 @@ The SDK intelligently handles various input formats for maximum convenience:
 
 ```python
 # Formats: string, list, or enum
-await client.scrape("https://example.com", formats="html")
-await client.scrape("https://example.com", formats=["html", "markdown"])
+await client.scrape.create(url_to_scrape="https://example.com", formats="html")
+await client.scrape.create(url_to_scrape="https://example.com", formats=["html", "markdown"])
 
 
 # Countries: case-insensitive strings or enums
-await client.scrape("https://example.com", country="us")
-await client.scrape("https://example.com", country=Country.US)
+await client.scrape.create(url_to_scrape="https://example.com", country="us")
+await client.scrape.create(url_to_scrape="https://example.com", country=Country.US)
 
 # Lists: single values or lists
-await client.batch("https://example.com")    # Single URL
-await client.batch(["https://a.com", "https://b.com"])  # Multiple URLs
+await client.batch.start(urls="https://example.com")    # Single URL
+await client.batch.start(urls=["https://a.com", "https://b.com"])  # Multiple URLs
 ```
 
   
