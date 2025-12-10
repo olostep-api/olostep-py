@@ -100,7 +100,6 @@ WORKFLOW_REQUEST_BODY = {
         {"url": "https://www.washingtonpost.com/", "custom_id": "wapo_home"},
     ],
     # "country": "RANDOM",
-    "parser": PARSER["param_values"]["valids"][0],
 }
 
 
