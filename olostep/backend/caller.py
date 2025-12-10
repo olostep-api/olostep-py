@@ -411,3 +411,12 @@ class EndpointCaller:
                     await asyncio.sleep(delay)
                     continue
                 raise
+            except OlostepServerError_RequestUnprocessable as e:
+                # The API seems to have sporadic validations errors. If we have validated the request client side, we can retry.
+                if (validate_request 
+                    and attempt < self._retry_strategy.max_retries - 1):
+                    delay = self._retry_strategy.calculate_delay(attempt)
+                    logger.debug(f"Request unprocessable error, but request was validated client side (should be valid). Retrying in {delay:.2f}s")
+                    await asyncio.sleep(delay)
+                    continue
+                raise
