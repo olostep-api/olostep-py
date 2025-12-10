@@ -48,10 +48,14 @@ Based on user feedback, release 1.0.0 will not only include more features but al
 # Change: The async client now uses the "Async" prefix much like other SDKs of similar design. We also took the opportunity to drop the "Client" part
 
 # Old
-from olostep import AsyncOlostep, Olostep
+from olostep import OlostepClient, SyncOlostepClient
 
 # New
 from olostep import AsyncOlostep, Olostep
+
+# So
+# OlostepClient -> AsyncOlostep and
+# SyncOlostepClient -> Olostep
 ```
 
 ### Endpoint Namespaces
