@@ -46,7 +46,7 @@ class TestOlostepClient:
     
     def test_client_with_fake_transport(self, fake_transport) -> None:
         """Test client initialization with fake transport."""
-        client = OlostepClient(transport=fake_transport)
+        client = OlostepClient(_transport=fake_transport)
         assert client._transport is fake_transport
         assert hasattr(client, 'scrape')
         assert hasattr(client, 'batch')
@@ -59,7 +59,7 @@ class TestOlostepClient:
     
     def test_client_with_base_url(self) -> None:
         """Test client initialization with custom base URL."""
-        client = OlostepClient(api_key="test_key", base_url="https://custom.api.com")
+        client = OlostepClient(api_key="test_key", _base_url="https://custom.api.com")
         assert client._base_url == "https://custom.api.com"
         assert hasattr(client, 'scrape')
     

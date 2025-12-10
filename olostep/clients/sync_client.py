@@ -79,6 +79,7 @@ from ..frontend.crawl_menu import CrawlMenu
 from ..frontend.sitemap_menu import SitemapMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.answers_menu import AnswersMenu
+from ..retry_strategy import RetryStrategy
 
 # Import state objects for wrapping
 from ..frontend.client_state import (
@@ -585,21 +586,23 @@ class SyncOlostepClient:
     def __init__(
         self,
         api_key: str | None = None,
-        base_url: str | None = None,
+        retry_strategy: RetryStrategy | None = None,
         *,
-        transport: Any = None,
+        _base_url: str | None = None,
+        _transport: Any = None,
     ) -> None:
-        """
-        Initialize the synchronous client.
-
+        """Initialize the synchronous client.
+        
         Args:
-            api_key: API key for authentication (required for real API calls)
-            base_url: Base URL for the API (optional, defaults to production)
-            transport: Custom transport layer (optional, for testing)
+            api_key: Your Olostep API key. If not provided, reads from OLOSTEP_API_KEY env var.
+            retry_strategy: Retry configuration for API calls. If not provided, uses sensible defaults.
+            _base_url: Override the base API URL (for internal testing only).
+            _transport: Custom transport layer (internal use only, not documented).
         """
         self._api_key = api_key
-        self._base_url = base_url
-        self._transport = transport
+        self._base_url = _base_url
+        self._transport = _transport
+        self._retry_strategy = retry_strategy
 
         # No need for async client - we get docstrings from class definitions directly
 
@@ -703,8 +706,9 @@ class SyncOlostepClient:
             # Use async context manager to ensure proper resource cleanup
             async with OlostepClient(
                 api_key=self._api_key,
-                base_url=self._base_url,
-                transport=self._transport,
+                retry_strategy=self._retry_strategy,
+                _base_url=self._base_url,
+                _transport=self._transport,
             ) as c:
                 return await func(c)
 

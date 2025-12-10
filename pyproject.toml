@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "olostep"
-version = "0.10.0"
+version = "0.11.0"
 description = "Olostep Python SDK - Programmatic access to the web"
 authors = ["Olostep Team <team@olostep.com>"]
 readme = "README.md"

@@ -28,7 +28,13 @@ class TestEndpointCallerRetryLogic:
     @pytest.fixture
     def caller(self, mock_transport: AsyncMock) -> EndpointCaller:
         """Create caller instance with mock transport."""
-        return EndpointCaller(transport=mock_transport, base_url="https://api.test.com", api_key="test_key")
+        from olostep.retry_strategy import RetryStrategy
+        return EndpointCaller(
+            transport=mock_transport, 
+            base_url="https://api.test.com", 
+            api_key="test_key",
+            retry_strategy=RetryStrategy(max_retries=3)
+        )
     
 
     @pytest.mark.asyncio

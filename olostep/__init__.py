@@ -2,6 +2,9 @@
 from .clients.async_client import OlostepClient
 from .clients.sync_client import SyncOlostepClient
 
+# Configuration
+from .retry_strategy import RetryStrategy
+
 # Stateful result objects
 from .frontend.client_state import ScrapeResult, BatchItemResult, CrawlPage, Crawl, CrawlInfo, Sitemap
 
@@ -33,6 +36,8 @@ __all__ = [
     # Clients
     "OlostepClient",
     "SyncOlostepClient",
+    # Configuration
+    "RetryStrategy",
     # Result objects
     "ScrapeResult",
     "BatchItemResult",

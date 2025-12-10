@@ -81,6 +81,30 @@ class HttpxTransport(Transport):
     async def close(self) -> None:
         await self._client.aclose()
 
+    def max_duration(self) -> float:
+        """Calculate maximum possible duration for transport-level retries.
+        
+        Returns worst-case time including:
+        - All retry delays (exponential backoff: 1s, 2s, 4s, ...)
+        - Timeout increases per attempt (15s per retry)
+        - Base timeout (API_TIMEOUT)
+        
+        Returns:
+            Maximum transport retry duration in seconds (worst case).
+        """
+        total = 0.0
+        base_delay = 1.0
+        timeout_bump = 15.0
+        
+        for attempt in range(self._max_connection_retries + 1):
+            # Add timeout for this attempt
+            total += API_TIMEOUT + (attempt * timeout_bump)
+            # Add delay before next retry (if not last attempt)
+            if attempt < self._max_connection_retries:
+                total += base_delay * (2 ** attempt)
+        
+        return total
+
     async def request(
         self,
         request: RawAPIRequest,

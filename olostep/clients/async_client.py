@@ -12,6 +12,7 @@ from ..frontend.sitemap_menu import SitemapMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.answers_menu import AnswersMenu
 from ..config import BASE_API_URL, API_KEY_ENV
+from ..retry_strategy import RetryStrategy
 
 
 class OlostepClient:
@@ -54,17 +55,41 @@ class OlostepClient:
     def __init__(
         self,
         api_key: str | None = None,
-        base_url: str | None = None,
+        retry_strategy: RetryStrategy | None = None,
         *,
-        transport: Transport | None = None,
+        _base_url: str | None = None,
+        _transport: Transport | None = None,
+        _caller: EndpointCaller | None = None,
     ) -> None:
+        """Initialize the async Olostep client.
+        
+        Args:
+            api_key: Your Olostep API key. If not provided, reads from OLOSTEP_API_KEY env var.
+            retry_strategy: Retry configuration for API calls. If not provided, uses sensible defaults.
+            _base_url: Override the base API URL (for internal testing only).
+            _transport: Custom transport layer (internal use only, not documented).
+            _caller: Custom caller (internal use only, not documented).
+        """
         self._api_key: str = (api_key or API_KEY_ENV or "").strip()
-        self._base_url: str = (base_url or BASE_API_URL).rstrip("/")
-        # Allow custom transport for tests (e.g., FakeTransportSmart). If not provided, use real HTTP.
-        if transport is None and not self._api_key:
+        self._base_url: str = (_base_url or BASE_API_URL).rstrip("/")
+        self._retry_strategy = retry_strategy or RetryStrategy()
+        
+        # Validate API key for real transport
+        if _transport is None and _caller is None and not self._api_key:
             raise ValueError("API key is required when using the real HTTP transport")
-        self._transport: Transport = transport or HttpxTransport(self._api_key)
-        self._caller = EndpointCaller(self._transport, self._base_url, self._api_key)
+        
+        # Use custom caller if provided (for testing)
+        if _caller is not None:
+            self._caller = _caller
+        else:
+            # Use custom transport or create default
+            self._transport: Transport = _transport or HttpxTransport(self._api_key)
+            self._caller = EndpointCaller(
+                self._transport, 
+                self._base_url, 
+                self._api_key,
+                self._retry_strategy
+            )
 
         # Menu items
         self.scrape = ScrapeMenu(self._caller)

@@ -116,6 +116,31 @@ try:
     scrape_result = await client.scrape.create(url_to_scrape="https://example.com")
 finally:
     await client.close()  # Manually close the transport
+```
+
+### Retry Configuration
+
+Control how the SDK handles transient errors:
+
+```python
+from olostep import OlostepClient, RetryStrategy
+
+# Custom retry strategy
+retry_strategy = RetryStrategy(
+    max_retries=3,
+    initial_delay=1.0,
+    jitter_min=0.2,
+    jitter_max=0.8
+)
+
+async with OlostepClient(
+    api_key="your-api-key",
+    retry_strategy=retry_strategy
+) as client:
+    result = await client.scrape.create("https://example.com")
+```
+
+See [docs/retry_strategy.md](docs/retry_strategy.md) for detailed configuration options.
 
 
 

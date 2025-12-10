@@ -93,13 +93,13 @@ def real_api_key() -> str:
 @pytest.fixture
 def async_client_fake(fake_transport: FakeTransportSmart) -> OlostepClient:
     """Create an async OlostepClient with fake transport."""
-    return OlostepClient(transport=fake_transport)
+    return OlostepClient(_transport=fake_transport)
 
 
 @pytest.fixture
 def sync_client_fake(fake_transport: FakeTransportSmart) -> SyncOlostepClient:
     """Create a sync OlostepClient with fake transport."""
-    return SyncOlostepClient(transport=fake_transport)
+    return SyncOlostepClient(_transport=fake_transport)
 
 
 # Real transport clients
@@ -207,12 +207,13 @@ async def retry_request(
 async def endpoint_caller(transport_with_real_key, real_api_key):
     """Create EndpointCaller instance for testing."""
     from olostep.backend.caller import EndpointCaller
+    from olostep.retry_strategy import RetryStrategy
     
     return EndpointCaller(
         transport=transport_with_real_key,
         base_url="https://api.olostep.com/v1",
         api_key=real_api_key,
-        max_retries=1
+        retry_strategy=RetryStrategy(max_retries=1)
     )
 
 
@@ -220,13 +221,14 @@ async def endpoint_caller(transport_with_real_key, real_api_key):
 async def caller_with_fake_key(transport_with_fake_key):
     """Create EndpointCaller with fake API key for testing."""
     from olostep.backend.caller import EndpointCaller
+    from olostep.retry_strategy import RetryStrategy
     
     fake_key = "fake_api_key_12345"
     return EndpointCaller(
         transport=transport_with_fake_key,
         base_url="https://api.olostep.com/v1",
         api_key=fake_key,
-        max_retries=1
+        retry_strategy=RetryStrategy(max_retries=1)
     )
 
 

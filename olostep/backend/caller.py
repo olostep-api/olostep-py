@@ -9,6 +9,7 @@ from olostep.models.response import Country
 
 from .api_endpoints import EndpointContract
 from .transport_protocol import Transport, RawAPIResponse, RawAPIRequest
+from ..retry_strategy import RetryStrategy
 from ..errors import (
     OlostepServerError_CreditsExhausted,
     OlostepServerError_NetworkBusy,
@@ -35,11 +36,26 @@ logger = get_logger("backend.caller")
 # T = TypeVar('T')
 
 class EndpointCaller:
-    def __init__(self, transport: Transport, base_url: str, api_key: str, max_retries: int = 3) -> None:
+    def __init__(self, transport: Transport, base_url: str, api_key: str, retry_strategy: RetryStrategy) -> None:
         self._transport = transport
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
-        self._max_retries = max_retries
+        self._retry_strategy = retry_strategy
+        
+        # Calculate combined max duration
+        caller_max = retry_strategy.max_duration()
+        transport_max = transport.max_duration() if hasattr(transport, 'max_duration') else 0.0
+        total_max = caller_max + transport_max
+        
+        logger.debug(
+            f"EndpointCaller initialized: "
+            f"retry_strategy(max_retries={retry_strategy.max_retries}, "
+            f"initial_delay={retry_strategy.initial_delay}s, "
+            f"jitter={retry_strategy.jitter_min*100:.0f}-{retry_strategy.jitter_max*100:.0f}%, "
+            f"max_duration={caller_max:.2f}s), "
+            f"transport(max_duration={transport_max:.2f}s), "
+            f"total_max_duration={total_max:.2f}s"
+        )
 
 
 
@@ -348,7 +364,6 @@ class EndpointCaller:
         path_params: dict[str, Any] | None = None,
         query_params: dict[str, Any] | None = None,
         body_params: dict[str, Any] | None = None,
-        max_retries: int | None = None,
         validate_request: bool = True
     ) -> Any:
         """
@@ -371,9 +386,9 @@ class EndpointCaller:
             query_params=query_params,
             body_params=body_params,
         )
-        max_retries = self._max_retries if max_retries is None else max_retries
-        for attempt in range(max_retries):
-            logger.info(f"Calling '{contract.name}' (attempt {attempt+1}/{max_retries}).")
+        
+        for attempt in range(self._retry_strategy.max_retries):
+            logger.info(f"Calling '{contract.name}' (attempt {attempt+1}/{self._retry_strategy.max_retries}).")
 
             try:
                 return await self._invoke(
@@ -383,12 +398,16 @@ class EndpointCaller:
                     body_params=processed_params["body_params"],
                 )
             except OlostepServerError_TemporaryIssue:
-                if attempt < self._max_retries:
-                    await asyncio.sleep(5 ** attempt)
+                if attempt < self._retry_strategy.max_retries - 1:
+                    delay = self._retry_strategy.calculate_delay(attempt)
+                    logger.debug(f"Temporary issue, retrying in {delay:.2f}s")
+                    await asyncio.sleep(delay)
                     continue
                 raise
             except OlostepServerError_NoResultInResponse:
-                if validate_request and attempt < self._max_retries:
-                    await asyncio.sleep(5 ** attempt)
+                if validate_request and attempt < self._retry_strategy.max_retries - 1:
+                    delay = self._retry_strategy.calculate_delay(attempt)
+                    logger.debug(f"No result in response, retrying in {delay:.2f}s")
+                    await asyncio.sleep(delay)
                     continue
                 raise
