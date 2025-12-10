@@ -22,7 +22,7 @@ from olostep.errors import (
     OlostepServerError_RequestUnprocessable,
 )
 from tests.stubs.fake_transport import FakeTransportSmart
-from tests.stubs.test_server import TestServer, cleanup_test_server, get_test_server
+from tests.stubs.test_server import StubServer, cleanup_test_server, get_test_server
 
 _enable_stderr_debug()
 _setup_io_file_handler()
@@ -47,7 +47,7 @@ def pytest_configure(config):
 
 
 @pytest.fixture(scope="session")
-def test_server() -> Generator[TestServer, None, None]:
+def test_server() -> Generator[StubServer, None, None]:
     """High-quality test server fixture that starts once per test session."""
     server = get_test_server()
     yield server

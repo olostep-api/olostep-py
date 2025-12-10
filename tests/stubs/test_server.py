@@ -29,7 +29,7 @@ class ServerResponse:
     custom_handler: Callable[[BaseHTTPRequestHandler], None] | None = None
 
 
-class TestHTTPRequestHandler(BaseHTTPRequestHandler):
+class StubHTTPRequestHandler(BaseHTTPRequestHandler):
     """Flexible HTTP request handler for testing with configurable responses."""
     
     def __init__(self, *args, **kwargs) -> None:
@@ -112,7 +112,7 @@ class TestHTTPRequestHandler(BaseHTTPRequestHandler):
         pass
 
 
-class TestServer:
+class StubServer:
     """High-quality test server that runs once and provides programmatic response control."""
     
     def __init__(self) -> None:
@@ -137,9 +137,9 @@ class TestServer:
             return  # Already started
         
         self.port = self._find_free_port()
-        self.server = HTTPServer(('localhost', self.port), TestHTTPRequestHandler)
+        self.server = HTTPServer(('localhost', self.port), StubHTTPRequestHandler)
         
-        # Make the TestServer instance accessible to the handler
+        # Make the StubServer instance accessible to the handler
         self.server.test_server_instance = self
         
         # Start server in a separate thread
@@ -183,14 +183,14 @@ class TestServer:
 
 
 # Global test server instance
-_test_server: TestServer | None = None
+_test_server: StubServer | None = None
 
 
-def get_test_server() -> TestServer:
+def get_test_server() -> StubServer:
     """Get the global test server instance."""
     global _test_server
     if _test_server is None:
-        _test_server = TestServer()
+        _test_server = StubServer()
         _test_server.start()
     return _test_server
 
