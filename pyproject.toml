@@ -42,6 +42,7 @@ python-dotenv = "^1.1.1"
 bpython = "^0.25"
 pytest-order = "^1.3.0"
 pytest-xdist = {extras = ["psutil"], version = "^3.8.0"}
+pyright = "^1.1.407"
 
 
 [tool.ruff]
@@ -51,3 +52,49 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ['E', 'W', 'F', 'I', 'B', 'C4', 'ARG', 'SIM']
 ignore = ['W291', 'W292', 'W293', 'E501']
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+reportMissingTypeStubs = false
+reportMissingImports = true
+reportUnusedImport = true
+reportUnusedClass = true
+reportUnusedFunction = false
+reportUnusedVariable = true
+reportDuplicateImport = true
+reportOptionalSubscript = true
+reportOptionalMemberAccess = true
+reportOptionalCall = true
+reportOptionalIterable = true
+reportOptionalContextManager = true
+reportOptionalOperand = true
+reportGeneralTypeIssues = true
+reportIncompatibleMethodOverride = false
+reportIncompatibleVariableOverride = false
+reportOverlappingOverload = true
+reportPrivateImportUsage = true
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownMemberType = false
+reportUnknownParameterType = false
+reportUnknownVariableType = false
+reportUntypedBaseClass = false
+reportUntypedClassDecorator = false
+reportUntypedFunctionDecorator = false
+reportUntypedNamedTuple = false
+reportCallInDefaultInitializer = false
+reportUnnecessaryIsInstance = false
+reportUnnecessaryCast = true
+reportUnnecessaryComparison = true
+reportAssertAlwaysTrue = true
+reportSelfClsParameterName = true
+reportImplicitStringConcatenation = false
+reportUnsupportedDunderAll = false
+reportAttributeAccessIssue = false
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+strictParameterNoneValue = false
+
+exclude = ["tests", "**/__pycache__", "**/.*", "scripts"]
