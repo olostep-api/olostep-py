@@ -879,7 +879,9 @@ class TestScrapeUrlCreation:
         """Test parser parameter with valid values from fixtures"""
         param_key = PARSER["param_name"]
         for valid_parser in PARSER["param_values"]["valids"]:
-            body_params = {**MINIMAL_REQUEST_BODY, param_key: valid_parser}
+            # Use Google search URL for google-search parser (parser requires matching URL type)
+            url = "https://www.google.com/search?q=test&gl=us&hl=en" if isinstance(valid_parser, dict) and valid_parser.get("id") == "@olostep/google-search" else MINIMAL_REQUEST_BODY["url_to_scrape"]
+            body_params = {"url_to_scrape": url, param_key: valid_parser}
             
             validated_request = endpoint_caller.validate_request(
                 SCRAPE_URL_CONTRACT, body_params=body_params
