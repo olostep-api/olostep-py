@@ -234,7 +234,7 @@ client = Olostep(api_key="your-api-key")
 
 # Full control over scraping behavior
 result = client.scrapes.create(
-    url_to_scrape="https://example.com",
+    url_to_scrape="https://news.google.com/",
     wait_before_scraping=3000,
     formats=[Format.HTML, Format.MARKDOWN],
     remove_css_selectors=["script", ".popup"],

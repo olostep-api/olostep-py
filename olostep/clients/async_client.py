@@ -86,19 +86,13 @@ class AsyncOlostep:
                 self._transport, self._base_url, self._api_key, self._retry_strategy
             )
 
-        # Menu items (singular)
-        self.scrape = ScrapeMenu(self._caller)
-        self.batch = BatchMenu(self._caller)
-        self.crawl = CrawlMenu(self._caller)
-        self.sitemap = SitemapMenu(self._caller)
-        self.retrieve = RetrieveMenu(self._caller)
+        # Menu items (plural naming convention)
+        self.scrapes = ScrapeMenu(self._caller)
+        self.batches = BatchMenu(self._caller)
+        self.crawls = CrawlMenu(self._caller)
+        self.maps = SitemapMenu(self._caller)
         self.answers = AnswersMenu(self._caller)
-        
-        # Plural aliases (to match documentation)
-        self.scrapes = self.scrape
-        self.batches = self.batch
-        self.crawls = self.crawl
-        self.maps = self.sitemap
+        self.retrieve = RetrieveMenu(self._caller)
 
     async def __aenter__(self) -> "AsyncOlostep":
         return self

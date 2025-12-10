@@ -170,7 +170,7 @@ class TestAdvancedFeatures:
         """Test advanced scraping options example."""
         async with AsyncOlostep() as c:
             result = await c.scrapes.create(
-                url_to_scrape="https://example.com",
+                url_to_scrape="https://news.google.com/",
                 wait_before_scraping=3000,
                 formats=[Format.HTML, Format.MARKDOWN],
                 remove_css_selectors=["script", ".popup"],

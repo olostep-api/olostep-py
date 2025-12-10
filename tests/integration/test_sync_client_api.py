@@ -146,7 +146,7 @@ class TestAdvancedFeatures:
         """Test advanced scraping options example."""
         client = Olostep()
         result = client.scrapes.create(
-            url_to_scrape="https://example.com",
+            url_to_scrape="https://news.google.com/",
             wait_before_scraping=3000,
             formats=[Format.HTML, Format.MARKDOWN],
             remove_css_selectors=["script", ".popup"],
@@ -184,7 +184,7 @@ class TestAdvancedFeatures:
         client = Olostep()
         crawl = client.crawls.create(
             start_url="https://www.bbc.com",
-            max_pages=1000,
+            max_pages=20,
             max_depth=3,
             include_urls=["/articles/**", "/news/**"],
             exclude_urls=["/ads/**", "/tracking/**"],

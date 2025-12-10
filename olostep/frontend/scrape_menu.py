@@ -128,7 +128,7 @@ class ScrapeMenu:
             result = await client.scrape("example.com", country=Country.US)
 
             # With parser
-            result = await client.scrape("example.com", parser="@olostep/google-news")
+            result = await client.scrape("https://news.google.com/", parser="@olostep/google-news")
         """
         # Normalize url_to_scrape to url
         if url is not None and url_to_scrape is not None:

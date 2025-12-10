@@ -117,10 +117,10 @@ class _SyncProxy:
     # This eliminates code duplication and provides a single source of truth
     # for which async class corresponds to each sync endpoint
     _CLASS_MAP = {
-        "scrape": ScrapeMenu,  # Maps to ScrapeMenu async class
-        "batch": BatchMenu,  # Maps to BatchMenu async class
-        "crawl": CrawlMenu,  # Maps to CrawlMenu async class
-        "sitemap": SitemapMenu,  # Maps to SitemapMenu async class
+        "scrapes": ScrapeMenu,  # Maps to ScrapeMenu async class
+        "batches": BatchMenu,  # Maps to BatchMenu async class
+        "crawls": CrawlMenu,  # Maps to CrawlMenu async class
+        "maps": SitemapMenu,  # Maps to SitemapMenu async class
         "retrieve": RetrieveMenu,  # Maps to RetrieveMenu async class
         "answers": AnswersMenu,  # Maps to AnswersMenu async class
     }
@@ -136,7 +136,7 @@ class _SyncProxy:
             outer: Reference back to the main Olostep instance
                    Used for accessing API credentials and transport settings
             endpoint_name: Name of the endpoint this proxy represents
-                          (e.g., "scrape", "batch", "answers")
+                          (e.g., "scrapes", "batches", "answers")
             method_name: Name of the method this proxy represents (e.g., "create", "get")
                         If None, this proxy represents the endpoint itself
         """
@@ -242,7 +242,7 @@ class _SyncProxy:
 
         # STEP 4: Create a resolver function dynamically based on the endpoint name
         # This function will be called with an async client instance and will
-        # return the appropriate async method (e.g., c.scrape.create, c.batch.get)
+        # return the appropriate async method (e.g., c.scrapes.create, c.batches.get)
         def resolver(c):
             endpoint = getattr(c, self._endpoint_name)
             if self._method_name:
@@ -659,18 +659,12 @@ class Olostep:
         # These proxies provide the same dot-notation API as the async client
         # but execute methods synchronously using event loops. Methods are introspected
         # from the actual async classes automatically.
-        self.scrape = _SyncProxy(self, "scrape")
-        self.batch = _SyncProxy(self, "batch")
-        self.crawl = _SyncProxy(self, "crawl")
-        self.sitemap = _SyncProxy(self, "sitemap")
-        self.retrieve = _SyncProxy(self, "retrieve")
+        self.scrapes = _SyncProxy(self, "scrapes")
+        self.batches = _SyncProxy(self, "batches")
+        self.crawls = _SyncProxy(self, "crawls")
+        self.maps = _SyncProxy(self, "maps")
         self.answers = _SyncProxy(self, "answers")
-        
-        # Plural aliases (to match documentation)
-        self.scrapes = self.scrape
-        self.batches = self.batch
-        self.crawls = self.crawl
-        self.maps = self.sitemap
+        self.retrieve = _SyncProxy(self, "retrieve")
 
     def __dir__(self) -> list[str]:
         """
@@ -681,7 +675,7 @@ class Olostep:
         Returns:
             List of available endpoint namespaces
         """
-        return ["scrape", "batch", "crawl", "sitemap", "retrieve", "answers"]
+        return ["scrapes", "batches", "crawls", "maps", "retrieve", "answers"]
 
     def close(self) -> None:
         """

@@ -44,8 +44,8 @@ async def test_scrape_random_hacker_news_page(hacker_news_urls: list[str]) -> No
     
     async with AsyncOlostep(api_key=api_key) as client:
         # Scrape the Hacker News page with multiple formats
-        result = await client.scrape.url(
-            url_to_scrape=test_url,
+        result = await client.scrapes.create(
+            url=test_url,
             formats=[Format.HTML, Format.MARKDOWN, Format.TEXT]
         )
         
