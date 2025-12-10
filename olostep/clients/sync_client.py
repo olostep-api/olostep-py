@@ -12,7 +12,7 @@ The sync client supports two usage patterns:
    a new async client internally.
 
    ```python
-   client = SyncOlostepClient(api_key="your-api-key")
+   client = Olostep(api_key="your-api-key")
    result = client.scrape.url(
        url_to_scrape="https://example.com",
        formats=["html", "markdown"]
@@ -24,7 +24,7 @@ The sync client supports two usage patterns:
    Call close() for consistency, though currently a no-op.
 
    ```python
-   client = SyncOlostepClient(api_key="your-api-key")
+   client = Olostep(api_key="your-api-key")
    try:
        result = client.scrape.url(
            url_to_scrape="https://example.com",
@@ -43,7 +43,7 @@ PROXY PATTERN EXPLANATION:
 The sync client uses a sophisticated proxy pattern to provide the same API
 as the async client:
 
-1. **SyncOlostepClient** - Main sync client class that creates proxy objects
+1. **Olostep** - Main sync client class that creates proxy objects
 2. **_SyncProxy** - Proxy class that forwards method calls to async client
 3. **_SyncStateProxy** - Smart wrapper for state objects that makes async methods sync
 4. **Event Loop Management** - Automatically handles async/sync conversion
@@ -90,7 +90,7 @@ from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.scrape_menu import ScrapeMenu
 from ..frontend.sitemap_menu import SitemapMenu
 from ..retry_strategy import RetryStrategy
-from .async_client import OlostepClient
+from .async_client import AsyncOlostep
 
 
 class _SyncProxy:
@@ -125,7 +125,7 @@ class _SyncProxy:
         "answers": AnswersMenu,  # Maps to AnswersMenu async class
     }
 
-    def __init__(self, outer: "SyncOlostepClient", endpoint_name: str) -> None:
+    def __init__(self, outer: "Olostep", endpoint_name: str, method_name: str | None = None) -> None:
         """
         Initialize a sync proxy for a specific endpoint.
 
@@ -133,13 +133,16 @@ class _SyncProxy:
         methods are available and copies docstrings automatically.
 
         Args:
-            outer: Reference back to the main SyncOlostepClient instance
+            outer: Reference back to the main Olostep instance
                    Used for accessing API credentials and transport settings
             endpoint_name: Name of the endpoint this proxy represents
                           (e.g., "scrape", "batch", "answers")
+            method_name: Name of the method this proxy represents (e.g., "create", "get")
+                        If None, this proxy represents the endpoint itself
         """
         self._outer = outer
         self._endpoint_name = endpoint_name
+        self._method_name = method_name
 
         # STEP 1: Copy docstring and class identity from the async method class
         # This ensures sync methods have the same comprehensive documentation
@@ -188,7 +191,7 @@ class _SyncProxy:
 
         # STEP 2: Create a new proxy for the specific method
         # This maintains the same API structure as the async client
-        new_proxy = _SyncProxy(self._outer, self._endpoint_name)
+        new_proxy = _SyncProxy(self._outer, self._endpoint_name, method_name=name)
 
         # STEP 3: Copy method-specific docstring and maintain class identity from async implementation
         # This ensures methods like `client.scrape.url.__doc__` show the correct documentation
@@ -239,9 +242,12 @@ class _SyncProxy:
 
         # STEP 4: Create a resolver function dynamically based on the endpoint name
         # This function will be called with an async client instance and will
-        # return the appropriate async method (e.g., c.scrape, c.batch, c.answers)
+        # return the appropriate async method (e.g., c.scrape.create, c.batch.get)
         def resolver(c):
-            return getattr(c, self._endpoint_name)
+            endpoint = getattr(c, self._endpoint_name)
+            if self._method_name:
+                return getattr(endpoint, self._method_name)
+            return endpoint
 
         # STEP 5: Execute the async method synchronously
         # The _outer._call() method handles all the event loop complexity
@@ -312,7 +318,7 @@ class _SyncStateProxy:
             result = item.retrieve()  # Sync call, returns ScrapeResult directly
     """
 
-    def __init__(self, async_state_obj: Any, sync_client: "SyncOlostepClient") -> None:
+    def __init__(self, async_state_obj: Any, sync_client: "Olostep") -> None:
         """Initialize sync wrapper for async state object.
 
         Args:
@@ -384,10 +390,10 @@ class _SyncStateProxy:
                 # This is an async method - execute it with fresh transport
                 # Create a fresh async client to avoid using closed transport
                 async def _fresh_call():
-                    async with OlostepClient(
+                    async with AsyncOlostep(
                         api_key=self._sync_client._api_key,
-                        base_url=self._sync_client._base_url,
-                        transport=self._sync_client._transport,
+                        _base_url=self._sync_client._base_url,
+                        _transport=self._sync_client._transport,
                     ) as fresh_client:
                         # Get the fresh caller from the new client
                         fresh_caller = fresh_client._caller
@@ -468,10 +474,10 @@ class _SyncStateProxy:
                 if self._items is None:
                     # Run the async collection with fresh transport
                     async def _collect_all():
-                        async with OlostepClient(
+                        async with AsyncOlostep(
                             api_key=self._sync_client._api_key,
-                            base_url=self._sync_client._base_url,
-                            transport=self._sync_client._transport,
+                            _base_url=self._sync_client._base_url,
+                            _transport=self._sync_client._transport,
                         ) as fresh_client:
                             # Get the fresh caller from the new client
                             fresh_caller = fresh_client._caller
@@ -510,7 +516,7 @@ class _SyncStateProxy:
                     # Trigger collection
                     self.__iter__()
 
-                if self._index >= len(self._items):
+                if self._items is None or self._index >= len(self._items):
                     raise StopIteration
 
                 item = self._items[self._index]
@@ -531,7 +537,7 @@ class _SyncStateProxy:
         # Get attributes already copied to self (excluding our internal ones)
         own_attrs = [
             name
-            for name in self.__dict__.keys()
+            for name in self.__dict__
             if not name.startswith("_")
             and name not in ["_async_state", "_sync_client", "_wrapped_cache"]
         ]
@@ -605,7 +611,7 @@ _STATE_WRAPPERS = {
 }
 
 
-class SyncOlostepClient:
+class Olostep:
     """
     Main synchronous client class that provides the same API as the async client.
 
@@ -620,7 +626,7 @@ class SyncOlostepClient:
     - Event loop management is handled automatically
 
     Example:
-        client = SyncOlostepClient(api_key="...")
+        client = Olostep(api_key="...")
         # client.scrape returns _SyncProxy with ScrapeMenu docstring
         # client.scrape.url returns _SyncProxy with ScrapeMenu.url docstring
         # client.scrape.url(...) executes async method and returns result
@@ -659,6 +665,13 @@ class SyncOlostepClient:
         self.sitemap = _SyncProxy(self, "sitemap")
         self.retrieve = _SyncProxy(self, "retrieve")
         self.answers = _SyncProxy(self, "answers")
+        
+        # Plural aliases (to match documentation)
+        self.scrapes = self.scrape
+        self.batches = self.batch
+        self.crawls = self.crawl
+        self.maps = self.sitemap
+        self.retrievals = self.retrieve
 
     def __dir__(self) -> list[str]:
         """
@@ -681,12 +694,12 @@ class SyncOlostepClient:
 
         For one-off usage, no explicit close is needed:
 
-            client = SyncOlostepClient(api_key="...")
+            client = Olostep(api_key="...")
             result = client.scrape.url("https://example.com")
 
         For long-lived services where you want to ensure cleanup:
 
-            client = SyncOlostepClient(api_key="...")
+            client = Olostep(api_key="...")
             try:
                 result = client.scrape.url("https://example.com")
             finally:
@@ -710,7 +723,7 @@ class SyncOlostepClient:
         """
         try:
             # Check if we're already in an event loop
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
         except RuntimeError:
             # No event loop running - safe to use asyncio.run()
             return asyncio.run(coro)
@@ -730,7 +743,7 @@ class SyncOlostepClient:
             t.join()  # Wait for completion
             return result["value"]
 
-    def _call(self, func: Callable[[OlostepClient], Any]) -> Any:
+    def _call(self, func: Callable[[AsyncOlostep], Any]) -> Any:
         """
         Execute an async client function synchronously.
 
@@ -749,7 +762,7 @@ class SyncOlostepClient:
         # STEP 7: Create the async function that will be executed
         async def _inner():
             # Use async context manager to ensure proper resource cleanup
-            async with OlostepClient(
+            async with AsyncOlostep(
                 api_key=self._api_key,
                 retry_strategy=self._retry_strategy,
                 _base_url=self._base_url,
@@ -794,12 +807,12 @@ class SyncOlostepClient:
 # COMPLETE EXECUTION FLOW:
 # ======================
 #
-# 1. User creates sync client: `client = SyncOlostepClient(api_key="...")`
+# 1. User creates sync client: `client = Olostep(api_key="...")`
 # 2. User accesses endpoint: `client.scrape` → Returns _SyncProxy with ScrapeMenu docstring
 # 3. User accesses method: `client.scrape.url` → Returns _SyncProxy with url() docstring
 # 4. User calls method: `client.scrape.url("example.com")` → Executes async method
 # 5. _SyncProxy.__call__() creates resolver function: `lambda c: c.scrape`
-# 6. _call() creates async context: `async with OlostepClient(...) as c:`
+# 6. _call() creates async context: `async with AsyncOlostep(...) as c:`
 # 7. _run() executes coroutine: Creates/manages event loop as needed
 # 8. _wrap_state_object() detects and wraps state objects in sync proxies
 # 9. Result returned synchronously: State objects have sync methods too!
