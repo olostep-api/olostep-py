@@ -10,25 +10,22 @@ runs:
   using: composite
   steps:
     - name: Install Poetry
-      uses: snok/install-poetry@v1
-      id: install-poetry
-      with:
-        version: latest
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-        installer-parallel: true
+      uses: abatilo/actions-poetry@v4
+
+    - name: Setup local virtual environment
+      shell: bash
+      run: |
+        poetry config virtualenvs.create true --local
+        poetry config virtualenvs.in-project true --local
 
     - name: Load cached venv
       id: cached-poetry-dependencies
       uses: actions/cache@v4
       shell: bash
       with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-        restore-keys: |
-          venv-${{ runner.os }}-${{ inputs.python-version }}-
+        path: ./.venv
+        key: venv-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('poetry.lock') }}
 
-    - name: Install dependencies
+    - name: Install the project dependencies
       shell: bash
-      run: |
-        poetry install --no-interaction
+      run: poetry install --no-interaction

@@ -27,9 +27,7 @@ jobs:
           python-version: ${{ steps.setup-python.outputs.python-version }}
 
       - name: Lint with ruff
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry run ruff check olostep/
+        run: poetry run ruff check olostep/
 
   sync_client_tests:
     needs: lint
@@ -58,9 +56,7 @@ jobs:
       - name: Run sync client integration tests
         env:
           OLOSTEP_API_KEY: ${{ secrets.OLOSTEP_API_KEY }}
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry run pytest -n 16 tests/integration/test_sync_client_api.py
+        run: poetry run pytest -n 16 tests/integration/test_sync_client_api.py
 
   async_client_tests:
     needs: lint
@@ -89,6 +85,4 @@ jobs:
       - name: Run async client integration tests
         env:
           OLOSTEP_API_KEY: ${{ secrets.OLOSTEP_API_KEY }}
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          poetry run pytest -n 16 tests/integration/test_async_client_api.py
+        run: poetry run pytest -n 16 tests/integration/test_async_client_api.py
