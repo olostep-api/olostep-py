@@ -187,6 +187,25 @@ class EndpointCaller:
                     request=request, response=response
                 )
 
+            # Handle case where malformed_request is missing but message indicates invalid country
+            message = parsed_body.get("message", "").lower() if parsed_body else ""
+            country = request.json.get("country") if request.json else None
+            if (
+                parsed_body is not None
+                and parsed_body.get("malformed_request") is None
+                and (
+                    message == "not enough resources available for the batch execution."
+                    or message == "not enough resources available to run this batch."
+                )
+                and (country is not None and country not in [c.value for c in Country])
+            ):
+                # "body": {
+                #   "message": "Not enough resources available to run this batch."
+                # }
+                raise OlostepServerError_RequestUnprocessable(
+                    request=request, response=response
+                )
+
         if response.status_code == 504:
             # Differentiate between timeout and network error based on response content
             if (

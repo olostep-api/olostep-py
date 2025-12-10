@@ -259,9 +259,9 @@ class TestBatchStart:
             except OlostepServerError_TemporaryIssue:
                 # API raised a temporary error - skip this test
                 pytest.skip("API raised a temporary error")
-            # except OlostepRequestUnprocessableError:
-            #     # API rejects invalid values or server errors - also acceptable
-            #     pass
+            except OlostepServerError_RequestUnprocessable:
+                # API rejects invalid values or server errors - also acceptable
+                pass
             except OlostepClientError_ResponseValidationFailed:
                 # the AP plays back the request body in the response which is not a valid response
                 pass
