@@ -4,7 +4,7 @@ import os
 from typing import Final
 
 # SDK version
-VERSION: Final[str] = "0.11.0"
+VERSION: Final[str] = "1.0.0"
 
 # Base API URL (can be overridden via env)
 BASE_API_URL: Final[str] = os.getenv(
@@ -14,7 +14,7 @@ BASE_API_URL: Final[str] = os.getenv(
 # User-Agent header built from version
 USER_AGENT: Final[str] = f"olostep-python-sdk/{VERSION}"
 
-API_TIMEOUT: Final[int] = os.getenv("OLOSTEP_API_TIMEOUT", 150)
+API_TIMEOUT: Final[int] = int(os.getenv("OLOSTEP_API_TIMEOUT", 150))
 
 # Environment variable names to try for API key (first hit wins)
 API_KEY_ENV: Final[str] | None = os.getenv("OLOSTEP_API_KEY")
