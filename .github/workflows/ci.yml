@@ -21,23 +21,10 @@ jobs:
           python-version: "3.11"
           cache: poetry
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
-
-      - name: Setup local virtual environment
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
+      - name: Setup Poetry
+        uses: ./.github/actions/setup-poetry
         with:
-          path: ./.venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
-
-      - name: Install the project dependencies
-        run: poetry install --no-interaction
+          python-version: ${{ steps.setup-python.outputs.python-version }}
 
       - name: Lint with ruff
         run: poetry run ruff check olostep/
@@ -61,23 +48,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: poetry
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
-
-      - name: Setup local virtual environment
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
+      - name: Setup Poetry
+        uses: ./.github/actions/setup-poetry
         with:
-          path: ./.venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
-
-      - name: Install the project dependencies
-        run: poetry install --no-interaction
+          python-version: ${{ steps.setup-python.outputs.python-version }}
 
       - name: Run sync client integration tests
         env:
@@ -103,23 +77,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: poetry
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
-
-      - name: Setup local virtual environment
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v4
+      - name: Setup Poetry
+        uses: ./.github/actions/setup-poetry
         with:
-          path: ./.venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
-
-      - name: Install the project dependencies
-        run: poetry install --no-interaction
+          python-version: ${{ steps.setup-python.outputs.python-version }}
 
       - name: Run async client integration tests
         env:
