@@ -10,7 +10,11 @@ from .._log import get_logger
 from ..backend.api_endpoints import BATCH_INFO, BATCH_START
 from ..backend.caller import EndpointCaller
 from ..frontend.client_state import Batch, BatchInfo, BatchItemResult
-from ..frontend.input_coersion import coerce_to_batch_items, coerce_to_key_in_dict
+from ..frontend.input_coersion import (
+    coerce_country,
+    coerce_to_batch_items,
+    coerce_to_key_in_dict,
+)
 from ..models.request import BatchItem, Country, LinksOnPage, Parser
 from ..models.response import BatchCreateResponse, BatchInfoResponse
 
@@ -85,7 +89,7 @@ class BatchMenu:
 
         body_params = {
             "items": coerce_to_batch_items(urls),
-            "country": country,
+            "country": coerce_country(country),
             "parser": coerce_to_key_in_dict(parser, "id"),
             "links_on_page": links_on_page,
         }
@@ -101,6 +105,30 @@ class BatchMenu:
         return Batch(self._caller, res)
 
     __call__ = start
+
+    async def create(
+        self,
+        urls: list[BatchItem] | list[str] | BatchItem | str | list[dict[str, Any]],
+        *,
+        country: Country | str | None = None,
+        parser_id: str | None = None,
+        parser: Parser | dict[str, Any] | str | None = None,
+        links_on_page: LinksOnPage | dict[str, Any] | None = None,
+        validate_request: bool | None = None,
+    ) -> Batch:
+        """Create a batch processing operation (alias for start() to match documentation)."""
+        # Use parser_id if provided, otherwise use parser
+        if parser_id is not None and parser is not None:
+            raise ValueError("Cannot specify both 'parser_id' and 'parser' parameters. Use only one.")
+        actual_parser = parser_id if parser_id is not None else parser
+        # coerce_to_batch_items handles list[dict[str, Any]] conversion
+        return await self.start(
+            urls=urls,  # type: ignore[arg-type]
+            country=country,
+            parser=actual_parser,
+            links_on_page=links_on_page,
+            validate_request=validate_request,
+        )
 
     async def info(self, batch_id: str) -> BatchInfo:
         """Get detailed information about a batch processing operation.
