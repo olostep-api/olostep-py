@@ -183,7 +183,7 @@ For detailed error handling information, including the full exception hierarchy 
 
 ### Automatic Retries
 
-The SDK automatically retries on transient errors (network issues, temporary server problems) based on your `RetryStrategy` configuration. You can customize retry behavior by passing a `RetryStrategy` instance when creating the client:
+The SDK automatically retries on transient errors (network issues, temporary server problems) based on the `RetryStrategy` configuration. You can customize the retry behavior by passing a `RetryStrategy` instance when creating the client:
 
 ```python
 from olostep import Olostep, RetryStrategy
