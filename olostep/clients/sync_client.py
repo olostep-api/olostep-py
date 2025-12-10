@@ -45,14 +45,27 @@ as the async client:
 
 1. **SyncOlostepClient** - Main sync client class that creates proxy objects
 2. **_SyncProxy** - Proxy class that forwards method calls to async client
-3. **Event Loop Management** - Automatically handles async/sync conversion
+3. **_SyncStateProxy** - Smart wrapper for state objects that makes async methods sync
+4. **Event Loop Management** - Automatically handles async/sync conversion
 
 Example of how it works:
 - User calls: `client.scrape.url("example.com")`
 - `client.scrape` returns a `_SyncProxy` instance
 - `client.scrape.url` returns another `_SyncProxy` instance with method docstring
-- `client.scrape.url(...)` executes the async method in an event loop
-- User gets result synchronously without knowing about async internals
+- `client.scrape.url(...)` executes the async method and wraps state objects
+- State objects get `_SyncStateProxy` which makes their async methods synchronous
+- User gets fully synchronous experience without knowing about async internals
+
+STATE OBJECT SYNC WRAPPING:
+===========================
+
+State objects (Batch, ScrapeResult, etc.) returned by the sync client are automatically
+wrapped in sync proxies that:
+- Detect async methods using asyncio.iscoroutine()
+- Execute async methods synchronously using the client's event loop management
+- Wrap nested state objects recursively
+- Cache wrapped objects to avoid duplicate wrapping
+- Preserve all synchronous methods and attributes unchanged
 """
 from __future__ import annotations
 
@@ -66,6 +79,13 @@ from ..frontend.crawl_menu import CrawlMenu
 from ..frontend.sitemap_menu import SitemapMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.answers_menu import AnswersMenu
+
+# Import state objects for wrapping
+from ..frontend.client_state import (
+    Batch, BatchInfo, BatchItemResult,
+    ScrapeResult, Crawl, CrawlInfo,
+    CrawlPage, Sitemap
+)
 
 
 class _SyncProxy:
@@ -213,7 +233,10 @@ class _SyncProxy:
         # STEP 5: Execute the async method synchronously
         # The _outer._call() method handles all the event loop complexity
         # and returns the result as if it were a normal synchronous call
-        return self._outer._call(lambda c: resolver(c)(*args, **kwargs))
+        result = self._outer._call(lambda c: resolver(c)(*args, **kwargs))
+
+        # STEP 6: Wrap state objects in sync proxies for seamless sync experience
+        return self._outer._wrap_state_object(result)
 
     def __dir__(self) -> list[str]:
         """
@@ -255,6 +278,214 @@ class _SyncProxy:
         if hasattr(self, '_async_class'):
             return f"{self._async_class.__name__}[SyncProxy]()"
         return "_SyncProxy()"
+
+
+class _SyncStateProxy:
+    """
+    Smart wrapper that makes async state objects synchronous.
+
+    This wrapper intercepts method calls on state objects and automatically:
+    - Detects async methods using asyncio.iscoroutine()
+    - Executes async methods synchronously using the sync client's event loop
+    - Wraps nested state objects recursively
+    - Converts async iterators to sync iterators for seamless for-loop usage
+    - Caches wrapped objects to avoid duplicate wrapping
+    - Preserves synchronous methods and attributes unchanged
+
+    Examples:
+        batch = client.batch(["url1", "url2"])  # Returns SyncBatch
+        info = batch.info()  # Sync call, returns BatchInfo directly
+        for item in batch.items():  # Sync iteration over async iterator
+            result = item.retrieve()  # Sync call, returns ScrapeResult directly
+    """
+
+    def __init__(self, async_state_obj: Any, sync_client: "SyncOlostepClient") -> None:
+        """Initialize sync wrapper for async state object.
+
+        Args:
+            async_state_obj: The async state object to wrap
+            sync_client: Reference to sync client for event loop management
+        """
+        self._async_state = async_state_obj
+        self._sync_client = sync_client
+        self._wrapped_cache: dict[int, "_SyncStateProxy"] = {}  # Cache for wrapped nested objects
+
+        # Copy all non-private, non-callable attributes from async object
+        # This prevents issues with method wrapping and infinite recursion
+        for attr_name in dir(async_state_obj):
+            if not attr_name.startswith('_'):
+                attr_value = getattr(async_state_obj, attr_name)
+                # Only copy non-callable attributes directly
+                if not callable(attr_value):
+                    setattr(self, attr_name, attr_value)
+
+    def __getattr__(self, name: str) -> Any:
+        """Intercept attribute access to wrap methods and nested objects."""
+        if name.startswith('_'):
+            # Don't wrap private attributes
+            return getattr(self._async_state, name)
+
+        attr = getattr(self._async_state, name)
+
+        # First check if it's a state object (before checking if callable)
+        # This prevents treating state objects as methods
+        if self._is_state_object(attr):
+            return self._wrap_nested_state(attr)
+
+        # If it's a method, wrap it to handle async execution
+        if callable(attr):
+            return self._wrap_method(name, attr)
+
+        return attr
+
+    def _is_state_object(self, obj: Any) -> bool:
+        """Check if an object is a state object that needs wrapping."""
+        if obj is None:
+            return False
+
+        # Check if it's one of our known state classes
+        if isinstance(obj, tuple(_STATE_WRAPPERS.keys())):
+            return True
+
+        # Check module for additional safety (but don't rely on it for MagicMock)
+        if hasattr(obj, '__class__') and hasattr(obj.__class__, '__module__'):
+            module = obj.__class__.__module__
+            # Avoid wrapping unittest.mock objects
+            if module == 'unittest.mock':
+                return False
+            return module.startswith('olostep.frontend.client_state')
+
+        return False
+
+    def _wrap_method(self, method_name: str, method: Any) -> Any:
+        """Wrap a method to detect and handle async execution."""
+
+        def sync_wrapper(*args, **kwargs):
+            # Execute the method
+            result = method(*args, **kwargs)
+
+            # Check if result is a coroutine (async method)
+            if asyncio.iscoroutine(result):
+                # This is an async method - execute it synchronously
+                result = self._sync_client._run(result)
+
+            # Handle async iterators (like items(), pages(), urls())
+            # Check this before state objects since async iterators might also be state objects
+            # But avoid wrapping MagicMock objects which have fake __aiter__ methods
+            if (hasattr(result, '__aiter__') and
+                hasattr(result, '__anext__') and
+                not getattr(result.__class__, '__module__', '').startswith('unittest.mock')):
+                return self._wrap_async_iterator(result)
+
+            # Check if result is a nested state object that needs wrapping
+            if self._is_state_object(result):
+                return self._wrap_nested_state(result)
+
+            # Regular result
+            return result
+
+        # Preserve method metadata
+        sync_wrapper.__name__ = method_name
+        sync_wrapper.__doc__ = getattr(method, '__doc__', None)
+
+        return sync_wrapper
+
+    def _wrap_nested_state(self, async_obj: Any) -> "_SyncStateProxy":
+        """Wrap nested state objects in sync proxies."""
+        # Check cache first to avoid infinite recursion
+        obj_id = id(async_obj)
+        if obj_id in self._wrapped_cache:
+            return self._wrapped_cache[obj_id]
+
+        # Create new wrapper
+        wrapper = _SyncStateProxy(async_obj, self._sync_client)
+        self._wrapped_cache[obj_id] = wrapper
+        return wrapper
+
+    def _wrap_async_iterator(self, async_iter: Any) -> Any:
+        """Wrap async iterators to make them synchronous.
+
+        Converts async iterators (like batch.items(), crawl.pages(), sitemap.urls())
+        into synchronous iterators that can be used in regular for loops.
+        """
+
+        class SyncIterator:
+            def __init__(self, async_iter, sync_client):
+                self._async_iter = async_iter
+                self._sync_client = sync_client
+                self._items = None  # Cache for collected items
+                self._index = 0
+
+            def __iter__(self):
+                # Collect all items synchronously on first iteration
+                if self._items is None:
+                    # Run the async collection synchronously
+                    async def _collect_all():
+                        items = []
+                        async for item in self._async_iter:
+                            # Wrap state objects in sync proxies
+                            items.append(self._sync_client._wrap_state_object(item))
+                        return items
+
+                    # Execute the coroutine synchronously
+                    self._items = self._sync_client._run(_collect_all())
+                self._index = 0
+                return self
+
+            def __next__(self):
+                if self._items is None:
+                    # Trigger collection
+                    self.__iter__()
+
+                if self._index >= len(self._items):
+                    raise StopIteration
+
+                item = self._items[self._index]
+                self._index += 1
+                return item
+
+        return SyncIterator(async_iter, self._sync_client)
+
+    def __repr__(self) -> str:
+        """Delegate repr to async object."""
+        return repr(self._async_state)
+
+    def __str__(self) -> str:
+        """Delegate str to async object."""
+        return str(self._async_state)
+
+
+# Specific sync wrapper classes for type hints and clarity
+class SyncBatch(_SyncStateProxy):
+    """Synchronous version of Batch state object."""
+    pass
+
+class SyncScrapeResult(_SyncStateProxy):
+    """Synchronous version of ScrapeResult state object."""
+    pass
+
+class SyncBatchItemResult(_SyncStateProxy):
+    """Synchronous version of BatchItemResult state object."""
+    pass
+
+class SyncCrawl(_SyncStateProxy):
+    """Synchronous version of Crawl state object."""
+    pass
+
+class SyncSitemap(_SyncStateProxy):
+    """Synchronous version of Sitemap state object."""
+    pass
+
+
+# Mapping of async state classes to their sync wrappers
+_STATE_WRAPPERS = {
+    Batch: SyncBatch,
+    ScrapeResult: SyncScrapeResult,
+    BatchItemResult: SyncBatchItemResult,
+    Crawl: SyncCrawl,
+    Sitemap: SyncSitemap,
+    # Add more as needed
+}
 
 
 class SyncOlostepClient:
@@ -407,6 +638,32 @@ class SyncOlostepClient:
         # STEP 8: Execute the async function synchronously
         return self._run(_inner())
 
+    def _wrap_state_object(self, obj: Any) -> Any:
+        """Recursively wrap state objects in sync proxies.
+
+        This method detects state objects returned by async operations and wraps
+        them in sync proxies so their methods become synchronous too.
+
+        Args:
+            obj: Object to potentially wrap (could be state object, list, dict, etc.)
+
+        Returns:
+            Wrapped object with sync behavior, or original object if not a state object
+        """
+        # Check if it's a direct state object
+        if isinstance(obj, tuple(_STATE_WRAPPERS.keys())):
+            wrapper_class = _STATE_WRAPPERS[type(obj)]
+            return wrapper_class(obj, self)
+
+        # Handle collections that might contain state objects
+        if isinstance(obj, (list, tuple)):
+            return type(obj)(self._wrap_state_object(item) for item in obj)
+        elif isinstance(obj, dict):
+            return {k: self._wrap_state_object(v) for k, v in obj.items()}
+
+        # Not a state object - return as-is
+        return obj
+
 
 # =============================================================================
 # PROXY PATTERN SUMMARY
@@ -422,7 +679,8 @@ class SyncOlostepClient:
 # 5. _SyncProxy.__call__() creates resolver function: `lambda c: c.scrape`
 # 6. _call() creates async context: `async with OlostepClient(...) as c:`
 # 7. _run() executes coroutine: Creates/manages event loop as needed
-# 8. Result returned synchronously: User gets result without knowing about async
+# 8. _wrap_state_object() detects and wraps state objects in sync proxies
+# 9. Result returned synchronously: State objects have sync methods too!
 #
 # KEY BENEFITS:
 # ============
