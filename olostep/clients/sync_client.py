@@ -77,9 +77,10 @@ class SyncOlostepClient:
         self.crawl = _SyncProxy(self, lambda c: c.crawl, dir_list=["start", "info", "pages"])
         self.sitemap = _SyncProxy(self, lambda c: c.sitemap, dir_list=["create"])
         self.retrieve = _SyncProxy(self, lambda c: c.retrieve, dir_list=["get"])
+        self.answers = _SyncProxy(self, lambda c: c.answers, dir_list=["create"])
 
     def __dir__(self) -> list[str]:
-        return ["scrape", "batch", "crawl", "sitemap", "retrieve"]
+        return ["scrape", "batch", "crawl", "sitemap", "retrieve", "answers"]
 
     def close(self) -> None:
         """

@@ -47,7 +47,43 @@ modify the trasport to not hold the api key but instead get it as part of invoke
 auto exponential backoff plus exposing a config arg for it
 central session renewal if error
 
+-----------------------------
+Based on my investigation of the test structure, no, there are not comprehensive tests for response models against fixtures for all endpoints.
+Here's what I found:
+Current Testing Patterns
+API Contract Tests (/tests/api_contracts/as_is/):
+These tests primarily focus on request validation and API behavior
+They check isinstance(model, SomeResponse) to verify the response type
+They don't validate that fixture data structures match the response model schemas
+Example: assert isinstance(model, CreateScrapeResponse) - checks type, not schema compatibility
+Fixture Usage:
+Response fixtures are mainly used in frontend unit tests (/tests/unit/frontend/test_state.py)
+These test the state objects (Batch, Scrape, etc.) that get created from API responses
+Example: response = BatchCreateResponse(**BATCH_CREATE_RESPONSE) - creates models from fixtures
+What's Missing:
+No systematic validation that fixture data matches response model schemas
+No tests that ensure fixture structures are compatible with model definitions
+The API contract tests don't instantiate response models with fixture data
+Why This Matters
+The issue you encountered with the answers endpoint (missing sources field in the model) wouldn't be caught by the current testing approach because:
+The tests only verify response types, not schema compatibility
+They don't validate fixture data against model definitions
+There's no automated check that fixtures match their corresponding response models
+Recommendation
+To improve test coverage, you could add tests that:
+Instantiate response models with fixture data
+Validate that fixtures are schema-compatible
+Ensure all response model fields are accounted for in fixtures
+This would catch schema mismatches early in development.
+add this issue to the @todo.txt  to be picked up later again
 
+✅ Added to todo.txt:
+This todo item captures the issue we discussed: the current API contract tests only validate response types (isinstance(model, SomeResponse)) but don't systematically check that fixture data structures are compatible with the response model schemas. This would help catch schema mismatches like the missing sources field in the AnswersResult model that we just identified and fixed.
+
+
+
+
+-----------------------------
 documenting the fact that filtering on batch items with failed returns in progress results
 {
   "timestamp": "2025-09-19T23:30:41.166169",

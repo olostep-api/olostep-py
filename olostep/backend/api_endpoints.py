@@ -24,6 +24,8 @@ from ..models.request import (
     MapCreateRequest,
     # Retrieve
     RetrieveGetRequest,
+    # Answers
+    AnswersRequest,
 )
 from ..models.response import (
     # Scrapes
@@ -41,6 +43,8 @@ from ..models.response import (
     MapResponse,
     # Retrieve
     RetrieveResponse,
+    # Answers
+    AnswersResponse,
 )
 
 Method = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
@@ -302,6 +306,41 @@ RETRIEVE_GET = EndpointContract(
 
 
 # =============================================================================
+# ANSWERS
+# =============================================================================
+
+ANSWERS_CREATE = EndpointContract(
+    key=("answers", "create"),
+    name="Create Answer",
+    description="Generate an answer for a given task with optional JSON format specification",
+    method="POST",
+    path="/answers",
+    request_model=AnswersRequest,
+    response_model=AnswersResponse,
+    examples=[
+        {
+            "description": "Basic task answering",
+            "request": {"task": "What is the capital of France?"},
+        },
+        {
+            "description": "Task with JSON format specification",
+            "request": {
+                "task": "Extract all product names and prices from the webpage",
+                "json_format": {
+                    "products": [
+                        {
+                            "name": "",
+                            "price": ""
+                        }
+                    ]
+                }
+            },
+        },
+    ],
+)
+
+
+# =============================================================================
 # REGISTRY
 # =============================================================================
 
@@ -318,6 +357,7 @@ CONTRACTS: dict[tuple[str, str], EndpointContract] = {
         CRAWL_PAGES,
         MAP_CREATE,
         RETRIEVE_GET,
+        ANSWERS_CREATE,
     ]
 }
 

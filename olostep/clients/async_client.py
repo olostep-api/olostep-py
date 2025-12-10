@@ -10,6 +10,7 @@ from ..frontend.batch_menu import BatchMenu
 from ..frontend.crawl_menu import CrawlMenu
 from ..frontend.sitemap_menu import SitemapMenu
 from ..frontend.retrieve_menu import RetrieveMenu
+from ..frontend.answers_menu import AnswersMenu
 from ..config import BASE_API_URL, API_KEY_ENV
 
 
@@ -71,6 +72,7 @@ class OlostepClient:
         self.crawl = CrawlMenu(self._caller)
         self.sitemap = SitemapMenu(self._caller)
         self.retrieve = RetrieveMenu(self._caller)
+        self.answers = AnswersMenu(self._caller)
 
 
     async def __aenter__(self) -> "OlostepClient":

@@ -361,3 +361,36 @@ class RetrieveResponse(ScrapeOutputs):
     """Response from retrieve content (GET /v1/retrieve)."""
     # this seems to be nothing else but the ScrapeOutputs model
     pass
+
+
+# =============================================================================
+# =============================================================================
+# ANSWERS API MODELS
+# =============================================================================
+# =============================================================================
+
+class AnswersResult(OlostepResponseBaseModel):
+    """Result object containing the answer data."""
+    json_content: dict[str, Any] | None = None
+    json_hosted_url: str | None = None
+
+    @field_validator('json_content', mode='before')
+    @classmethod
+    def parse_json_content(cls, v):
+        """Parse JSON string to dictionary if needed."""
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                # If it's not valid JSON, return as-is (let Pydantic handle the error)
+                return v
+        return v  # return all other types as is
+
+class AnswersResponse(OlostepResponseBaseModel):
+    """Response from POST /answers."""
+    id: str
+    object: str = "answer"
+    created: int
+    metadata: dict[str, Any] | None = None
+    task: str
+    result: AnswersResult

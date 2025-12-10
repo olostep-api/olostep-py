@@ -33,6 +33,7 @@ from ..models.response import (
     CrawlPagesResponse,
     CrawlPagesResponseListItem,
     MapResponse,
+    AnswersResponse,
 )
 
 logger = get_logger("frontend.client_state")
@@ -119,6 +120,75 @@ class ScrapeResult:
             f"ScrapeResult({_id}html={html_len}B, md={md_len}B, text={txt_len}B, "
             f"json={'yes' if hasattr(self, "json_content") and bool(self.json_content) else 'no'})"
         )
+
+
+class AnswersResult:
+    """Result object for answers operations.
+
+    This class provides a convenient interface for accessing the results of
+    answer generation API calls. It exposes the answer data, metadata, and
+    provides formatted representations for easy inspection.
+
+    Attributes:
+        id: Unique identifier for the answer operation
+        object: Object type identifier ("answer")
+        created: Creation timestamp as Unix epoch
+        metadata: Metadata dictionary (if provided)
+        task: The task that was performed
+        json_content: Structured JSON content of the answer (if available)
+        json_hosted_url: URL to hosted JSON content (if available)
+        sources: List of source URLs used to generate the answer (if available)
+    """
+
+    def __init__(self, response: AnswersResponse) -> None:
+        """Initialize AnswersResult from an API response.
+
+        Args:
+            response: API response object from answers endpoint.
+        """
+        # Copy all fields from response to reduce dependency
+        self.id = response.id
+        self.object = response.object
+        self.created = response.created
+        self.metadata = response.metadata or {}
+        self.task = response.task
+
+        # Copy result fields
+        result = response.result
+        self.json_content = result.json_content
+        self.json_hosted_url = result.json_hosted_url
+        if hasattr(result, 'sources') and result.sources is not None:
+            self.sources = result.sources
+        else:
+            self.sources = []
+
+    def __repr__(self) -> str:
+        """Return a string representation of the AnswersResult.
+
+        Returns:
+            str: String representation showing id, task, and content availability.
+        """
+        content_info = []
+        if self.json_content:
+            if isinstance(self.json_content, dict):
+                content_info.append(f"json_content={len(str(self.json_content))}chars")
+            else:
+                content_info.append(f"json_content={len(self.json_content)}chars")
+        if self.json_hosted_url:
+            content_info.append("hosted_url")
+
+        content_str = f"({', '.join(content_info)})" if content_info else "(no content)"
+
+        task_str = self.task[:50] + ("..." if len(self.task) > 50 else "")
+        return f"AnswersResult(id={self.id!r}, task={task_str!r}, {content_str})"
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation of the AnswersResult.
+
+        Returns:
+            str: Human-readable string showing key information.
+        """
+        return f"Answer: {self.task[:50]}{'...' if len(self.task) > 50 else ''} -> {len(self.sources)} sources"
 
 
 

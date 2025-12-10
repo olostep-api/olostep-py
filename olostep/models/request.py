@@ -842,3 +842,19 @@ class RetrieveGetQueryParams(QueryParams):
 class RetrieveGetRequest(BaseRequestModel):
     """Request for GET /retrieve."""
     query_params: RetrieveGetQueryParams
+
+
+# =============================================================================
+# =============================================================================
+# ANSWERS API MODELS
+# =============================================================================
+# =============================================================================
+
+class AnswersBodyParams(BodyParams):
+    """Body parameters for POST /answers."""
+    task: str
+    json_format: dict[str, Any] | None = None
+
+class AnswersRequest(BaseRequestModel):
+    """Request for POST /answers."""
+    body_params: AnswersBodyParams
