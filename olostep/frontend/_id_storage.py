@@ -1,3 +1,11 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from .client_state import RetrievableID
+
+
 def _get_retrievable_ids_storage_path() -> Path:
     """Get the path to store retrievable IDs across machines."""
     # Use user's home directory with a hidden folder for cross-machine compatibility
