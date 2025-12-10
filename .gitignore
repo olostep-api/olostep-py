@@ -89,7 +89,7 @@ dmypy.json
 .pyre/
 
 # Poetry
-poetry.lock
+# Keep poetry.lock to pin dependency graph for CI reproducibility
 
 
 
