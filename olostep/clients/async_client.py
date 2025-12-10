@@ -99,7 +99,6 @@ class AsyncOlostep:
         self.batches = self.batch
         self.crawls = self.crawl
         self.maps = self.sitemap
-        self.retrievals = self.retrieve
 
     async def __aenter__(self) -> "AsyncOlostep":
         return self

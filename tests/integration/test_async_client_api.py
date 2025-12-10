@@ -259,7 +259,7 @@ class TestAdvancedFeatures:
     async def test_content_retrieval_basic(self) -> None:
         """Test basic content retrieval example."""
         async with AsyncOlostep() as c:
-            result = await c.retrievals.get(retrieve_id="ret_123")
+            result = await c.retrieve.get(retrieve_id="ret_123")
             assert result is not None
 
     @pytest.mark.asyncio
@@ -267,7 +267,7 @@ class TestAdvancedFeatures:
         """Test content retrieval with multiple formats example."""
         async with AsyncOlostep() as c:
             # Note: "text" format is not valid, but docs show it - using valid formats only
-            result = await c.retrievals.get(retrieve_id="ret_123", formats=["html", "markdown", "json"])
+            result = await c.retrieve.get(retrieve_id="ret_123", formats=["html", "markdown", "json"])
             assert result is not None
 
     @pytest.mark.asyncio

@@ -230,14 +230,14 @@ class TestAdvancedFeatures:
     def test_content_retrieval_basic(self) -> None:
         """Test basic content retrieval example."""
         client = Olostep()
-        result = client.retrievals.get(retrieve_id="ret_123")
+        result = client.retrieve.get(retrieve_id="ret_123")
         assert result is not None
 
     def test_content_retrieval_multiple_formats(self) -> None:
         """Test content retrieval with multiple formats example."""
         client = Olostep()
         # Note: "text" format is not valid, but docs show it - using valid formats only
-        result = client.retrievals.get(retrieve_id="ret_123", formats=["html", "markdown", "json"])
+        result = client.retrieve.get(retrieve_id="ret_123", formats=["html", "markdown", "json"])
         assert result is not None
 
     def test_retry_strategy(self) -> None:

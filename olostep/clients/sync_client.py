@@ -671,7 +671,6 @@ class Olostep:
         self.batches = self.batch
         self.crawls = self.crawl
         self.maps = self.sitemap
-        self.retrievals = self.retrieve
 
     def __dir__(self) -> list[str]:
         """

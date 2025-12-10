@@ -72,7 +72,7 @@ result = await client.scrapes.create(url)
 batch = await client.batches.create(urls)
 crawl = await client.crawls.create(url)
 maps = await client.maps.create(url)
-content = await client.retrievals.get(retrieve_id)
+content = await client.retrieve.get(retrieve_id)
 answers = await client.answers.create(task="What is this page about?")
 ```
 
@@ -148,14 +148,14 @@ The async client provides non-blocking operations and is the recommended choice 
 
 Both SDK clients provide the same clean, pythonic interface organized into logical namespaces:
 
-| Namespace    | Purpose               | Key Methods                     |
-| ------------ | --------------------- | ------------------------------- |
-| `scrapes`    | Single URL extraction | `create()`, `get()`             |
-| `batches`    | Multi-URL processing  | `create()`, `info()`, `items()` |
-| `crawls`     | Website traversal     | `create()`, `info()`, `pages()` |
-| `maps`       | Link extraction       | `create()`, `urls()`            |
-| `answers`    | AI-powered extraction | `create()`, `get()`             |
-| `retrievals` | Content retrieval     | `get()`                         |
+| Namespace  | Purpose               | Key Methods                     |
+| ---------- | --------------------- | ------------------------------- |
+| `scrapes`  | Single URL extraction | `create()`, `get()`             |
+| `batches`  | Multi-URL processing  | `create()`, `info()`, `items()` |
+| `crawls`   | Website traversal     | `create()`, `info()`, `pages()` |
+| `maps`     | Link extraction       | `create()`, `urls()`            |
+| `answers`  | AI-powered extraction | `create()`, `get()`             |
+| `retrieve` | Content retrieval     | `get()`                         |
 
 Each operation returns stateful objects with ergonomic methods for follow-up operations.
 
@@ -339,10 +339,10 @@ from olostep import Olostep
 client = Olostep(api_key="your-api-key")
 
 # Get content by retrieve ID
-result = client.retrievals.get(retrieve_id="ret_123")
+result = client.retrieve.get(retrieve_id="ret_123")
 
 # Get multiple formats
-result = client.retrievals.get(retrieve_id="ret_123", formats=["html", "markdown", "text", "json"])
+result = client.retrieve.get(retrieve_id="ret_123", formats=["html", "markdown", "text", "json"])
 ```
 
 ## Olostep via API vs SDK

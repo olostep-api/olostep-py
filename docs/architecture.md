@@ -202,7 +202,7 @@ The frontend layer provides user-friendly interfaces and stateful objects for AP
 
 **Responsibilities**:
 
-- Namespace organization (scrapes, batches, crawls, maps, retrievals, answers)
+- Namespace organization (scrapes, batches, crawls, maps, answers, retrieve)
 - Method exposure and parameter forwarding
 - Response object creation and state management
 - Integration with EndpointCaller for API requests
@@ -213,7 +213,7 @@ The frontend layer provides user-friendly interfaces and stateful objects for AP
 - **batches**: `create()`, `info()`, `items()`
 - **crawls**: `create()`, `info()`, `pages()`
 - **maps**: `create()`
-- **retrievals**: `get()`
+- **retrieve**: `get()`
 - **answers**: `create()`, `get()`
 
 #### Client State (`olostep/frontend/client_state.py`)
