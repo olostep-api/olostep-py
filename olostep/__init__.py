@@ -1,8 +1,8 @@
 # Core clients
 # Error hierarchy
 from . import errors
-from .clients.async_client import OlostepClient
-from .clients.sync_client import SyncOlostepClient
+from .clients.async_client import AsyncOlostep
+from .clients.sync_client import Olostep
 from .config import VERSION as __version__
 
 # Stateful result objects
@@ -41,8 +41,8 @@ _error_classes = [
 
 __all__ = [
     # Clients
-    "OlostepClient",
-    "SyncOlostepClient",
+    "AsyncOlostep",
+    "Olostep",
     # Configuration
     "RetryStrategy",
     # Result objects

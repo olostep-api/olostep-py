@@ -13,7 +13,7 @@ from ..frontend.sitemap_menu import SitemapMenu
 from ..retry_strategy import RetryStrategy
 
 
-class OlostepClient:
+class AsyncOlostep:
     """
     Default async client that wires the transport, caller, and namespaced frontend.
     This is the main client for the Olostep SDK.
@@ -24,7 +24,7 @@ class OlostepClient:
        Automatically handles resource cleanup when exiting the context.
 
        ```python
-       async with OlostepClient(api_key="your-api-key") as client:
+       async with AsyncOlostep(api_key="your-api-key") as client:
            result = await client.scrape.url(
                url_to_scrape="https://example.com",
                formats=["html", "markdown"]
@@ -36,7 +36,7 @@ class OlostepClient:
        Requires manual resource cleanup using the close() method.
 
        ```python
-       client = OlostepClient(api_key="your-api-key")
+       client = AsyncOlostep(api_key="your-api-key")
        try:
            result = await client.scrape.url(
                url_to_scrape="https://example.com",
@@ -86,15 +86,22 @@ class OlostepClient:
                 self._transport, self._base_url, self._api_key, self._retry_strategy
             )
 
-        # Menu items
+        # Menu items (singular)
         self.scrape = ScrapeMenu(self._caller)
         self.batch = BatchMenu(self._caller)
         self.crawl = CrawlMenu(self._caller)
         self.sitemap = SitemapMenu(self._caller)
         self.retrieve = RetrieveMenu(self._caller)
         self.answers = AnswersMenu(self._caller)
+        
+        # Plural aliases (to match documentation)
+        self.scrapes = self.scrape
+        self.batches = self.batch
+        self.crawls = self.crawl
+        self.maps = self.sitemap
+        self.retrievals = self.retrieve
 
-    async def __aenter__(self) -> "OlostepClient":
+    async def __aenter__(self) -> "AsyncOlostep":
         return self
 
     async def close(self) -> None:
@@ -106,12 +113,12 @@ class OlostepClient:
 
         For one-off usage, prefer the context manager pattern:
 
-            async with OlostepClient(api_key="...") as client:
+            async with AsyncOlostep(api_key="...") as client:
                 result = await client.scrape.url("https://example.com")
 
         For long-lived services, use explicit close:
 
-            client = OlostepClient(api_key="...")
+            client = AsyncOlostep(api_key="...")
             try:
                 result = await client.scrape.url("https://example.com")
             finally:

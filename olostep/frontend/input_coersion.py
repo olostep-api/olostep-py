@@ -104,7 +104,7 @@ def _coerce_single_batch_item(item: Any, index: int = 0) -> dict[str, Any]:
         return result
 
 
-def coerce_to_key_in_dict(value: Any, key: str) -> dict[str, Any]:
+def coerce_to_key_in_dict(value: Any, key: str) -> dict[str, Any] | BaseModel | None:
     if value is None:
         return value
     if isinstance(value, BaseModel):
@@ -125,3 +125,16 @@ def coerce_to_string(value: Any) -> str:
     if isinstance(value, str):
         return value
     raise ValueError(f"Cannot coerce {value} to string")
+
+
+def coerce_country(value: Any) -> Any:
+    """Coerce country value to Country enum or uppercase string.
+    
+    Handles case-insensitive string conversion (e.g., "us" -> "US").
+    """
+    if value is None:
+        return value
+    if isinstance(value, str):
+        # Convert lowercase to uppercase for country codes
+        return value.upper()
+    return value
