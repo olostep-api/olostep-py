@@ -29,37 +29,57 @@ else:
 # =============================================================================
 # =============================================================================
 
+
 class PathParams(OlostepBaseModel):
     """Base class for path parameters (e.g., {scrape_id}, {batch_id})."""
+
     pass
+
 
 class QueryParams(OlostepBaseModel):
     """Base class for query parameters (e.g., ?retrieve_id=123&formats=html)."""
+
     pass
+
 
 class BodyParams(OlostepBaseModel):
     """Base class for request body parameters (POST/PUT/PATCH only)."""
+
     pass
+
 
 class BaseRequestModel(OlostepBaseModel):
     """Base class for all request models with separate parameter types."""
+
     pass
-    
+
     path_params: PathParams | None = None
-    query_params: QueryParams | None = None  
+    query_params: QueryParams | None = None
     body_params: BodyParams | None = None
-    
+
     def get_path_params(self) -> dict[str, Any]:
         """Extract path parameters as dict."""
-        return self.path_params.model_dump(exclude_none=True, exclude_unset=True) if self.path_params else {}
-    
+        return (
+            self.path_params.model_dump(exclude_none=True, exclude_unset=True)
+            if self.path_params
+            else {}
+        )
+
     def get_query_params(self) -> dict[str, Any]:
         """Extract query parameters as dict."""
-        return self.query_params.model_dump(exclude_none=True, exclude_unset=True) if self.query_params else {}
-    
+        return (
+            self.query_params.model_dump(exclude_none=True, exclude_unset=True)
+            if self.query_params
+            else {}
+        )
+
     def get_body_params(self) -> dict[str, Any]:
         """Extract body parameters as dict."""
-        return self.body_params.model_dump(exclude_none=True, exclude_unset=True) if self.body_params else {}
+        return (
+            self.body_params.model_dump(exclude_none=True, exclude_unset=True)
+            if self.body_params
+            else {}
+        )
 
     def model_dump(self, **kwargs) -> dict[str, Any]:
         # Explicitly dump submodels for path_params, query_params, and body_params
@@ -72,6 +92,7 @@ class BaseRequestModel(OlostepBaseModel):
             data["body_params"] = self.body_params.model_dump(**kwargs)
         return data
 
+
 # =============================================================================
 # MODEL FOR UNVALIDATED REQUESTS
 # =============================================================================
@@ -79,7 +100,12 @@ class RawRequest:
     """Holds request parameters without validation for skip-validation mode.
     Is not a Pydantic model because it is not validated and we want raw behavior."""
 
-    def __init__(self, path_params: dict[str, Any] | None, query_params: dict[str, Any] | None, body_params: dict[str, Any] | None) -> None:
+    def __init__(
+        self,
+        path_params: dict[str, Any] | None,
+        query_params: dict[str, Any] | None,
+        body_params: dict[str, Any] | None,
+    ) -> None:
         self.path_params = path_params or {}
         self.query_params = query_params or {}
         self.body_params = body_params or {}
@@ -92,7 +118,6 @@ class RawRequest:
 
     def get_body_params(self) -> dict[str, Any]:
         return self.body_params
-
 
 
 # =============================================================================
@@ -112,7 +137,7 @@ class RawRequest:
 #     """
 #     path_params = path_params or {}
 #     query_params = query_params or {}
-    
+
 
 #     # If no request model is defined (e.g., for GET requests), skip validation
 #     if contract.request_model is None:
@@ -123,30 +148,28 @@ class RawRequest:
 #         try:
 #             # Create the request model with all parameters
 #             request_data = {}
-            
+
 #             if path_params:
 #                 request_data['path_params'] = path_params
-            
+
 #             if query_params:
 #                 request_data['query_params'] = query_params
-            
+
 #             if body_params:
 #                 request_data['body_params'] = body_params
-            
+
 #             # Validate the complete request
 #             req = contract.request_model(**request_data)
-            
+
 #             # Extract validated parameters
 #             validated_path = req.get_path_params()
 #             validated_query = req.get_query_params()
 #             validated_body = req.get_body_params() if contract.method != "GET" else None
-            
+
 #         except ValidationError as e:
 #             raise OlostepRequestValidationError(e.errors()) from e
-    
+
 #     return validated_path, validated_query, validated_body
-
-
 
 
 # =============================================================================
@@ -155,19 +178,21 @@ class RawRequest:
 # =============================================================================
 # =============================================================================
 
+
 class Country(str, Enum):
     """Country codes for geolocation. Only supported/tested countries are included."""
-    US = "US"      # United States
-    CA = "CA"      # Canada
-    IT = "IT"      # Italy
-    IN = "IN"      # India
-    GB = "GB"      # England
-    JP = "JP"      # Japan
-    MX = "MX"      # Mexico
-    AU = "AU"      # Australia
-    ID = "ID"      # Indonesia
-    UA = "UA"      # UAE
-    RU = "RU"      # Russia
+
+    US = "US"  # United States
+    CA = "CA"  # Canada
+    IT = "IT"  # Italy
+    IN = "IN"  # India
+    GB = "GB"  # England
+    JP = "JP"  # Japan
+    MX = "MX"  # Mexico
+    AU = "AU"  # Australia
+    ID = "ID"  # Indonesia
+    UA = "UA"  # UAE
+    RU = "RU"  # Russia
     RANDOM = "RANDOM"  # Random country selection
 
     def __str__(self) -> str:
@@ -176,15 +201,15 @@ class Country(str, Enum):
 
 class Format(str, Enum):
     """Output formats for scraping."""
+
     HTML = "html"
     MARKDOWN = "markdown"
     TEXT = "text"
     JSON = "json"
-    SCREENSHOT = "screenshot" # not officially supported yet
+    SCREENSHOT = "screenshot"  # not officially supported yet
 
     def __str__(self) -> str:
         return self.value
-
 
 
 # =============================================================================
@@ -199,21 +224,23 @@ class Format(str, Enum):
 # =============================================================================
 
 # Suppress the schema field shadowing warning
-warnings.filterwarnings('ignore', message='Field name "schema" in "LLMExtract" shadows an attribute in parent "OlostepBaseModel"')
-
+warnings.filterwarnings(
+    "ignore",
+    message='Field name "schema" in "LLMExtract" shadows an attribute in parent "OlostepBaseModel"',
+)
 
 
 class ActionType(OlostepBaseModel):
     type: Literal["wait"] | Literal["click"] | Literal["fill_input"] | Literal["scroll"]
 
 
-
 class WaitAction(ActionType):
     """Wait action configuration."""
+
     type: Literal["wait"] = "wait"
     milliseconds: int
-    
-    @field_validator('milliseconds')
+
+    @field_validator("milliseconds")
     @classmethod
     def validate_milliseconds(cls, v: int) -> int:
         if v < 0:
@@ -223,12 +250,14 @@ class WaitAction(ActionType):
 
 class ClickAction(ActionType):
     """Click action configuration."""
+
     type: Literal["click"] = "click"
     selector: str
 
 
 class FillInputAction(ActionType):
     """Fill input action configuration."""
+
     type: Literal["fill_input"] = "fill_input"
     selector: str
     value: str
@@ -236,6 +265,7 @@ class FillInputAction(ActionType):
 
 class ScrollDirection(str, Enum):
     """Scroll directions."""
+
     UP = "up"
     DOWN = "down"
     LEFT = "left"
@@ -244,8 +274,10 @@ class ScrollDirection(str, Enum):
     def __str__(self) -> str:
         return self.value
 
+
 class ScrollAction(ActionType):
     """Scroll action configuration."""
+
     type: Literal["scroll"] = "scroll"
     direction: ScrollDirection
     amount: int
@@ -257,8 +289,6 @@ class ScrollAction(ActionType):
 #     CLICK = "click"
 #     FILL_INPUT = "fill_input"
 #     SCROLL = "scroll"
-
-
 
 
 # Action classes are now imported from ..types
@@ -275,30 +305,32 @@ class ScrollAction(ActionType):
 #     GOOGLE_AI_OVERVIEW = "google-ai-overview"
 #     GOOGLE_ADVANCED_SEARCH = "google-advanced-search"
 #     GOOGLE_SEARCH = "google-search"
-    
+
 #     # Predefined parsers for Olostep structured scraping
 #     AMAZON_IT_PRODUCT = "amazon-it-product"
-    
+
 #     # Reserved parsers (may require contact)
 #     LINKEDIN_PROFILE = "linkedin-profile"
 #     TIKTOK_DATA = "tiktok-data"
-    
+
 #     def __str__(self) -> str:
 #         return self.value
 
 
 Transformer = Literal["postlight"] | None
 
+
 class Parser(OlostepBaseModel):
     """Parser configuration."""
+
     id: str | None = None
     # config: dict[str, Any] | None = None
 
 
 class LLMExtract(OlostepBaseModel):
     """LLM extraction configuration."""
-    schema: dict[str, Any]
 
+    schema: dict[str, Any]
 
 
 class LinksOnPage(OlostepBaseModel):
@@ -307,19 +339,19 @@ class LinksOnPage(OlostepBaseModel):
 
     With this option, you can get all the links present on the page you scrape.
     """
+
     absolute_links: bool = True
     query_to_order_links_by: str | None = None
     include_links: list[str] | None = None
     exclude_links: list[str] | None = None
 
 
-
 class ScreenSize(OlostepBaseModel):
     """Browser viewport configuration for screenshots.
-    
+
     Supports both preset screen types and custom dimensions:
     - desktop: 1920x1080 pixels
-    - mobile: 414x896 pixels  
+    - mobile: 414x896 pixels
     - tablet: 768x1024 pixels
     - or pass in screen_width and screen_height
     """
@@ -335,19 +367,26 @@ class ScreenSize(OlostepBaseModel):
         screen_width = values.screen_width
         screen_height = values.screen_height
 
-
         if screen_type is not None:
             if screen_width is not None or screen_height is not None:
-                raise ValueError("Specify either 'screen_type' or both 'screen_width' and 'screen_height', not both.")
+                raise ValueError(
+                    "Specify either 'screen_type' or both 'screen_width' and 'screen_height', not both."
+                )
 
-        else: # screen_type is None
+        else:  # screen_type is None
             if screen_width is not None or screen_height is not None:
                 if screen_width is None or screen_height is None:
-                    raise ValueError("Both 'screen_width' and 'screen_height' must be set if specifying custom dimensions.")
+                    raise ValueError(
+                        "Both 'screen_width' and 'screen_height' must be set if specifying custom dimensions."
+                    )
                 if screen_width <= 0 or screen_height <= 0:
-                    raise ValueError("'screen_width' and 'screen_height' must be positive")
+                    raise ValueError(
+                        "'screen_width' and 'screen_height' must be positive"
+                    )
             else:
-                raise ValueError("You must specify either 'screen_type' or both 'screen_width' and 'screen_height'.")
+                raise ValueError(
+                    "You must specify either 'screen_type' or both 'screen_width' and 'screen_height'."
+                )
 
         # else:
         #     if screen_width is not None or screen_height is not None:
@@ -362,11 +401,14 @@ class ScreenSize(OlostepBaseModel):
 
 class ScrapeUrlBodyParams(BodyParams):
     """Body parameters for POST /scrapes."""
+
     url_to_scrape: HttpUrl
     wait_before_scraping: int | None = None
     formats: list[Format] | None = None
     remove_css_selectors: str | None = None
-    actions: list[WaitAction | ClickAction | FillInputAction | ScrollAction] | None = None
+    actions: list[WaitAction | ClickAction | FillInputAction | ScrollAction] | None = (
+        None
+    )
     country: Country | None = None
     transformer: Transformer | None = None
     remove_images: bool | None = None
@@ -375,24 +417,26 @@ class ScrapeUrlBodyParams(BodyParams):
     llm_extract: LLMExtract | None = None
     links_on_page: LinksOnPage | None = None
     screen_size: ScreenSize | None = None
-    metadata: dict[str, Any] | None = None # Docs mention that this is not yet supported
-    
-    @field_validator('wait_before_scraping')
+    metadata: dict[str, Any] | None = (
+        None  # Docs mention that this is not yet supported
+    )
+
+    @field_validator("wait_before_scraping")
     @classmethod
     def validate_wait_before_scraping(cls, v):
         if v is not None and v < 0:
-            raise ValueError('wait_before_scraping must be non-negative')
+            raise ValueError("wait_before_scraping must be non-negative")
         return v
-    
-    @field_validator('remove_css_selectors')
+
+    @field_validator("remove_css_selectors")
     @classmethod
     def validate_remove_css_selectors(cls, v: str | None) -> str | None:
         if v is None:
             return v
-        
+
         if v in ["default", "none"]:
             return v
-        
+
         # For any other string, validate it's a valid JSON array of strings
         try:
             parsed = json.loads(v)
@@ -401,31 +445,34 @@ class ScrapeUrlBodyParams(BodyParams):
             if not all(isinstance(item, str) for item in parsed):
                 raise ValueError("Array must contain only strings")
         except (json.JSONDecodeError, ValueError) as e:
-            raise ValueError(f"Must be 'default', 'none', or a valid JSON array of strings: {e}")
-        
+            raise ValueError(
+                f"Must be 'default', 'none', or a valid JSON array of strings: {e}"
+            )
+
         return v
-    
+
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Custom serialization to handle special fields."""
         data = super().model_dump(**kwargs)
-        
+
         # Convert HttpUrl to string
-        if 'url_to_scrape' in data and isinstance(self.url_to_scrape, HttpUrl):
-            data['url_to_scrape'] = str(self.url_to_scrape)
-        
-        
+        if "url_to_scrape" in data and isinstance(self.url_to_scrape, HttpUrl):
+            data["url_to_scrape"] = str(self.url_to_scrape)
+
         # Handle ParserConfig serialization
-        if 'parser' in data and isinstance(self.parser, Parser):
+        if "parser" in data and isinstance(self.parser, Parser):
             parser_data = self.parser.model_dump()
             if parser_data:  # Only include if not empty
-                data['parser'] = parser_data
+                data["parser"] = parser_data
             else:
-                del data['parser']  # Remove if empty
-        
+                del data["parser"]  # Remove if empty
+
         return data
+
 
 class ScrapeUrlRequest(BaseRequestModel):
     """Request for POST /scrapes."""
+
     body_params: ScrapeUrlBodyParams
 
 
@@ -433,16 +480,17 @@ class ScrapeUrlRequest(BaseRequestModel):
 # SCRAPES GET MODELS
 # =============================================================================
 
+
 class ScrapeGetPathParams(PathParams):
     """Path parameters for GET /scrapes/{scrape_id}."""
+
     scrape_id: str
+
 
 class ScrapeGetRequest(BaseRequestModel):
     """Request for GET /scrapes/{scrape_id}."""
+
     path_params: ScrapeGetPathParams
-
-
-
 
 
 # =============================================================================
@@ -450,7 +498,6 @@ class ScrapeGetRequest(BaseRequestModel):
 # BATCHES API MODELS
 # =============================================================================
 # =============================================================================
-
 
 
 # =============================================================================
@@ -467,18 +514,21 @@ class BatchItem(OlostepBaseModel):
     separated to avoid conflicts between the request model (BatchItem) and
     the response wrapper (BatchItemResult).
     """
+
     url: HttpUrl
     custom_id: str | None = None
-    
+
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Custom serialization to convert HttpUrl to string."""
         data = super().model_dump(**kwargs)
-        if 'url' in data and hasattr(self.url, '__str__'):
-            data['url'] = str(self.url)
+        if "url" in data and hasattr(self.url, "__str__"):
+            data["url"] = str(self.url)
         return data
+
 
 class BatchStartBodyParams(BodyParams):
     """Body parameters for POST /batches."""
+
     items: list[BatchItem]
     country: Country | None = None
     parser: Parser | None = None
@@ -490,23 +540,25 @@ class BatchStartBodyParams(BodyParams):
         if not v:
             raise ValueError("items must not be empty")
         return v
-    
+
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Custom serialization to handle special fields."""
         kwargs["exclude_none"] = True
         data = super().model_dump(**kwargs)
-        
+
         # Handle items serialization - convert each item to dict
-        if 'items' in data and isinstance(self.items, list):
-            data['items'] = [item.model_dump() for item in self.items]
-        
+        if "items" in data and isinstance(self.items, list):
+            data["items"] = [item.model_dump() for item in self.items]
+
         # Handle ParserConfig serialization
-        if 'parser' in data and isinstance(self.parser, Parser):
-            data['parser'] = self.parser.model_dump()
+        if "parser" in data and isinstance(self.parser, Parser):
+            data["parser"] = self.parser.model_dump()
         return data
+
 
 class BatchStartRequest(BaseRequestModel):
     """Request for POST /batches."""
+
     body_params: BatchStartBodyParams
 
 
@@ -514,12 +566,16 @@ class BatchStartRequest(BaseRequestModel):
 # BATCHES INFO MODELS
 # =============================================================================
 
+
 class BatchInfoPathParams(PathParams):
     """Path parameters for GET /batches/{batch_id}."""
+
     batch_id: str
+
 
 class BatchInfoRequest(BaseRequestModel):
     """Request for GET /batches/{batch_id}."""
+
     path_params: BatchInfoPathParams
 
 
@@ -527,71 +583,76 @@ class BatchInfoRequest(BaseRequestModel):
 # BATCHES ITEMS MODELS
 # =============================================================================
 
+
 class BatchItemsPathParams(PathParams):
     """Path parameters for GET /batches/{batch_id}/items."""
+
     batch_id: str
+
 
 class BatchItemsQueryStatus(str, Enum):
     """Common status values."""
+
     FAILED = "failed"
     COMPLETED = "completed"
     # IN_PROGRESS = "in_progress" # not used for filtering batch items
 
     def __str__(self) -> str:
         return self.value
-    
+
 
 class BatchItemsQueryParams(QueryParams):
     """
     Query parameters for GET /batches/{batch_id}/items.
-    
+
     Pagination Behavior:
     ===================
-    
+
     The Olostep API uses a cursor-based pagination system with the following rules:
-    
+
     1. **First Request**: Send only `limit` parameter (no cursor)
        - Example: `?limit=10`
        - API returns first batch of items + cursor token
-    
+
     2. **Subsequent Requests**: Send only `cursor` parameter (no limit)
        - Example: `?cursor=1758303369342`
        - API remembers the limit from the first request
        - Returns next batch of items + new cursor token
-    
+
     3. **Pagination Complete**: When cursor is null/None
        - No more items available
        - Stop pagination
-    
+
     **Important**: Never send both `cursor` and `limit` in the same request.
     The API will ignore the limit if cursor is provided, which can lead to
     unexpected pagination behavior.
     """
+
     status: BatchItemsQueryStatus | None = None
     cursor: int | None = None
     limit: int | None = None
-    
-    @field_validator('cursor')
+
+    @field_validator("cursor")
     @classmethod
     def cursor_must_be_positive(cls, v: int | None) -> int | None:
         """Validate that cursor is a positive integer if provided."""
         if v is not None and v < 0:
-            raise ValueError('cursor must be a positive integer')
+            raise ValueError("cursor must be a positive integer")
         return v
-    
-    @field_validator('limit')
+
+    @field_validator("limit")
     @classmethod
     def limit_must_be_positive(cls, v: int | None) -> int | None:
         """Validate that limit is a positive integer if provided."""
         if v is not None and v <= 0:
-            raise ValueError('limit must be a positive integer')
+            raise ValueError("limit must be a positive integer")
         return v
-    
-    @model_validator(mode='after')
-    def cursor_and_limit_mutually_exclusive(self) -> 'BatchItemsQueryParams':
+
+    @model_validator(mode="after")
+    def cursor_and_limit_mutually_exclusive(self) -> "BatchItemsQueryParams":
         """
         Enforce that cursor and limit cannot be sent together.
-        
+
         This prevents confusion about pagination behavior and ensures
         the API's cursor-based pagination works correctly.
         """
@@ -606,16 +667,16 @@ class BatchItemsQueryParams(QueryParams):
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Custom serialization to convert status to string."""
         data = super().model_dump(**kwargs)
-        if 'status' in data and isinstance(self.status, BatchItemsQueryStatus):
-            data['status'] = self.status.value
+        if "status" in data and isinstance(self.status, BatchItemsQueryStatus):
+            data["status"] = self.status.value
         return data
+
 
 class BatchItemsRequest(BaseRequestModel):
     """Request for GET /batches/{batch_id}/items."""
+
     path_params: BatchItemsPathParams
     query_params: BatchItemsQueryParams | None = None
-
-
 
 
 # =============================================================================
@@ -625,13 +686,14 @@ class BatchItemsRequest(BaseRequestModel):
 # =============================================================================
 
 
-
 # =============================================================================
 # CRAWLS START MODELS
 # =============================================================================
 
+
 class CrawlStartBodyParams(BodyParams):
     """Body parameters for POST /crawls."""
+
     start_url: HttpUrl
     max_pages: int | None = None
     include_urls: list[str] | None = None
@@ -642,34 +704,34 @@ class CrawlStartBodyParams(BodyParams):
     search_query: str | None = None
     top_n: int | None = None
     webhook_url: HttpUrl | None = None
-    
-    @field_validator('max_pages')
+
+    @field_validator("max_pages")
     @classmethod
     def max_pages_must_be_positive(cls, v: int | None) -> int | None:
         if v is not None and v <= 0:
-            raise ValueError('max_pages must be positive')
+            raise ValueError("max_pages must be positive")
         return v
-    
-    @field_validator('max_depth')
+
+    @field_validator("max_depth")
     @classmethod
     def max_depth_must_be_positive(cls, v: int | None) -> int | None:
         if v is not None and v <= 0:
-            raise ValueError('max_depth must be positive')
+            raise ValueError("max_depth must be positive")
         return v
-    
-    @model_validator(mode='after')
-    def at_least_one_limit_must_be_set(self) -> 'CrawlStartBodyParams':
+
+    @model_validator(mode="after")
+    def at_least_one_limit_must_be_set(self) -> "CrawlStartBodyParams":
         if self.max_pages is None and self.max_depth is None:
-            raise ValueError('At least one of max_pages or max_depth must be set')
+            raise ValueError("At least one of max_pages or max_depth must be set")
         return self
-    
-    @field_validator('top_n')
+
+    @field_validator("top_n")
     @classmethod
     def top_n_must_be_positive(cls, v: int | None) -> int | None:
         if v is not None and v <= 0:
-            raise ValueError('top_n must be positive')
+            raise ValueError("top_n must be positive")
         return v
-    
+
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Custom serialization to remove empty keys and convert all HttpUrl fields to string."""
         kwargs["exclude_none"] = True
@@ -680,89 +742,99 @@ class CrawlStartBodyParams(BodyParams):
                 data[key] = str(value)
             elif isinstance(value, list):
                 # Convert HttpUrl in lists to string
-                data[key] = [str(item) if isinstance(item, HttpUrl) else item for item in value]
+                data[key] = [
+                    str(item) if isinstance(item, HttpUrl) else item for item in value
+                ]
         return data
+
 
 class CrawlStartRequest(BaseRequestModel):
     """Request for POST /crawls."""
-    body_params: CrawlStartBodyParams
 
+    body_params: CrawlStartBodyParams
 
 
 # =============================================================================
 # CRAWLS INFO MODELS
 # =============================================================================
 
+
 class CrawlInfoPathParams(PathParams):
     """Path parameters for GET /crawls/{crawl_id}."""
+
     crawl_id: str
+
 
 class CrawlInfoRequest(BaseRequestModel):
     """Request for GET /crawls/{crawl_id}."""
-    path_params: CrawlInfoPathParams
 
+    path_params: CrawlInfoPathParams
 
 
 # =============================================================================
 # CRAWLS PAGES MODELS
 # =============================================================================
 
+
 class CrawlPagesPathParams(PathParams):
     """Path parameters for GET /crawls/{crawl_id}/pages."""
+
     crawl_id: str
+
 
 class CrawlPagesQueryParams(QueryParams):
     """
     Query parameters for GET /crawls/{crawl_id}/pages.
-    
+
     Pagination Behavior:
     ===================
-    
+
     The Olostep API uses a cursor-based pagination system with the following rules:
-    
+
     1. **First Request**: Send only `limit` parameter (no cursor)
        - Example: `?limit=10`
        - API returns first batch of pages + cursor token
-    
+
     2. **Subsequent Requests**: Send only `cursor` parameter (no limit)
        - Example: `?cursor=1758303369342`
        - API remembers the limit from the first request
        - Returns next batch of pages + new cursor token
-    
+
     3. **Pagination Complete**: When cursor is null/None
        - No more pages available
        - Stop pagination
-    
+
     **Important**: Never send both `cursor` and `limit` in the same request.
     The API will ignore the limit if cursor is provided, which can lead to
     unexpected pagination behavior.
     ```
     """
+
     cursor: int | None = None
     limit: int | None = None
     search_query: str | None = None
-    
-    @field_validator('cursor')
+
+    @field_validator("cursor")
     @classmethod
     def cursor_must_be_positive(cls, v: int | None) -> int | None:
         """Validate that cursor is a positive integer if provided."""
         if v is not None and v < 0:
-            raise ValueError('cursor must be a positive integer')
+            raise ValueError("cursor must be a positive integer")
         return v
-    
-    @field_validator('limit')
+
+    @field_validator("limit")
     @classmethod
     def limit_must_be_positive(cls, v: int | None) -> int | None:
         """Validate that limit is a positive integer if provided."""
         if v is not None and v <= 0:
-            raise ValueError('limit must be a positive integer')
+            raise ValueError("limit must be a positive integer")
         return v
-    
-    @model_validator(mode='after')
-    def cursor_and_limit_mutually_exclusive(self) -> 'CrawlPagesQueryParams':
+
+    @model_validator(mode="after")
+    def cursor_and_limit_mutually_exclusive(self) -> "CrawlPagesQueryParams":
         """
         Enforce that cursor and limit cannot be sent together.
-        
+
         This prevents confusion about pagination behavior and ensures
         the API's cursor-based pagination works correctly.
         """
@@ -774,12 +846,12 @@ class CrawlPagesQueryParams(QueryParams):
             )
         return self
 
+
 class CrawlPagesRequest(BaseRequestModel):
     """Request for GET /crawls/{crawl_id}/pages."""
+
     path_params: CrawlPagesPathParams
     query_params: CrawlPagesQueryParams | None = None
-
-
 
 
 # =============================================================================
@@ -788,9 +860,11 @@ class CrawlPagesRequest(BaseRequestModel):
 # =============================================================================
 # =============================================================================
 
+
 # There is only one endpoint for maps, so no need to split it into multiple markers.
 class MapCreateBodyParams(BodyParams):
     """Body parameters for POST /maps."""
+
     url: HttpUrl
     search_query: str | None = None
     top_n: int | None = None
@@ -799,28 +873,29 @@ class MapCreateBodyParams(BodyParams):
     exclude_urls: list[str] | None = None
     cursor: str | None = None
 
-    @field_validator('top_n')
+    @field_validator("top_n")
     @classmethod
     def top_n_must_be_positive(cls, v: int | None) -> int | None:
         if v is not None and v <= 0:
-            raise ValueError('top_n must be positive')
+            raise ValueError("top_n must be positive")
         return v
-    
+
     def model_dump(self, **kwargs) -> dict[str, Any]:
         """Custom serialization to remove empty keys and convert HttpUrl to string."""
         kwargs["exclude_none"] = True
         data = super().model_dump(**kwargs)
-        
+
         # Convert HttpUrl to string
-        if 'url' in data and isinstance(self.url, HttpUrl):
-            data['url'] = str(self.url)
-        
+        if "url" in data and isinstance(self.url, HttpUrl):
+            data["url"] = str(self.url)
+
         return data
+
 
 class MapCreateRequest(BaseRequestModel):
     """Request for POST /maps."""
-    body_params: MapCreateBodyParams
 
+    body_params: MapCreateBodyParams
 
 
 # =============================================================================
@@ -829,9 +904,11 @@ class MapCreateRequest(BaseRequestModel):
 # =============================================================================
 # =============================================================================
 
+
 # In an ideal world the retrieve format would be predeterminated by the original scrape/crawl/batch config.
 class RetrieveFormat(str, Enum):
     """Output formats for retrieve content endpoint."""
+
     HTML = "html"
     MARKDOWN = "markdown"
     JSON = "json"
@@ -839,8 +916,10 @@ class RetrieveFormat(str, Enum):
     def __str__(self) -> str:
         return self.value
 
+
 class RetrieveGetQueryParams(QueryParams):
     """Query parameters for GET /retrieve."""
+
     retrieve_id: str
     formats: list[RetrieveFormat] | None = None
 
@@ -850,8 +929,10 @@ class RetrieveGetQueryParams(QueryParams):
     #         object.__setattr__(self, "formats", [])
     #     return self
 
+
 class RetrieveGetRequest(BaseRequestModel):
     """Request for GET /retrieve."""
+
     query_params: RetrieveGetQueryParams
 
 
@@ -861,13 +942,17 @@ class RetrieveGetRequest(BaseRequestModel):
 # =============================================================================
 # =============================================================================
 
+
 class AnswersBodyParams(BodyParams):
     """Body parameters for POST /answers."""
+
     task: str
     json_format: dict[str, Any] | None = None
 
+
 class AnswersRequest(BaseRequestModel):
     """Request for POST /answers."""
+
     body_params: AnswersBodyParams
 
 
@@ -875,10 +960,14 @@ class AnswersRequest(BaseRequestModel):
 # ANSWERS GET MODELS
 # =============================================================================
 
+
 class AnswersGetPathParams(PathParams):
     """Path parameters for GET /answers/{answer_id}."""
+
     answer_id: str
+
 
 class AnswersGetRequest(BaseRequestModel):
     """Request for GET /answers/{answer_id}."""
+
     path_params: AnswersGetPathParams

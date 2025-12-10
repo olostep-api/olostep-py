@@ -84,8 +84,8 @@ class EndpointContract:
     ) -> str:
         path_params = path_params or {}
         formatted_path = self.path.format(**path_params)
-        formatted_path = formatted_path.rstrip('/')
-        formatted_path = formatted_path.lstrip('/')
+        formatted_path = formatted_path.rstrip("/")
+        formatted_path = formatted_path.lstrip("/")
         return formatted_path
 
     @property
@@ -132,7 +132,10 @@ SCRAPE_GET = EndpointContract(
     request_model=None,
     response_model=GetScrapeResponse,
     examples=[
-        {"description": "Retrieve scrape results", "path_params": {"scrape_id": "scrape_12345"}},
+        {
+            "description": "Retrieve scrape results",
+            "path_params": {"scrape_id": "scrape_12345"},
+        },
     ],
 )
 
@@ -221,7 +224,11 @@ CRAWL_START = EndpointContract(
     examples=[
         {
             "description": "Basic crawl creation",
-            "request": {"start_url": "https://example.com", "max_pages": 10, "follow_links": True},
+            "request": {
+                "start_url": "https://example.com",
+                "max_pages": 10,
+                "follow_links": True,
+            },
         }
     ],
 )
@@ -248,7 +255,10 @@ CRAWL_PAGES = EndpointContract(
     request_model=CrawlPagesRequest,
     response_model=CrawlPagesResponse,
     examples=[
-        {"description": "Get all crawled pages", "path_params": {"crawl_id": "crawl_12345"}},
+        {
+            "description": "Get all crawled pages",
+            "path_params": {"crawl_id": "crawl_12345"},
+        },
         {
             "description": "Get pages with pagination",
             "path_params": {"crawl_id": "crawl_12345"},
@@ -271,7 +281,10 @@ MAP_CREATE = EndpointContract(
     request_model=MapCreateRequest,
     response_model=MapResponse,
     examples=[
-        {"description": "Basic link extraction", "request": {"url": "https://example.com"}},
+        {
+            "description": "Basic link extraction",
+            "request": {"url": "https://example.com"},
+        },
         {
             "description": "Link extraction with filtering",
             "request": {
@@ -301,7 +314,10 @@ RETRIEVE_GET = EndpointContract(
     examples=[
         {
             "description": "Retrieve content by ID with formats",
-            "query_params": {"retrieve_id": "retrieve_12345", "formats": ["html", "markdown", "json"]},
+            "query_params": {
+                "retrieve_id": "retrieve_12345",
+                "formats": ["html", "markdown", "json"],
+            },
         }
     ],
 )
@@ -328,14 +344,7 @@ ANSWERS_CREATE = EndpointContract(
             "description": "Task with JSON format specification",
             "request": {
                 "task": "Extract all product names and prices from the webpage",
-                "json_format": {
-                    "products": [
-                        {
-                            "name": "",
-                            "price": ""
-                        }
-                    ]
-                }
+                "json_format": {"products": [{"name": "", "price": ""}]},
             },
         },
     ],
@@ -350,7 +359,10 @@ ANSWERS_GET = EndpointContract(
     request_model=AnswersGetRequest,
     response_model=AnswersResponse,
     examples=[
-        {"description": "Retrieve answer results", "path_params": {"answer_id": "answer_12345"}},
+        {
+            "description": "Retrieve answer results",
+            "path_params": {"answer_id": "answer_12345"},
+        },
     ],
 )
 
@@ -376,4 +388,3 @@ CONTRACTS: dict[tuple[str, str], EndpointContract] = {
         ANSWERS_GET,
     ]
 }
-

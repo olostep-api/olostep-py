@@ -60,7 +60,7 @@ class OlostepClient:
         _caller: EndpointCaller | None = None,
     ) -> None:
         """Initialize the async Olostep client.
-        
+
         Args:
             api_key: Your Olostep API key. If not provided, reads from OLOSTEP_API_KEY env var.
             retry_strategy: Retry configuration for API calls. If not provided, uses sensible defaults.
@@ -71,11 +71,11 @@ class OlostepClient:
         self._api_key: str = (api_key or API_KEY_ENV or "").strip()
         self._base_url: str = (_base_url or BASE_API_URL).rstrip("/")
         self._retry_strategy = retry_strategy or RetryStrategy()
-        
+
         # Validate API key for real transport
         if _transport is None and _caller is None and not self._api_key:
             raise ValueError("API key is required when using the real HTTP transport")
-        
+
         # Use custom caller if provided (for testing)
         if _caller is not None:
             self._caller = _caller
@@ -83,10 +83,7 @@ class OlostepClient:
             # Use custom transport or create default
             self._transport: Transport = _transport or HttpxTransport(self._api_key)
             self._caller = EndpointCaller(
-                self._transport, 
-                self._base_url, 
-                self._api_key,
-                self._retry_strategy
+                self._transport, self._base_url, self._api_key, self._retry_strategy
             )
 
         # Menu items
@@ -96,7 +93,6 @@ class OlostepClient:
         self.sitemap = SitemapMenu(self._caller)
         self.retrieve = RetrieveMenu(self._caller)
         self.answers = AnswersMenu(self._caller)
-
 
     async def __aenter__(self) -> "OlostepClient":
         return self

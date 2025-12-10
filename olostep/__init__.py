@@ -35,7 +35,9 @@ from .models.request import (
 from .retry_strategy import RetryStrategy
 
 # Get all error classes dynamically
-_error_classes = [name for name in dir(errors) if not name.startswith('_') and name.endswith('Error')]
+_error_classes = [
+    name for name in dir(errors) if not name.startswith("_") and name.endswith("Error")
+]
 
 __all__ = [
     # Clients

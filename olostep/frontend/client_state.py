@@ -42,15 +42,15 @@ logger = get_logger("frontend.client_state")
 
 class ScrapeResult:
     """Unified result object for scrape and retrieve operations.
-    
+
     This class provides a single interface for accessing the results of scrape-related
     API calls. It dynamically exposes content fields and metadata based on the response
     type and available data.
-    
+
     The class handles two main response types:
     - /scrapes (create, get): Includes metadata fields plus content
     - /retrieve: Content fields only (if present and non-null)
-    
+
     Attributes:
         id: Unique identifier for the scrape operation (scrapes endpoints only)
         created: Creation timestamp as Unix epoch (scrapes endpoints only)
@@ -74,17 +74,21 @@ class ScrapeResult:
         image_queued: Whether an image was queued for processing (if available)
     """
 
-    def __init__(self, response: CreateScrapeResponse | GetScrapeResponse | RetrieveResponse) -> None:
+    def __init__(
+        self, response: CreateScrapeResponse | GetScrapeResponse | RetrieveResponse
+    ) -> None:
         """Initialize ScrapeResult from an API response.
-        
+
         Args:
             response: API response object from scrape or retrieve endpoints.
                 Supports CreateScrapeResponse, GetScrapeResponse, or RetrieveResponse.
-                
+
         Raises:
             ValueError: If the response type is not supported.
         """
-        if isinstance(response, CreateScrapeResponse) or isinstance(response, GetScrapeResponse):
+        if isinstance(response, CreateScrapeResponse) or isinstance(
+            response, GetScrapeResponse
+        ):
             self.id = response.id
             self.created = response.created
             self.url_to_scrape = response.url_to_scrape
@@ -95,7 +99,9 @@ class ScrapeResult:
         elif isinstance(response, RetrieveResponse):
             results = response  # /retrieve returns content fields directly
         else:
-            raise ValueError(f"Invalid response type: {type(response)} for ScrapeResult")
+            raise ValueError(
+                f"Invalid response type: {type(response)} for ScrapeResult"
+            )
 
         # Dynamically set attributes for all fields in the results model that are not null
         for k, v in results.model_dump().items():
@@ -106,20 +112,33 @@ class ScrapeResult:
         content_keys = [
             attr
             for attr in vars(self)
-            if (attr.endswith("_content") or attr.endswith("_hosted_url")) and getattr(self, attr, None) is not None
+            if (attr.endswith("_content") or attr.endswith("_hosted_url"))
+            and getattr(self, attr, None) is not None
         ]
         _id = f"id={self.id!r}, " if hasattr(self, "id") and self.id else ""
         return f"ScrapeResult({_id}available={content_keys})"
 
     def __str__(self) -> str:
-        html_len = len(self.html_content) if hasattr(self, "html_content") and self.html_content else 0
-        md_len = len(self.markdown_content) if hasattr(self, "markdown_content") and self.markdown_content else 0
-        txt_len = len(self.text_content) if hasattr(self, "text_content") and self.text_content else 0
+        html_len = (
+            len(self.html_content)
+            if hasattr(self, "html_content") and self.html_content
+            else 0
+        )
+        md_len = (
+            len(self.markdown_content)
+            if hasattr(self, "markdown_content") and self.markdown_content
+            else 0
+        )
+        txt_len = (
+            len(self.text_content)
+            if hasattr(self, "text_content") and self.text_content
+            else 0
+        )
 
         _id = f"id={self.id!r}, " if hasattr(self, "id") and self.id else ""
         return (
             f"ScrapeResult({_id}html={html_len}B, md={md_len}B, text={txt_len}B, "
-            f"json={'yes' if hasattr(self, "json_content") and bool(self.json_content) else 'no'})"
+            f"json={'yes' if hasattr(self, 'json_content') and bool(self.json_content) else 'no'})"
         )
 
 
@@ -158,7 +177,7 @@ class AnswersResult:
         result = response.result
         self.json_content = result.json_content
         self.json_hosted_url = result.json_hosted_url
-        if hasattr(result, 'sources') and result.sources is not None:
+        if hasattr(result, "sources") and result.sources is not None:
             self.sources = result.sources
         else:
             self.sources = []
@@ -192,52 +211,52 @@ class AnswersResult:
         return f"Answer: {self.task[:50]}{'...' if len(self.task) > 50 else ''} -> {len(self.sources)} sources"
 
 
-
 @dataclass
 class RetrievableID:
     """Represents a retrievable ID with metadata and expiration checking.
-    
+
     This class provides a convenient way to track and manage retrievable IDs
     with their associated metadata, including age calculation and expiration checking.
-    
+
     Attributes:
         id: The unique identifier for the retrievable content.
         type: The type of retrievable content (e.g., "scrape", "batch_item").
         timestamp: Unix timestamp when the ID was created.
     """
+
     id: str
     type: str
     timestamp: int  # Unix timestamp
-    
+
     def __repr__(self) -> str:
         """Return a string representation of the RetrievableID.
-        
+
         Returns:
             str: String representation showing id, type, and age.
         """
         return f"RetrievableID(id={self.id!r}, type={self.type!r}, age={self.age})"
-    
+
     @property
     def age(self) -> str:
         """Get human-readable age of this ID.
-        
+
         Returns:
             str: Human-readable time delta (e.g., "2h ago", "3d ago").
         """
         return _format_time_delta(self.timestamp)
-    
+
     def is_expired(self, retention_days: int = 7) -> bool:
         """Check if this ID is expired based on retention days.
-        
+
         Args:
             retention_days: Number of days to retain the ID (default: 7).
-            
+
         Returns:
             bool: True if the ID is expired, False otherwise.
         """
         if not self.timestamp:
             return True
-        
+
         try:
             created_time = datetime.fromtimestamp(self.timestamp, tz=timezone.utc)
             now = datetime.now(tz=timezone.utc)
@@ -263,8 +282,10 @@ class BatchItemResult:
         retrieve_id: Unique identifier for retrieving the scraped content.
         custom_id: Custom identifier provided when creating the batch.
     """
-    
-    def __init__(self, caller: EndpointCaller, item: BatchItemsResponseListItem) -> None:
+
+    def __init__(
+        self, caller: EndpointCaller, item: BatchItemsResponseListItem
+    ) -> None:
         """Initialize BatchItemResult from API response.
 
         Args:
@@ -293,33 +314,31 @@ class BatchItemResult:
         """
         return f"BatchItemResult {self.custom_id or '-'} -> {self.url} ({self.retrieve_id})"
 
-
-
-    async def retrieve(self, formats: list[str]| None = None) -> ScrapeResult:
+    async def retrieve(self, formats: list[str] | None = None) -> ScrapeResult:
         """Retrieve the scraped content for this batch item.
-        
+
         Fetches the scraped content for this specific batch item using its
         retrieve_id. Supports filtering by content formats.
-        
+
         Args:
             formats: List of content formats to retrieve (e.g., ["html", "markdown"]).
                 If None, returns all available formats.
-                
+
         Returns:
             ScrapeResult: The scraped content in the requested formats.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Retrieve all available formats
             result = await batch_item.retrieve()
-            
+
             # Retrieve specific formats
             result = await batch_item.retrieve(["html", "markdown"])
         """
         c = CONTRACTS[("retrieve", "get")]
-        #todo: if we had request validation for all endpoints we could put coersion into the models and 
+        # todo: if we had request validation for all endpoints we could put coersion into the models and
         # have endpoints like this support coersion for e.g. formats too.
         query_params = {
             "retrieve_id": self.retrieve_id,
@@ -330,15 +349,13 @@ class BatchItemResult:
         return ScrapeResult(data)
 
 
-
-
 class BatchInfo:
     """Represents information about a batch processing operation.
-    
+
     This class provides access to batch metadata including status, progress,
     and timing information. It's typically obtained from the Batch.info() method
     or the BatchMenu.info() method.
-    
+
     Attributes:
         id: Unique identifier for the batch.
         status: Current status of the batch (e.g., "in_progress", "completed", "failed").
@@ -346,10 +363,10 @@ class BatchInfo:
         total_urls: Total number of URLs in the batch.
         completed_urls: Number of URLs that have been processed.
     """
-    
+
     def __init__(self, response: BatchInfoResponse) -> None:
         """Initialize BatchInfo from API response.
-        
+
         Args:
             response: Batch info response from API.
         """
@@ -362,7 +379,7 @@ class BatchInfo:
 
     def __repr__(self) -> str:
         """Return a string representation of the BatchInfo.
-        
+
         Returns:
             str: String representation showing id, status, progress, and age.
         """
@@ -371,7 +388,7 @@ class BatchInfo:
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the BatchInfo.
-        
+
         Returns:
             str: Human-readable string showing status and progress.
         """
@@ -380,7 +397,7 @@ class BatchInfo:
     @property
     def age(self) -> str:
         """Get human-readable age of this batch.
-        
+
         Returns:
             str: Human-readable time delta (e.g., "2h ago", "3d ago").
         """
@@ -389,7 +406,7 @@ class BatchInfo:
     @property
     def time_since_start(self) -> float:
         """Get time since batch started in seconds.
-        
+
         Returns:
             float: Number of seconds since the batch was created.
         """
@@ -401,11 +418,11 @@ class BatchInfo:
 
 class Batch:
     """Represents a batch processing operation for multiple URLs.
-    
+
     This class provides access to batch operations including status monitoring,
     item iteration, and completion waiting. It supports pagination and filtering
     of batch items. Typically created by the BatchMenu.start() method.
-    
+
     Attributes:
         id: Unique identifier for the batch.
         status: Current status of the batch (e.g., "in_progress", "completed").
@@ -416,10 +433,10 @@ class Batch:
         country: Country setting used for the batch (if any).
         start_date: Human-readable start date of the batch.
     """
-    
+
     def __init__(self, caller: EndpointCaller, response: BatchCreateResponse) -> None:
         """Initialize Batch from API response.
-        
+
         Args:
             caller: EndpointCaller for making API requests.
             response: Batch creation response from API.
@@ -437,7 +454,7 @@ class Batch:
 
     def __repr__(self) -> str:
         """Return a string representation of the Batch.
-        
+
         Returns:
             str: String representation showing id and total URLs.
         """
@@ -445,39 +462,43 @@ class Batch:
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the Batch.
-        
+
         Returns:
             str: Human-readable string showing id, status, and progress.
         """
-        return f"Batch {self.id} [{self.status}] {self.completed_urls}/{self.total_urls}"
+        return (
+            f"Batch {self.id} [{self.status}] {self.completed_urls}/{self.total_urls}"
+        )
 
     @classmethod
     async def _info(cls, caller: EndpointCaller, batch_id: str) -> BatchInfo:
         """Private class method to get batch information.
-        
+
         Args:
             caller: EndpointCaller for making API requests.
             batch_id: The ID of the batch to get information for.
-            
+
         Returns:
             BatchInfo: Current batch status, progress, and metadata.
         """
         c = CONTRACTS[("batch", "info")]
-        data: BatchInfoResponse = await caller.invoke(c, path_params={"batch_id": batch_id})
+        data: BatchInfoResponse = await caller.invoke(
+            c, path_params={"batch_id": batch_id}
+        )
         return BatchInfo(data)
 
     async def info(self) -> BatchInfo:
         """Get current information about the batch.
-        
+
         Retrieves the latest status, progress, and metadata for this batch.
         Useful for monitoring batch progress and checking completion status.
-        
+
         Returns:
             BatchInfo: Current batch status, progress, and metadata.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get current batch information
             info = await batch.info()
@@ -486,13 +507,19 @@ class Batch:
         """
         return await self._info(self._caller, self.id)
 
-    def items(self, *, batch_size: int = 50, status: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[BatchItemResult]:
+    def items(
+        self,
+        *,
+        batch_size: int = 50,
+        status: str | None = None,
+        wait_for_completion: bool = True,
+    ) -> AsyncIterator[BatchItemResult]:
         """Return an async iterator for elegant pagination over all batch items.
-        
+
         Returns an async iterator that yields BatchItemResult objects for all items
         in this batch. Handles pagination automatically and can filter by status.
         Optionally waits for batch completion before starting iteration.
-        
+
         Args:
             batch_size: Number of items to fetch per API request (default: 50).
                 Larger values reduce API calls but use more memory.
@@ -501,35 +528,48 @@ class Batch:
             wait_for_completion: Whether to wait for the batch to complete before
                 starting iteration (default: True). If False, starts immediately
                 and may return partial results.
-                
+
         Yields:
             BatchItemResult: Individual batch items with URL, retrieve_id, and custom_id.
                 Each item can be used to retrieve scraped content.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get all completed items
             async for item in batch.items(status="completed"):
                 result = await item.retrieve()
                 print(f"Retrieved: {item.url}")
-                
+
             # Get items without waiting for completion
             async for item in batch.items(wait_for_completion=False):
                 print(f"Item: {item.url} - {item.retrieve_id}")
         """
-        return self._items_async_iterator(self._caller, self.id, batch_size=batch_size, status=status, wait_for_completion=wait_for_completion)
+        return self._items_async_iterator(
+            self._caller,
+            self.id,
+            batch_size=batch_size,
+            status=status,
+            wait_for_completion=wait_for_completion,
+        )
 
     @classmethod
-    async def _wait_till_done_(cls, caller: EndpointCaller, batch_id: str, *, check_every_n_secs: int = 10, timeout_seconds: int = 600) -> None:
+    async def _wait_till_done_(
+        cls,
+        caller: EndpointCaller,
+        batch_id: str,
+        *,
+        check_every_n_secs: int = 10,
+        timeout_seconds: int = 600,
+    ) -> None:
         """Private static method to wait for batch completion."""
         start_time = datetime.now(timezone.utc)
-        
+
         # Get initial info for logging
         info = await cls._info(caller, batch_id)
         batch_elapsed = info.time_since_start
-        
+
         logger.info(
             f"Starting wait_till_done for batch {batch_id}: batch started {batch_elapsed:.2f}s ago, "
             f"monitoring for up to {timeout_seconds}s"
@@ -548,21 +588,29 @@ class Batch:
                     f"[BatchInfo] finish: id={batch_id} wait={wait_elapsed:.2f}s status={info.status} completed={info.completed_urls}/{info.total_urls}"
                 )
                 break
-                
+
             if wait_elapsed >= timeout_seconds:
                 logger.error(
                     f"[BatchInfo] id={batch_id} aborted after {wait_elapsed:.2f}s (timeout: {timeout_seconds}s)"
                 )
                 raise OlostepClientError_Timeout("wait_till_done", timeout_seconds)
-                
+
             await asyncio.sleep(check_every_n_secs)
 
     @classmethod
-    async def _items_async_iterator(cls, caller: EndpointCaller, batch_id: str, *, batch_size: int = 50, status: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[BatchItemResult]:
+    async def _items_async_iterator(
+        cls,
+        caller: EndpointCaller,
+        batch_id: str,
+        *,
+        batch_size: int = 50,
+        status: str | None = None,
+        wait_for_completion: bool = True,
+    ) -> AsyncIterator[BatchItemResult]:
         """Internal async iterator that handles pagination automatically."""
         if wait_for_completion:
             await cls._wait_till_done_(caller, batch_id)
-        
+
         current_cursor = None
         while True:
             c = CONTRACTS[("batch", "items")]
@@ -575,61 +623,71 @@ class Batch:
                 args["cursor"] = current_cursor
             if status is not None:
                 args["status"] = status
-            
-            data: BatchItemsResponse = await caller.invoke(c, path_params={"batch_id": batch_id}, query_params=args)
-            
+
+            data: BatchItemsResponse = await caller.invoke(
+                c, path_params={"batch_id": batch_id}, query_params=args
+            )
+
             if not data.items:
                 break
-            
+
             for item_data in data.items:
                 yield BatchItemResult(caller, item_data)
-            
+
             if data.cursor is None:
-                logger.debug(f"Pagination for batch {batch_id!r} complete: no more items")
+                logger.debug(
+                    f"Pagination for batch {batch_id!r} complete: no more items"
+                )
                 break
-            logger.debug(f"Pagination for batch {batch_id!r}: next cursor={data.cursor}")
+            logger.debug(
+                f"Pagination for batch {batch_id!r}: next cursor={data.cursor}"
+            )
             current_cursor = data.cursor
 
     async def wait_till_done(self, *, check_every_n_secs: int = 10) -> None:
         """Wait until the batch is completed or failed.
-        
+
         Polls the batch status at regular intervals until the batch reaches a
         terminal state (completed or failed). Useful for ensuring all items
         are processed before proceeding.
-        
+
         Args:
             check_every_n_secs: How often to check batch status in seconds (default: 10).
                 More frequent checking uses more API calls but provides faster updates.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Wait for batch completion with default settings
             await batch.wait_till_done()
-            
+
             # Wait with more frequent status checks
             await batch.wait_till_done(check_every_n_secs=5)
         """
-        await self._wait_till_done_(self._caller, self.id, check_every_n_secs=check_every_n_secs)
+        await self._wait_till_done_(
+            self._caller, self.id, check_every_n_secs=check_every_n_secs
+        )
 
 
 class CrawlPage:
     """Represents a single page discovered during a crawl operation.
-    
+
     Each CrawlPage corresponds to one URL that was discovered and processed
     during a crawl. It provides access to the URL, retrieve ID, and allows
     retrieving the scraped content for that specific page.
-    
+
     Attributes:
         url: The URL that was crawled.
         retrieve_id: Unique identifier for retrieving the scraped content.
         is_external: Whether this page is external to the crawl domain.
     """
-    
-    def __init__(self, caller: EndpointCaller, item: CrawlPagesResponseListItem) -> None:
+
+    def __init__(
+        self, caller: EndpointCaller, item: CrawlPagesResponseListItem
+    ) -> None:
         """Initialize CrawlPage from API response.
-        
+
         Args:
             caller: EndpointCaller for making API requests.
             item: Crawl page data from API response.
@@ -642,7 +700,7 @@ class CrawlPage:
 
     def __repr__(self) -> str:
         """Return a string representation of the CrawlPage.
-        
+
         Returns:
             str: String representation showing url, retrieve_id, and external status.
         """
@@ -650,32 +708,34 @@ class CrawlPage:
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the CrawlPage.
-        
+
         Returns:
             str: Human-readable string showing url and external/internal status.
         """
-        return f"CrawlPage {self.url} ({'external' if self.is_external else 'internal'})"
+        return (
+            f"CrawlPage {self.url} ({'external' if self.is_external else 'internal'})"
+        )
 
     async def retrieve(self, formats: list[str] | None = None) -> ScrapeResult:
         """Retrieve the scraped content for this crawl page.
-        
+
         Fetches the scraped content for this specific crawl page using its
         retrieve_id. Supports filtering by content formats.
-        
+
         Args:
             formats: List of content formats to retrieve (e.g., ["html", "markdown"]).
                 If None, returns all available formats.
-                
+
         Returns:
             ScrapeResult: The scraped content in the requested formats.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Retrieve all available formats
             result = await crawl_page.retrieve()
-            
+
             # Retrieve specific formats
             result = await crawl_page.retrieve(["html", "markdown"])
         """
@@ -687,15 +747,13 @@ class CrawlPage:
         return ScrapeResult(data)
 
 
-
-
 class CrawlInfo:
     """Represents information about a crawl operation.
-    
+
     This class provides access to crawl metadata including status, progress,
     and timing information. It's typically obtained from the Crawl.info() method
     or the CrawlMenu.info() method.
-    
+
     Attributes:
         id: Unique identifier for the crawl.
         status: Current status of the crawl (e.g., "in_progress", "completed", "failed").
@@ -703,24 +761,24 @@ class CrawlInfo:
         pages_count: Total number of pages discovered in the crawl.
         current_depth: Current depth of the crawl from the starting URL.
     """
-    
+
     def __init__(self, response: CrawlInfoResponse) -> None:
         """Initialize CrawlInfo from API response.
-        
+
         Args:
             response: Crawl info response from API.
         """
         # Copy fields from response to reduce dependency
         self.id = response.id
         self.status = str(response.status)
-        self.created = response.created # start of crawl
+        self.created = response.created  # start of crawl
         self.pages_count = response.pages_count
         self.current_depth = response.current_depth
         self._last_updated = datetime.now(timezone.utc)
 
     def __repr__(self) -> str:
         """Return a string representation of the CrawlInfo.
-        
+
         Returns:
             str: String representation showing id, status, pages count, and depth.
         """
@@ -728,7 +786,7 @@ class CrawlInfo:
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the CrawlInfo.
-        
+
         Returns:
             str: Human-readable string showing id, age, status, pages count, and depth.
         """
@@ -738,7 +796,7 @@ class CrawlInfo:
     @property
     def time_since_start(self) -> int:
         """Get time since crawl started in seconds.
-        
+
         Returns:
             int: Number of seconds since the crawl was created.
         """
@@ -750,7 +808,7 @@ class CrawlInfo:
     @property
     def time_since_info_update(self) -> int:
         """Get time since last info update in seconds.
-        
+
         Returns:
             int: Number of seconds since this CrawlInfo object was last updated.
         """
@@ -761,7 +819,7 @@ class CrawlInfo:
     @property
     def age(self) -> str:
         """Get human-readable age of this crawl.
-        
+
         Returns:
             str: Human-readable time delta (e.g., "2h ago", "3d ago").
         """
@@ -770,11 +828,11 @@ class CrawlInfo:
 
 class Crawl:
     """Represents a crawl operation for discovering and processing multiple pages.
-    
+
     This class provides access to crawl operations including status monitoring,
     page iteration, and completion waiting. It supports pagination and filtering
     of discovered pages. Typically created by the CrawlMenu.start() method.
-    
+
     Attributes:
         id: Unique identifier for the crawl.
         object: Object type identifier.
@@ -793,10 +851,10 @@ class Crawl:
         pages_count: Total number of pages discovered so far.
         webhook_url: Webhook URL for notifications (if set).
     """
-    
+
     def __init__(self, caller: EndpointCaller, response: CreateCrawlResponse) -> None:
         """Initialize Crawl from API response.
-        
+
         Args:
             caller: EndpointCaller for making API requests.
             response: Crawl creation response from API.
@@ -822,20 +880,22 @@ class Crawl:
 
     def __repr__(self) -> str:
         """Return a string representation of the Crawl.
-        
+
         Returns:
             str: String representation showing key crawl parameters.
         """
-        return (f"Crawl(id={self.id!r}, start_url={self.start_url!r}, "
-                f"max_pages={self.max_pages!r}, include_urls={self.include_urls!r}, "
-                f"exclude_urls={self.exclude_urls!r}, max_depth={self.max_depth!r}, "
-                f"include_external={self.include_external!r}, include_subdomain=None, "
-                f"search_query={self.search_query!r}, top_n={self.top_n!r}, "
-                f"webhook_url={self.webhook_url!r})")
+        return (
+            f"Crawl(id={self.id!r}, start_url={self.start_url!r}, "
+            f"max_pages={self.max_pages!r}, include_urls={self.include_urls!r}, "
+            f"exclude_urls={self.exclude_urls!r}, max_depth={self.max_depth!r}, "
+            f"include_external={self.include_external!r}, include_subdomain=None, "
+            f"search_query={self.search_query!r}, top_n={self.top_n!r}, "
+            f"webhook_url={self.webhook_url!r})"
+        )
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the Crawl.
-        
+
         Returns:
             str: Human-readable string showing key crawl information.
         """
@@ -844,30 +904,32 @@ class Crawl:
     @classmethod
     async def _info(cls, caller: EndpointCaller, crawl_id: str) -> CrawlInfo:
         """Private class method to get crawl information.
-        
+
         Args:
             caller: EndpointCaller for making API requests.
             crawl_id: The ID of the crawl to get information for.
-            
+
         Returns:
             CrawlInfo: Current crawl status, progress, and metadata.
         """
         c = CONTRACTS[("crawl", "info")]
-        data: CrawlInfoResponse = await caller.invoke(c, path_params={"crawl_id": crawl_id})
+        data: CrawlInfoResponse = await caller.invoke(
+            c, path_params={"crawl_id": crawl_id}
+        )
         return CrawlInfo(data)
 
     async def info(self) -> CrawlInfo:
         """Get current information about the crawl.
-        
+
         Retrieves the latest status, progress, and metadata for this crawl.
         Useful for monitoring crawl progress and checking completion status.
-        
+
         Returns:
             CrawlInfo: Current crawl status, progress, and metadata.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get current crawl information
             info = await crawl.info()
@@ -876,13 +938,19 @@ class Crawl:
         """
         return await self._info(self._caller, self.id)
 
-    def pages(self, *, batch_size: int = 50, search_query: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[CrawlPage]:
+    def pages(
+        self,
+        *,
+        batch_size: int = 50,
+        search_query: str | None = None,
+        wait_for_completion: bool = True,
+    ) -> AsyncIterator[CrawlPage]:
         """Return an async iterator for elegant pagination over all crawl pages.
-        
+
         Returns an async iterator that yields CrawlPage objects for all pages
         discovered during this crawl. Handles pagination automatically and can filter
         by search query. Optionally waits for crawl completion before starting iteration.
-        
+
         Args:
             batch_size: Number of pages to fetch per API request (default: 50).
                 Larger values reduce API calls but use more memory.
@@ -891,35 +959,48 @@ class Crawl:
             wait_for_completion: Whether to wait for the crawl to complete before
                 starting iteration (default: True). If False, starts immediately
                 and may return partial results.
-                
+
         Yields:
             CrawlPage: Individual crawl pages with URL, retrieve_id, and external status.
                 Each page can be used to retrieve scraped content.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get all discovered pages
             async for page in crawl.pages():
                 result = await page.retrieve()
                 print(f"Retrieved: {page.url}")
-                
+
             # Get pages matching a search query
             async for page in crawl.pages(search_query="news"):
                 print(f"News page: {page.url}")
         """
-        return self._pages_async_iterator(self._caller, self.id, batch_size=batch_size, search_query=search_query, wait_for_completion=wait_for_completion)
+        return self._pages_async_iterator(
+            self._caller,
+            self.id,
+            batch_size=batch_size,
+            search_query=search_query,
+            wait_for_completion=wait_for_completion,
+        )
 
     @classmethod
-    async def _wait_till_done_(cls, caller: EndpointCaller, crawl_id: str, *, check_every_n_secs: int = 10, timeout_seconds: int = 600) -> None:
+    async def _wait_till_done_(
+        cls,
+        caller: EndpointCaller,
+        crawl_id: str,
+        *,
+        check_every_n_secs: int = 10,
+        timeout_seconds: int = 600,
+    ) -> None:
         """Private static method to wait for crawl completion."""
         start_time = datetime.now(timezone.utc)
-        
+
         # Get initial info for logging
         info = await cls._info(caller, crawl_id)
         crawl_elapsed = info.time_since_start
-        
+
         logger.info(
             f"Starting wait_till_done for crawl {crawl_id}: crawl started {crawl_elapsed:.2f}s ago, "
             f"monitoring for up to {timeout_seconds}s"
@@ -948,11 +1029,19 @@ class Crawl:
             await asyncio.sleep(check_every_n_secs)
 
     @classmethod
-    async def _pages_async_iterator(cls, caller: EndpointCaller, crawl_id: str, *, batch_size: int = 50, search_query: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[CrawlPage]:
+    async def _pages_async_iterator(
+        cls,
+        caller: EndpointCaller,
+        crawl_id: str,
+        *,
+        batch_size: int = 50,
+        search_query: str | None = None,
+        wait_for_completion: bool = True,
+    ) -> AsyncIterator[CrawlPage]:
         """Internal async iterator that handles pagination automatically."""
         if wait_for_completion:
             await cls._wait_till_done_(caller, crawl_id)
-        
+
         current_cursor = None
         while True:
             c = CONTRACTS[("crawl", "pages")]
@@ -965,68 +1054,81 @@ class Crawl:
                 args["cursor"] = current_cursor
             if search_query is not None:
                 args["search_query"] = search_query
-            data: CrawlPagesResponse = await caller.invoke(c, path_params={"crawl_id": crawl_id}, query_params=args)
-            
+            data: CrawlPagesResponse = await caller.invoke(
+                c, path_params={"crawl_id": crawl_id}, query_params=args
+            )
+
             if not data.pages:
                 break
-            
+
             for page_data in data.pages:
                 yield CrawlPage(caller, page_data)
-            
+
             if data.cursor is None:
-                logger.debug(f"Pagination for crawl {crawl_id!r} complete: no more pages")
+                logger.debug(
+                    f"Pagination for crawl {crawl_id!r} complete: no more pages"
+                )
                 break
-            logger.debug(f"Pagination for crawl {crawl_id!r}: next cursor={data.cursor}")
+            logger.debug(
+                f"Pagination for crawl {crawl_id!r}: next cursor={data.cursor}"
+            )
             current_cursor = data.cursor
 
-    async def wait_till_done(self, *, check_every_n_secs: int = 10, timeout_seconds: int = 600) -> None:
+    async def wait_till_done(
+        self, *, check_every_n_secs: int = 10, timeout_seconds: int = 600
+    ) -> None:
         """Wait until the crawl is completed or failed.
-        
+
         Polls the crawl status at regular intervals until the crawl reaches a
         terminal state (completed or failed). Useful for ensuring all pages
         are discovered before proceeding.
-        
+
         Args:
             check_every_n_secs: How often to check crawl status in seconds (default: 10).
                 More frequent checking uses more API calls but provides faster updates.
             timeout_seconds: Maximum time to wait in seconds (default: 600 seconds / 10 minutes).
                 If the crawl doesn't complete within this time, a timeout error is raised.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Wait for crawl completion with default settings
             await crawl.wait_till_done()
-            
+
             # Wait with more frequent status checks and longer timeout
             await crawl.wait_till_done(check_every_n_secs=5, timeout_seconds=1200)
         """
-        await self._wait_till_done_(self._caller, self.id, check_every_n_secs=check_every_n_secs, timeout_seconds=timeout_seconds)
+        await self._wait_till_done_(
+            self._caller,
+            self.id,
+            check_every_n_secs=check_every_n_secs,
+            timeout_seconds=timeout_seconds,
+        )
 
 
 class Sitemap:
     """Represents a sitemap operation for extracting links from a website.
-    
+
     This class provides access to sitemap operations including link extraction,
     pagination, and filtering. It supports pagination for large sitemaps and
     provides methods for iterating over discovered URLs. Typically created by
     the SitemapMenu.__call__() method.
-    
+
     Attributes:
         id: Unique identifier for the sitemap (if available).
         initial_urls_count: Total number of URLs discovered in the initial response.
         cursor: Pagination cursor for retrieving more URLs (if available).
     """
-    
+
     def __init__(self, caller: EndpointCaller, response: MapResponse, url: str) -> None:
         """Initialize Sitemap from API response.
-        
+
         Args:
             caller: EndpointCaller for making API requests.
             response: Map response from API.
             url: Original URL used to create the sitemap (required for pagination).
-            
+
         Note:
             The original URL is required for pagination because the API needs it
             when fetching subsequent pages with cursor-based pagination. Without
@@ -1042,7 +1144,7 @@ class Sitemap:
 
     def __repr__(self) -> str:
         """Return a string representation of the Sitemap.
-        
+
         Returns:
             str: String representation showing id, initial URLs count, and cursor.
         """
@@ -1050,7 +1152,7 @@ class Sitemap:
 
     def __str__(self) -> str:
         """Return a human-readable string representation of the Sitemap.
-        
+
         Returns:
             str: Human-readable string showing id, initial URLs count, and cursor status.
         """
@@ -1058,16 +1160,16 @@ class Sitemap:
 
     async def urls(self) -> AsyncIterator[str]:
         """Return an async iterator for all sitemap URLs.
-        
+
         This method automatically handles pagination, yielding each URL
         individually for seamless iteration over large sitemaps.
-        
+
         Yields:
             str: Individual URLs from the sitemap.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get all URLs from the sitemap
             async for url in sitemap.urls():
@@ -1076,26 +1178,32 @@ class Sitemap:
         async for url in self._urls_async_iterator(self._caller, self):
             yield url
 
-
     @classmethod
-    async def _urls_async_iterator(cls, caller: EndpointCaller, sitemap: 'Sitemap') -> AsyncIterator[str]:
+    async def _urls_async_iterator(
+        cls, caller: EndpointCaller, sitemap: "Sitemap"
+    ) -> AsyncIterator[str]:
         """Internal async iterator that handles pagination automatically."""
         current_sitemap = sitemap
-        
+
         while True:
             # Yield all URLs from current sitemap
             for url in current_sitemap._initial_urls:
                 yield url
-            
+
             # Check if there are more URLs to fetch
             if not current_sitemap.cursor:
                 logger.debug("Pagination for sitemap complete: no more URLs")
                 break
-            
+
             # Fetch next batch using cursor and original URL
-            logger.debug(f"Pagination for sitemap: next cursor={current_sitemap.cursor}")
+            logger.debug(
+                f"Pagination for sitemap: next cursor={current_sitemap.cursor}"
+            )
             c = CONTRACTS[("map", "create")]
-            req = {"cursor": current_sitemap.cursor, "url": current_sitemap._original_url}
+            req = {
+                "cursor": current_sitemap.cursor,
+                "url": current_sitemap._original_url,
+            }
             data: MapResponse = await caller.invoke(c, body_params=req)
             current_sitemap = Sitemap(caller, data, current_sitemap._original_url)
 
@@ -1104,12 +1212,12 @@ def _format_time_delta(timestamp: int) -> str:
     """Format a Unix timestamp as a human-readable time delta."""
     if not timestamp:
         return "unknown"
-    
+
     try:
         created_time = datetime.fromtimestamp(timestamp, tz=timezone.utc)
         now = datetime.now(tz=timezone.utc)
         delta = now - created_time
-        
+
         if delta.days > 0:
             return f"{delta.days}d ago"
         elif delta.seconds > 3600:

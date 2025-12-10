@@ -7,7 +7,9 @@ from typing import Final
 VERSION: Final[str] = "0.11.0"
 
 # Base API URL (can be overridden via env)
-BASE_API_URL: Final[str] = os.getenv("OLOSTEP_BASE_API_URL", "https://api.olostep.com/v1")
+BASE_API_URL: Final[str] = os.getenv(
+    "OLOSTEP_BASE_API_URL", "https://api.olostep.com/v1"
+)
 
 # User-Agent header built from version
 USER_AGENT: Final[str] = f"olostep-python-sdk/{VERSION}"

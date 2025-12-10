@@ -35,15 +35,14 @@ from ..models.response import CreateScrapeResponse, GetScrapeResponse
 logger = get_logger("frontend.scrape_menu")
 
 
-
 class ScrapeMenu:
     """Scraping operations with rich IDE support and smart input coercion.
-    
+
     This class provides methods for scraping individual URLs with various
     configuration options. It supports smart input coercion, validation,
     and provides rich type hints for better IDE support.
     """
-    
+
     def __init__(self, caller: EndpointCaller, validate_request: bool = True) -> None:
         self._caller = caller
         self._validate_request = validate_request
@@ -56,7 +55,10 @@ class ScrapeMenu:
         country: Country | str | None = None,
         wait_before_scraping: int | None = None,
         remove_css_selectors: list[str] | str | None = None,
-        actions: list[WaitAction | ClickAction | FillInputAction | ScrollAction] | list[dict[str, Any]] | dict[str, Any] | None = None,
+        actions: list[WaitAction | ClickAction | FillInputAction | ScrollAction]
+        | list[dict[str, Any]]
+        | dict[str, Any]
+        | None = None,
         transformer: Transformer | str | None = None,
         remove_images: bool | None = None,
         remove_class_names: list[str] | None = None,
@@ -68,11 +70,11 @@ class ScrapeMenu:
         validate_request: bool | None = None,
     ) -> ScrapeResult:
         """Scrape a URL with rich type hints and smart input coercion.
-        
+
         Creates a new scraping job for the specified URL with various configuration
         options. Supports smart input coercion and provides rich type hints for
         better IDE support.
-        
+
         Args:
             url: URL to scrape (supports bare domains like "example.com").
             formats: Output formats - single format or list of formats.
@@ -100,24 +102,24 @@ class ScrapeMenu:
             metadata: Custom metadata to associate with the scrape (not yet supported by API).
             validate_request: Override the global validation setting for this request.
                 If None, uses the instance's default validation setting.
-                
+
         Returns:
             ScrapeResult: The scraped content in the requested formats.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Basic scraping
             result = await client.scrape("example.com")
-            
+
             # With formats
             result = await client.scrape("example.com", formats=Format.HTML)
             result = await client.scrape("example.com", formats=[Format.HTML, Format.MARKDOWN])
-            
+
             # With country
             result = await client.scrape("example.com", country=Country.US)
-            
+
             # With parser
             result = await client.scrape("example.com", parser="@olostep/google-news")
         """
@@ -139,37 +141,36 @@ class ScrapeMenu:
             "metadata": metadata,
         }
 
-
         # local validation setting overrides global validation setting
-        validate_request = self._validate_request if validate_request is None else validate_request
-        
-        res: CreateScrapeResponse = await self._caller.invoke(
-            SCRAPE_URL, 
-            body_params=body_params,
-            validate_request=validate_request
+        validate_request = (
+            self._validate_request if validate_request is None else validate_request
         )
-        
+
+        res: CreateScrapeResponse = await self._caller.invoke(
+            SCRAPE_URL, body_params=body_params, validate_request=validate_request
+        )
+
         return ScrapeResult(res)
-    
-    __call__ = create # shorthand for create
+
+    __call__ = create  # shorthand for create
 
     async def get(self, scrape_id: str) -> ScrapeResult:
         """Get an existing scrape result by ID.
-        
+
         Retrieves a previously created scrape result using its unique identifier.
         Useful for accessing scrape results that were created earlier or
         by other processes.
-        
+
         Args:
             scrape_id: The unique identifier of the scrape to retrieve.
                 This is returned when creating a scrape with the create() method.
-                
+
         Returns:
             ScrapeResult: The scraped content and metadata.
-            
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get existing scrape result
             result = await client.scrape.get("scrape_123")
@@ -178,9 +179,6 @@ class ScrapeMenu:
         """
         path_params = {"scrape_id": scrape_id}
         res: GetScrapeResponse = await self._caller.invoke(
-            SCRAPE_GET, 
-            path_params=path_params,
-            validate_request=self._validate_request
+            SCRAPE_GET, path_params=path_params, validate_request=self._validate_request
         )
         return ScrapeResult(res)
-

@@ -15,9 +15,11 @@ logger = get_logger("backend.transport")
 
 try:
     import h2
+
     USE_HTTP2 = True
 except ImportError:
     USE_HTTP2 = False
+
 
 class HttpxTransport(Transport):
     """
@@ -50,8 +52,8 @@ class HttpxTransport(Transport):
         - httpx.ConnectError: Connection failures (DNS, network unreachable, etc.)
         - httpx.TimeoutException: Request timeouts (connect or read timeouts)
         - httpx.RemoteProtocolError: HTTP protocol violations
-    HTTP status errors (4xx, 5xx) not considered network-level errors! 
-    They are expected to be handled by the caller because they have non-transport semantical meaning and require business logic interpretation. 
+    HTTP status errors (4xx, 5xx) not considered network-level errors!
+    They are expected to be handled by the caller because they have non-transport semantical meaning and require business logic interpretation.
     All other errors (JSON parsing, validation) are also left for the caller layer to handle, maintaining clear separation of concerns.
 
 
@@ -59,7 +61,14 @@ class HttpxTransport(Transport):
     A faked/stubbed version of this transport is available for testing purposes that can simulate
     API responses without needing to contact the actual Olostep API.
     """
-    def __init__(self, api_key: str, *, enable_io_logging: bool = False, max_connection_retries: int = 3) -> None:
+
+    def __init__(
+        self,
+        api_key: str,
+        *,
+        enable_io_logging: bool = False,
+        max_connection_retries: int = 3,
+    ) -> None:
         self._client = httpx.AsyncClient(
             headers={
                 "Authorization": f"Bearer {api_key}",
@@ -69,7 +78,7 @@ class HttpxTransport(Transport):
             timeout=httpx.Timeout(API_TIMEOUT, connect=30.0),
             limits=httpx.Limits(
                 max_keepalive_connections=100,  # More keepalive connections
-                max_connections=200,            # Match concurrent request count
+                max_connections=200,  # Match concurrent request count
             ),
             # Enable HTTP/2 for better multiplexing
             http2=USE_HTTP2,
@@ -83,26 +92,26 @@ class HttpxTransport(Transport):
 
     def max_duration(self) -> float:
         """Calculate maximum possible duration for transport-level retries.
-        
+
         Returns worst-case time including:
         - All retry delays (exponential backoff: 1s, 2s, 4s, ...)
         - Timeout increases per attempt (15s per retry)
         - Base timeout (API_TIMEOUT)
-        
+
         Returns:
             Maximum transport retry duration in seconds (worst case).
         """
         total = 0.0
         base_delay = 1.0
         timeout_bump = 15.0
-        
+
         for attempt in range(self._max_connection_retries + 1):
             # Add timeout for this attempt
             total += API_TIMEOUT + (attempt * timeout_bump)
             # Add delay before next retry (if not last attempt)
             if attempt < self._max_connection_retries:
-                total += base_delay * (2 ** attempt)
-        
+                total += base_delay * (2**attempt)
+
         return total
 
     async def request(
@@ -128,47 +137,53 @@ class HttpxTransport(Transport):
         full_headers = dict(self._client.headers)
         if request.headers:
             full_headers.update(request.headers)
-        
+
         for attempt in range(max_retries + 1):
             start_time = time.time()
 
             # if self._enable_io_logging:
             request_id = f"req_{uuid.uuid4().hex[:12]}"
             io_logger.debug(
-                    f"API REQUEST [ref: {request_id}]",
-                    extra={
-                        "skip_file_logging": True,
-                        "request_id": request_id,
-                        "I": {
-                            "method": request.method,
-                            "url": request.url,
-                            "query": request.query,
-                            "url_formatted": str(httpx.URL(str(request.url)).copy_merge_params(request.query)) if request.query else str(request.url),
-                            "headers": full_headers,
-                            "json": request.json,
-                        }
-                    }
-                )
+                f"API REQUEST [ref: {request_id}]",
+                extra={
+                    "skip_file_logging": True,
+                    "request_id": request_id,
+                    "I": {
+                        "method": request.method,
+                        "url": request.url,
+                        "query": request.query,
+                        "url_formatted": str(
+                            httpx.URL(str(request.url)).copy_merge_params(request.query)
+                        )
+                        if request.query
+                        else str(request.url),
+                        "headers": full_headers,
+                        "json": request.json,
+                    },
+                },
+            )
             # else:
             #     request_id = None
-            
-            attempt_timeout=httpx.Timeout(API_TIMEOUT + (attempt * timeout_bump_per_attempt), connect=30.0)
+
+            attempt_timeout = httpx.Timeout(
+                API_TIMEOUT + (attempt * timeout_bump_per_attempt), connect=30.0
+            )
 
             try:
                 response = await self._client.request(
-                    request.method, 
-                    request.url, 
-                    params=request.query, 
-                    json=request.json, 
-                    headers=full_headers, 
-                    timeout=attempt_timeout
+                    request.method,
+                    request.url,
+                    params=request.query,
+                    json=request.json,
+                    headers=full_headers,
+                    timeout=attempt_timeout,
                 )
 
-                # Get raw response text - no JSON parsing because we get back html if the API is unable to 
+                # Get raw response text - no JSON parsing because we get back html if the API is unable to
                 # process the request
                 response_text = response.text
                 response_time_ms = (time.time() - start_time) * 1000
-                
+
                 # Log the response
                 # if self._enable_io_logging:
                 io_logger.debug(
@@ -180,7 +195,13 @@ class HttpxTransport(Transport):
                             "method": request.method,
                             "url": request.url,
                             "query": request.query,
-                            "url_formatted": str(httpx.URL(str(request.url)).copy_merge_params(request.query)) if request.query else str(request.url),
+                            "url_formatted": str(
+                                httpx.URL(str(request.url)).copy_merge_params(
+                                    request.query
+                                )
+                            )
+                            if request.query
+                            else str(request.url),
                             "headers": full_headers,
                             "json": request.json,
                         },
@@ -188,26 +209,25 @@ class HttpxTransport(Transport):
                             "status_code": response.status_code,
                             "headers": dict(response.headers),
                             "body": response_text,
-                        }
-                    }
+                        },
+                    },
                 )
-                
+
                 return RawAPIResponse(
                     status_code=response.status_code,
-                    headers=dict(response.headers), #also lowercase the header keys
-                    body=response_text
+                    headers=dict(response.headers),  # also lowercase the header keys
+                    body=response_text,
                 )
-                
+
             except (
                 httpx.RequestError,
                 httpx.InvalidURL,
                 httpx.CookieConflict,
-                httpx.StreamError
+                httpx.StreamError,
             ) as e:
                 # Only handle communication/timeout errors - let caller handle everything else
                 response_time_ms = (time.time() - start_time) * 1000
 
-                
                 # if self._enable_io_logging:
                 io_logger.debug(
                     f"API ERROR '{type(e).__name__}' [ref: {request_id}]",
@@ -218,22 +238,32 @@ class HttpxTransport(Transport):
                             "method": request.method,
                             "url": request.url,
                             "query": request.query,
-                            "url_formatted": str(httpx.URL(str(request.url)).copy_merge_params(request.query)) if request.query else str(request.url),
+                            "url_formatted": str(
+                                httpx.URL(str(request.url)).copy_merge_params(
+                                    request.query
+                                )
+                            )
+                            if request.query
+                            else str(request.url),
                             "headers": full_headers,
                             "json": request.json,
                         },
                         "O": {
                             "error": type(e).__name__,
-                        }
-                    }
+                        },
+                    },
                 )
-                
+
                 if attempt == max_retries:
                     # Last attempt failed, re-raise the error
-                    logger.error(f"Connection to API failed terminally after {max_retries + 1} attempts: {e}")
+                    logger.error(
+                        f"Connection to API failed terminally after {max_retries + 1} attempts: {e}"
+                    )
                     raise Olostep_APIConnectionError() from e
-                
+
                 # Calculate exponential backoff delay
-                delay = base_delay * (2 ** attempt)
-                logger.debug(f"API connection attempt {attempt + 1} failed with connection error, retrying in {delay}s (timeout: {attempt_timeout}s): {e}")
+                delay = base_delay * (2**attempt)
+                logger.debug(
+                    f"API connection attempt {attempt + 1} failed with connection error, retrying in {delay}s (timeout: {attempt_timeout}s): {e}"
+                )
                 await asyncio.sleep(delay)

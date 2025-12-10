@@ -75,12 +75,12 @@ class AnswersMenu:
         }
 
         # local validation setting overrides global validation setting
-        validate_request = self._validate_request if validate_request is None else validate_request
+        validate_request = (
+            self._validate_request if validate_request is None else validate_request
+        )
 
         res: AnswersResponse = await self._caller.invoke(
-            ANSWERS_CREATE,
-            body_params=body_params,
-            validate_request=validate_request
+            ANSWERS_CREATE, body_params=body_params, validate_request=validate_request
         )
 
         return AnswersResult(res)
@@ -116,6 +116,6 @@ class AnswersMenu:
         res: AnswersResponse = await self._caller.invoke(
             ANSWERS_GET,
             path_params=path_params,
-            validate_request=self._validate_request
+            validate_request=self._validate_request,
         )
         return AnswersResult(res)

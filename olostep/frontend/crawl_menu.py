@@ -18,15 +18,14 @@ from ..models.response import CrawlInfoResponse, CreateCrawlResponse
 logger = get_logger("frontend.crawl_menu")
 
 
-
 class CrawlMenu:
     """Web crawling operations with smart pagination.
-    
+
     This class provides methods for creating and managing web crawling operations
     that can discover and process multiple pages from a starting URL. It supports
     various filtering options, pagination, and provides rich type hints for better IDE support.
     """
-    
+
     def __init__(self, caller: EndpointCaller, validate_request: bool = True) -> None:
         self._validate_request = validate_request
         self._caller = caller
@@ -47,11 +46,11 @@ class CrawlMenu:
         validate_request: bool | None = None,
     ) -> Crawl:
         """Start a web crawling operation with smart input coercion.
-        
+
         Creates a new web crawling job that will discover and process pages
         starting from the specified URL. Supports various filtering options
         and provides smart coercion for better usability.
-        
+
         Args:
             url: URL to start crawling from (supports bare domains like "example.com").
             max_pages: Maximum number of pages to crawl (must be positive).
@@ -73,18 +72,18 @@ class CrawlMenu:
             webhook_url: Webhook URL for receiving notifications about crawl progress.
             validate_request: Override the global validation setting for this request.
                 If None, uses the instance's default validation setting.
-                
+
         Returns:
             Crawl: A Crawl object that provides methods for monitoring progress,
                 retrieving pages, and waiting for completion.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Basic crawling
             crawl = await client.crawl("example.com", max_pages=10)
-            
+
             # With URL filtering
             crawl = await client.crawl(
                 "example.com",
@@ -92,7 +91,7 @@ class CrawlMenu:
                 include_urls=["/blog/**"],
                 exclude_urls=["/admin/**"]
             )
-            
+
             # With search and limits
             crawl = await client.crawl(
                 "example.com",
@@ -114,39 +113,37 @@ class CrawlMenu:
             "top_n": top_n,
             "webhook_url": webhook_url,
         }
-        
+
         # local validation setting overrides global validation setting
-        validate_request = self._validate_request if validate_request is None else validate_request
+        validate_request = (
+            self._validate_request if validate_request is None else validate_request
+        )
 
         res: CreateCrawlResponse = await self._caller.invoke(
-            CRAWL_START, 
-            body_params=body_params,
-            validate_request=validate_request
+            CRAWL_START, body_params=body_params, validate_request=validate_request
         )
-        
 
-        
         return Crawl(self._caller, res)
 
     __call__ = start
 
     async def info(self, crawl_id: str) -> CrawlInfo:
         """Get detailed information about a crawl operation.
-        
+
         Retrieves current status, progress, and metadata for a specific crawl.
         Useful for monitoring crawl progress and checking completion status.
-        
+
         Args:
             crawl_id: The unique identifier of the crawl to get information for.
                 This is returned when creating a crawl with the start() method.
-                
+
         Returns:
             CrawlInfo: An object containing crawl status, progress metrics,
                 and timing information.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get crawl information
             info = await client.crawl.info("crawl_123")
@@ -154,19 +151,26 @@ class CrawlMenu:
             print(f"Pages discovered: {info.pages_count}")
         """
         res: CrawlInfoResponse = await self._caller.invoke(
-            CRAWL_INFO, 
+            CRAWL_INFO,
             path_params={"crawl_id": crawl_id},
-            validate_request=self._validate_request
+            validate_request=self._validate_request,
         )
         return CrawlInfo(res)
 
-    async def pages(self, crawl_id: str, *, batch_size: int = 50, search_query: str | None = None, wait_for_completion: bool = True) -> AsyncIterator[CrawlPage]:
+    async def pages(
+        self,
+        crawl_id: str,
+        *,
+        batch_size: int = 50,
+        search_query: str | None = None,
+        wait_for_completion: bool = True,
+    ) -> AsyncIterator[CrawlPage]:
         """Get an async iterator for crawl pages with automatic pagination.
-        
+
         Returns an async iterator that yields CrawlPage objects for all pages
         discovered during the crawl. Handles pagination automatically and can filter
         by search query. Optionally waits for crawl completion before starting iteration.
-        
+
         Args:
             crawl_id: The unique identifier of the crawl to get pages for.
                 This is returned when creating a crawl with the start() method.
@@ -177,24 +181,30 @@ class CrawlMenu:
             wait_for_completion: Whether to wait for the crawl to complete before
                 starting iteration (default: True). If False, starts immediately
                 and may return partial results.
-                
+
         Yields:
             CrawlPage: Individual crawl pages with URL, retrieve_id, and external status.
                 Each page can be used to retrieve scraped content.
-                
+
         Raises:
             Exception: If the API request fails.
-            
+
         Examples:
             # Get all discovered pages
             async for page in client.crawl.pages("crawl_123"):
                 result = await page.retrieve()
                 print(f"Retrieved: {page.url}")
-                
+
             # Get pages matching a search query
             async for page in client.crawl.pages("crawl_123", search_query="news"):
                 print(f"News page: {page.url}")
         """
         # looks hacky, maybe it is. Reason: Nobody expects to synchronously get an async iterator.
-        async for page in Crawl._pages_async_iterator(self._caller, crawl_id, batch_size=batch_size, search_query=search_query, wait_for_completion=wait_for_completion):
+        async for page in Crawl._pages_async_iterator(
+            self._caller,
+            crawl_id,
+            batch_size=batch_size,
+            search_query=search_query,
+            wait_for_completion=wait_for_completion,
+        ):
             yield page

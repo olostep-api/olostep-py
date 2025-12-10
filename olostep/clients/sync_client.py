@@ -67,6 +67,7 @@ wrapped in sync proxies that:
 - Cache wrapped objects to avoid duplicate wrapping
 - Preserve all synchronous methods and attributes unchanged
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -116,14 +117,13 @@ class _SyncProxy:
     # This eliminates code duplication and provides a single source of truth
     # for which async class corresponds to each sync endpoint
     _CLASS_MAP = {
-        "scrape": ScrapeMenu,    # Maps to ScrapeMenu async class
-        "batch": BatchMenu,      # Maps to BatchMenu async class
-        "crawl": CrawlMenu,      # Maps to CrawlMenu async class
+        "scrape": ScrapeMenu,  # Maps to ScrapeMenu async class
+        "batch": BatchMenu,  # Maps to BatchMenu async class
+        "crawl": CrawlMenu,  # Maps to CrawlMenu async class
         "sitemap": SitemapMenu,  # Maps to SitemapMenu async class
-        "retrieve": RetrieveMenu, # Maps to RetrieveMenu async class
-        "answers": AnswersMenu,   # Maps to AnswersMenu async class
+        "retrieve": RetrieveMenu,  # Maps to RetrieveMenu async class
+        "answers": AnswersMenu,  # Maps to AnswersMenu async class
     }
-
 
     def __init__(self, outer: "SyncOlostepClient", endpoint_name: str) -> None:
         """
@@ -148,7 +148,7 @@ class _SyncProxy:
         async_class = self._CLASS_MAP.get(self._endpoint_name)
         if async_class:
             # Copy docstring
-            if hasattr(async_class, '__doc__') and async_class.__doc__:
+            if hasattr(async_class, "__doc__") and async_class.__doc__:
                 self.__doc__ = async_class.__doc__
             # Store the async class for identity purposes
             self._async_class = async_class
@@ -157,8 +157,10 @@ class _SyncProxy:
             # Get all public methods (not starting with _) from the async class
             # This ensures we only expose methods that actually exist on the async class
             self._public_methods = [
-                name for name in dir(async_class)
-                if not name.startswith('_') and callable(getattr(async_class, name, None))
+                name
+                for name in dir(async_class)
+                if not name.startswith("_")
+                and callable(getattr(async_class, name, None))
             ]
 
     def __getattr__(self, name: str) -> "_SyncProxy":
@@ -180,7 +182,9 @@ class _SyncProxy:
         """
         # Only allow access to methods that actually exist on the async class
         if name not in self._public_methods:
-            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
 
         # STEP 2: Create a new proxy for the specific method
         # This maintains the same API structure as the async client
@@ -197,11 +201,15 @@ class _SyncProxy:
                 new_proxy._async_class = async_class
 
                 # Copy the same public methods list so all proxies have consistent method access
-                if hasattr(self, '_public_methods'):
+                if hasattr(self, "_public_methods"):
                     new_proxy._public_methods = self._public_methods
 
                 async_method = getattr(async_class, name, None)
-                if async_method and hasattr(async_method, '__doc__') and async_method.__doc__:
+                if (
+                    async_method
+                    and hasattr(async_method, "__doc__")
+                    and async_method.__doc__
+                ):
                     new_proxy.__doc__ = async_method.__doc__
         except Exception:
             pass  # Silently fail if we can't get the docstring or class
@@ -228,6 +236,7 @@ class _SyncProxy:
         Returns:
             Result of the async method execution (synchronous)
         """
+
         # STEP 4: Create a resolver function dynamically based on the endpoint name
         # This function will be called with an async client instance and will
         # return the appropriate async method (e.g., c.scrape, c.batch, c.answers)
@@ -267,7 +276,7 @@ class _SyncProxy:
         Returns:
             The async class that this proxy represents
         """
-        return self._async_class if hasattr(self, '_async_class') else _SyncProxy
+        return self._async_class if hasattr(self, "_async_class") else _SyncProxy
 
     def __repr__(self) -> str:
         """
@@ -279,7 +288,7 @@ class _SyncProxy:
         Returns:
             String representation using the async class name
         """
-        if hasattr(self, '_async_class'):
+        if hasattr(self, "_async_class"):
             return f"{self._async_class.__name__}[SyncProxy]()"
         return "_SyncProxy()"
 
@@ -312,12 +321,14 @@ class _SyncStateProxy:
         """
         self._async_state = async_state_obj
         self._sync_client = sync_client
-        self._wrapped_cache: dict[int, "_SyncStateProxy"] = {}  # Cache for wrapped nested objects
+        self._wrapped_cache: dict[
+            int, "_SyncStateProxy"
+        ] = {}  # Cache for wrapped nested objects
 
         # Copy all non-private, non-callable attributes from async object
         # This prevents issues with method wrapping and infinite recursion
         for attr_name in dir(async_state_obj):
-            if not attr_name.startswith('_'):
+            if not attr_name.startswith("_"):
                 attr_value = getattr(async_state_obj, attr_name)
                 # Only copy non-callable attributes directly
                 if not callable(attr_value):
@@ -325,7 +336,7 @@ class _SyncStateProxy:
 
     def __getattr__(self, name: str) -> Any:
         """Intercept attribute access to wrap methods and nested objects."""
-        if name.startswith('_'):
+        if name.startswith("_"):
             # Don't wrap private attributes
             return getattr(self._async_state, name)
 
@@ -352,12 +363,12 @@ class _SyncStateProxy:
             return True
 
         # Check module for additional safety (but don't rely on it for MagicMock)
-        if hasattr(obj, '__class__') and hasattr(obj.__class__, '__module__'):
+        if hasattr(obj, "__class__") and hasattr(obj.__class__, "__module__"):
             module = obj.__class__.__module__
             # Avoid wrapping unittest.mock objects
-            if module == 'unittest.mock':
+            if module == "unittest.mock":
                 return False
-            return module.startswith('olostep.frontend.client_state')
+            return module.startswith("olostep.frontend.client_state")
 
         return False
 
@@ -389,16 +400,20 @@ class _SyncStateProxy:
                         finally:
                             # Restore the original caller
                             self._async_state._caller = original_caller
-                
+
                 # Execute with fresh transport
                 result = self._sync_client._run(_fresh_call())
 
             # Handle async iterators (like items(), pages(), urls())
             # Check this before state objects since async iterators might also be state objects
             # But avoid wrapping MagicMock objects which have fake __aiter__ methods
-            if (hasattr(result, '__aiter__') and
-                hasattr(result, '__anext__') and
-                not getattr(result.__class__, '__module__', '').startswith('unittest.mock')):
+            if (
+                hasattr(result, "__aiter__")
+                and hasattr(result, "__anext__")
+                and not getattr(result.__class__, "__module__", "").startswith(
+                    "unittest.mock"
+                )
+            ):
                 return self._wrap_async_iterator(result, method_name, args, kwargs)
 
             # Check if result is a nested state object that needs wrapping
@@ -410,7 +425,7 @@ class _SyncStateProxy:
 
         # Preserve method metadata
         sync_wrapper.__name__ = method_name
-        sync_wrapper.__doc__ = getattr(method, '__doc__', None)
+        sync_wrapper.__doc__ = getattr(method, "__doc__", None)
 
         return sync_wrapper
 
@@ -426,7 +441,9 @@ class _SyncStateProxy:
         self._wrapped_cache[obj_id] = wrapper
         return wrapper
 
-    def _wrap_async_iterator(self, async_iter: Any, method_name: str, args: tuple, kwargs: dict) -> Any:
+    def _wrap_async_iterator(
+        self, async_iter: Any, method_name: str, args: tuple, kwargs: dict
+    ) -> Any:
         """Wrap async iterators to make them synchronous.
 
         Converts async iterators (like batch.items(), crawl.pages(), sitemap.urls())
@@ -434,7 +451,9 @@ class _SyncStateProxy:
         """
 
         class SyncIterator:
-            def __init__(self, async_iter, sync_client, state_obj, method_name, args, kwargs):
+            def __init__(
+                self, async_iter, sync_client, state_obj, method_name, args, kwargs
+            ):
                 self._async_iter = async_iter
                 self._sync_client = sync_client
                 self._state_obj = state_obj
@@ -463,13 +482,19 @@ class _SyncStateProxy:
                             try:
                                 # Create a fresh async iterator by calling the method again
                                 # This ensures the iterator uses the fresh caller
-                                fresh_method = getattr(self._state_obj, self._method_name)
-                                fresh_async_iter = fresh_method(*self._args, **self._kwargs)
-                                
+                                fresh_method = getattr(
+                                    self._state_obj, self._method_name
+                                )
+                                fresh_async_iter = fresh_method(
+                                    *self._args, **self._kwargs
+                                )
+
                                 items = []
                                 async for item in fresh_async_iter:
                                     # Wrap state objects in sync proxies
-                                    items.append(self._sync_client._wrap_state_object(item))
+                                    items.append(
+                                        self._sync_client._wrap_state_object(item)
+                                    )
                                 return items
                             finally:
                                 # Restore the original caller
@@ -492,26 +517,30 @@ class _SyncStateProxy:
                 self._index += 1
                 return item
 
-        return SyncIterator(async_iter, self._sync_client, self._async_state, method_name, args, kwargs)
+        return SyncIterator(
+            async_iter, self._sync_client, self._async_state, method_name, args, kwargs
+        )
 
     def __dir__(self) -> list[str]:
         """Return directory including methods from async state object."""
         # Get all public attributes and methods from async state object
         async_names = [
-            name for name in dir(self._async_state)
-            if not name.startswith('_')
+            name for name in dir(self._async_state) if not name.startswith("_")
         ]
 
         # Get attributes already copied to self (excluding our internal ones)
         own_attrs = [
-            name for name in self.__dict__.keys()
-            if not name.startswith('_') and name not in ['_async_state', '_sync_client', '_wrapped_cache']
+            name
+            for name in self.__dict__.keys()
+            if not name.startswith("_")
+            and name not in ["_async_state", "_sync_client", "_wrapped_cache"]
         ]
 
         # Get wrapper-specific methods
         wrapper_methods = [
-            name for name in dir(_SyncStateProxy)
-            if not name.startswith('_') and name not in ['__class__', '__dir__']
+            name
+            for name in dir(_SyncStateProxy)
+            if not name.startswith("_") and name not in ["__class__", "__dir__"]
         ]
 
         # Combine all names, prioritizing async state methods/attributes
@@ -530,26 +559,37 @@ class _SyncStateProxy:
 # Specific sync wrapper classes for type hints and clarity
 class SyncBatch(_SyncStateProxy):
     """Synchronous version of Batch state object."""
+
     pass
+
 
 class SyncScrapeResult(_SyncStateProxy):
     """Synchronous version of ScrapeResult state object."""
+
     pass
+
 
 class SyncBatchItemResult(_SyncStateProxy):
     """Synchronous version of BatchItemResult state object."""
+
     pass
+
 
 class SyncCrawl(_SyncStateProxy):
     """Synchronous version of Crawl state object."""
+
     pass
+
 
 class SyncSitemap(_SyncStateProxy):
     """Synchronous version of Sitemap state object."""
+
     pass
+
 
 class SyncCrawlPage(_SyncStateProxy):
     """Synchronous version of CrawlPage state object."""
+
     pass
 
 
@@ -595,7 +635,7 @@ class SyncOlostepClient:
         _transport: Any = None,
     ) -> None:
         """Initialize the synchronous client.
-        
+
         Args:
             api_key: Your Olostep API key. If not provided, reads from OLOSTEP_API_KEY env var.
             retry_strategy: Retry configuration for API calls. If not provided, uses sensible defaults.
@@ -677,6 +717,7 @@ class SyncOlostepClient:
         else:
             # Already in an event loop - must use threading to avoid blocking
             import threading
+
             result: dict[str, Any] = {}
 
             def _runner() -> None:
@@ -704,6 +745,7 @@ class SyncOlostepClient:
         Returns:
             Result of the async function execution (synchronous)
         """
+
         # STEP 7: Create the async function that will be executed
         async def _inner():
             # Use async context manager to ensure proper resource cleanup
@@ -771,4 +813,4 @@ class SyncOlostepClient:
 # - **IDE-friendly:** Full autocomplete and type hints
 #
 # The proxy pattern successfully bridges the gap between sync and async APIs
-# while maintaining the full feature set and developer experience of both! 
+# while maintaining the full feature set and developer experience of both!

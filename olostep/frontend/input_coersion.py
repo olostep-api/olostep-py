@@ -1,4 +1,4 @@
-""" This file contains helper functions that enable the frontend layer to
+"""This file contains helper functions that enable the frontend layer to
 offer nice input coercion to the user.
 Input validation is a non-goal! Coersion happens before validation.
 """
@@ -69,7 +69,9 @@ def _coerce_single_batch_item(item: Any, index: int = 0) -> dict[str, Any]:
         if "custom_id" not in result:
             auto_id = f"auto_{uuid.uuid4().hex[:8]}"
             result["custom_id"] = auto_id
-            logger.debug(f"Auto-generated custom_id '{auto_id}' for URL '{item}' (index {index})")
+            logger.debug(
+                f"Auto-generated custom_id '{auto_id}' for URL '{item}' (index {index})"
+            )
         return result
     elif isinstance(item, dict):
         # Already a dictionary -> ensure custom_id exists
@@ -77,7 +79,9 @@ def _coerce_single_batch_item(item: Any, index: int = 0) -> dict[str, Any]:
         if "custom_id" not in result or result["custom_id"] is None:
             auto_id = f"auto_{uuid.uuid4().hex[:8]}"
             result["custom_id"] = auto_id
-            logger.debug(f"Auto-generated custom_id '{auto_id}' for URL '{result.get('url', 'unknown')}' (index {index})")
+            logger.debug(
+                f"Auto-generated custom_id '{auto_id}' for URL '{result.get('url', 'unknown')}' (index {index})"
+            )
         return result
     elif BatchItem and isinstance(item, BatchItem):
         # BatchItem -> convert to dict
@@ -85,15 +89,20 @@ def _coerce_single_batch_item(item: Any, index: int = 0) -> dict[str, Any]:
         if "custom_id" not in result or result["custom_id"] is None:
             auto_id = f"auto_{uuid.uuid4().hex[:8]}"
             result["custom_id"] = auto_id
-            logger.debug(f"Auto-generated custom_id '{auto_id}' for BatchItem URL '{result.get('url', 'unknown')}' (index {index})")
+            logger.debug(
+                f"Auto-generated custom_id '{auto_id}' for BatchItem URL '{result.get('url', 'unknown')}' (index {index})"
+            )
         return result
     else:
         # Try to treat as URL string as fallback
         result = {"url": str(item)}
         auto_id = f"auto_{uuid.uuid4().hex[:8]}"
         result["custom_id"] = auto_id
-        logger.debug(f"Auto-generated custom_id '{auto_id}' for fallback URL '{str(item)}' (index {index})")
+        logger.debug(
+            f"Auto-generated custom_id '{auto_id}' for fallback URL '{str(item)}' (index {index})"
+        )
         return result
+
 
 def coerce_to_key_in_dict(value: Any, key: str) -> dict[str, Any]:
     if value is None:
@@ -103,6 +112,7 @@ def coerce_to_key_in_dict(value: Any, key: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         return {key: value}
     return value
+
 
 def coerce_to_string(value: Any) -> str:
     if value is None:
