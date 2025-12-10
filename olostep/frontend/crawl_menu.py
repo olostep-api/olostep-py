@@ -32,7 +32,8 @@ class CrawlMenu:
 
     async def start(
         self,
-        url: HttpUrl | str,
+        url: HttpUrl | str | None = None,
+        start_url: HttpUrl | str | None = None,
         *,
         max_pages: int | None = None,
         include_urls: list[str] | str | None = None,
@@ -53,6 +54,8 @@ class CrawlMenu:
 
         Args:
             url: URL to start crawling from (supports bare domains like "example.com").
+            start_url: Alternative parameter name for url (for documentation compatibility).
+                If both url and start_url are provided, ValueError is raised.
             max_pages: Maximum number of pages to crawl (must be positive).
                 If None, no limit is applied.
             include_urls: URL patterns to include (string or list of strings).
@@ -100,6 +103,13 @@ class CrawlMenu:
                 max_depth=3
             )
         """
+        # Normalize start_url to url
+        if url is not None and start_url is not None:
+            raise ValueError("Cannot specify both 'url' and 'start_url' parameters. Use only one.")
+        if url is None and start_url is not None:
+            url = start_url
+        if url is None:
+            raise ValueError("Either 'url' or 'start_url' parameter must be provided.")
 
         body_params = {
             "start_url": url,
@@ -126,6 +136,44 @@ class CrawlMenu:
         return Crawl(self._caller, res)
 
     __call__ = start
+
+    async def create(
+        self,
+        start_url: HttpUrl | str | None = None,
+        url: HttpUrl | str | None = None,
+        *,
+        max_pages: int | None = None,
+        include_urls: list[str] | str | None = None,
+        exclude_urls: list[str] | str | None = None,
+        max_depth: int | None = None,
+        include_external: bool | None = None,
+        include_subdomain: bool | None = None,
+        search_query: str | None = None,
+        top_n: int | None = None,
+        webhook_url: HttpUrl | str | None = None,
+        validate_request: bool | None = None,
+    ) -> Crawl:
+        """Create a crawl operation (alias for start() to match documentation)."""
+        # Normalize start_url to url
+        if url is not None and start_url is not None:
+            raise ValueError("Cannot specify both 'url' and 'start_url' parameters. Use only one.")
+        if url is None and start_url is not None:
+            url = start_url
+        if url is None:
+            raise ValueError("Either 'url' or 'start_url' parameter must be provided.")
+        return await self.start(
+            url=url,
+            max_pages=max_pages,
+            include_urls=include_urls,
+            exclude_urls=exclude_urls,
+            max_depth=max_depth,
+            include_external=include_external,
+            include_subdomain=include_subdomain,
+            search_query=search_query,
+            top_n=top_n,
+            webhook_url=webhook_url,
+            validate_request=validate_request,
+        )
 
     async def info(self, crawl_id: str) -> CrawlInfo:
         """Get detailed information about a crawl operation.

@@ -13,6 +13,7 @@ from ..backend.api_endpoints import SCRAPE_GET, SCRAPE_URL
 from ..backend.caller import EndpointCaller
 from ..frontend.client_state import ScrapeResult
 from ..frontend.input_coersion import (
+    coerce_country,
     coerce_to_key_in_dict,
     coerce_to_list,
     coerce_to_string,
@@ -49,7 +50,8 @@ class ScrapeMenu:
 
     async def create(
         self,
-        url: HttpUrl | str,
+        url: HttpUrl | str | None = None,
+        url_to_scrape: HttpUrl | str | None = None,
         *,
         formats: list[Format] | list[str] | Format | str | None = None,
         country: Country | str | None = None,
@@ -79,6 +81,8 @@ class ScrapeMenu:
 
         Args:
             url: URL to scrape (supports bare domains like "example.com").
+            url_to_scrape: Alternative parameter name for url (for documentation compatibility).
+                If both url and url_to_scrape are provided, ValueError is raised.
             formats: Output formats - single format or list of formats.
                 Can be Format enum values, strings, or mixed lists.
             country: Country for geolocation when scraping.
@@ -125,11 +129,18 @@ class ScrapeMenu:
             # With parser
             result = await client.scrape("example.com", parser="@olostep/google-news")
         """
+        # Normalize url_to_scrape to url
+        if url is not None and url_to_scrape is not None:
+            raise ValueError("Cannot specify both 'url' and 'url_to_scrape' parameters. Use only one.")
+        if url is None and url_to_scrape is not None:
+            url = url_to_scrape
+        if url is None:
+            raise ValueError("Either 'url' or 'url_to_scrape' parameter must be provided.")
 
         body_params = {
             "url_to_scrape": url,
             "formats": coerce_to_list(formats),
-            "country": country,
+            "country": coerce_country(country),
             "wait_before_scraping": wait_before_scraping,
             "remove_css_selectors": coerce_to_string(remove_css_selectors),
             "actions": coerce_to_list(actions),
