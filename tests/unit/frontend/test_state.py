@@ -883,7 +883,7 @@ class TestSitemap:
         class MockCaller:
             pass
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
         # Verify it can be created
         assert isinstance(sitemap, Sitemap)
@@ -891,8 +891,8 @@ class TestSitemap:
         # Verify fields are set correctly
         assert sitemap.id == "map_12345"
         assert sitemap.initial_urls_count == 5
-        assert len(sitemap.urls) == 5
-        assert sitemap.urls[0] == "https://example.com"
+        assert len(sitemap._initial_urls) == 5
+        assert sitemap._initial_urls[0] == "https://example.com"
         assert sitemap.cursor == ""
 
     def test_sitemap_creation_without_id(self):
@@ -901,7 +901,7 @@ class TestSitemap:
         class MockCaller:
             pass
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
         # Verify it can be created
         assert isinstance(sitemap, Sitemap)
@@ -909,7 +909,7 @@ class TestSitemap:
         # Verify fields are set correctly
         assert sitemap.id == ""
         assert sitemap.initial_urls_count == 3
-        assert len(sitemap.urls) == 3
+        assert len(sitemap._initial_urls) == 3
         assert sitemap.cursor == ""
 
     def test_sitemap_repr_and_str_work(self):
@@ -918,24 +918,25 @@ class TestSitemap:
         class MockCaller:
             pass
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
         # Test __repr__
         repr_str = repr(sitemap)
         assert "Sitemap" in repr_str
         assert "map_12345" in repr_str
-        assert "urls_count=5" in repr_str
+        assert "initial_urls_count=5" in repr_str
         assert "cursor=" in repr_str
         
         # Test __str__
         str_repr = str(sitemap)
         assert "Sitemap" in str_repr
         assert "map_12345" in str_repr
-        assert "urls_count=5" in str_repr
+        assert "initial_urls_count=5" in str_repr
         assert "cursor=none" in str_repr
 
-    def test_sitemap_next_returns_none_when_no_cursor(self):
-        """Test that next() returns None when cursor is empty."""
+    @pytest.mark.asyncio
+    async def test_sitemap_urls_stops_when_no_cursor(self):
+        """Test that urls() iterator stops when cursor is empty."""
         response = MapResponse(**MAP_RESPONSE)
         class MockCaller:
             call_count = 0
@@ -944,15 +945,18 @@ class TestSitemap:
                 return MapResponse(**MAP_RESPONSE)
         
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
-        # next() should return None when cursor is empty
-        result = asyncio.run(sitemap.next())
-        assert result is None
+        # urls() should only yield initial URLs when cursor is empty
+        urls = []
+        async for url in sitemap.urls():
+            urls.append(url)
+        assert len(urls) == 5  # Only initial URLs
         assert caller.call_count == 0  # No API call should be made
 
-    def test_sitemap_next_returns_next_page_with_cursor(self):
-        """Test that next() returns new Sitemap when cursor exists."""
+    @pytest.mark.asyncio
+    async def test_sitemap_urls_paginates_with_cursor(self):
+        """Test that urls() iterator automatically paginates when cursor exists."""
         response = MapResponse(**MAP_RESPONSE_WITH_CURSOR)
         class MockCaller:
             call_count = 0
@@ -962,24 +966,28 @@ class TestSitemap:
                 return MapResponse(**MAP_RESPONSE_EMPTY_CURSOR)
         
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
-        # next() should return a new Sitemap when cursor exists
-        result = asyncio.run(sitemap.next())
-        assert result is not None
-        assert isinstance(result, Sitemap)
-        assert caller.call_count == 1  # API call should be made
+        # urls() should automatically fetch next page when cursor exists
+        urls = []
+        async for url in sitemap.urls():
+            urls.append(url)
+        assert len(urls) == 5  # 3 from initial + 2 from pagination
+        assert caller.call_count == 1  # API call should be made for pagination
 
-    def test_sitemap_iteration_works(self):
+    @pytest.mark.asyncio
+    async def test_sitemap_iteration_works(self):
         """Test that Sitemap can be iterated over URLs."""
         response = MapResponse(**MAP_RESPONSE)
         class MockCaller:
             pass
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
-        # Test iteration over URLs
-        urls = list(sitemap.urls)
+        # Test iteration over URLs using async method
+        urls = []
+        async for url in sitemap.urls():
+            urls.append(url)
         assert len(urls) == 5
         assert urls[0] == "https://example.com"
         assert urls[1] == "https://example.com/about"
@@ -990,13 +998,13 @@ class TestSitemap:
         class MockCaller:
             pass
         caller = MockCaller()
-        sitemap = Sitemap(caller, response)
+        sitemap = Sitemap(caller, response, "https://example.com")
         
-        # Test direct URL access
-        assert len(sitemap.urls) == 5
-        assert sitemap.urls[0] == "https://example.com"
-        assert sitemap.urls[-1] == "https://example.com/faq"
-        assert "https://example.com/contact" in sitemap.urls
+        # Test direct URL access via internal _initial_urls
+        assert len(sitemap._initial_urls) == 5
+        assert sitemap._initial_urls[0] == "https://example.com"
+        assert sitemap._initial_urls[-1] == "https://example.com/faq"
+        assert "https://example.com/contact" in sitemap._initial_urls
 
 
 class TestSitemapMenu:
@@ -1013,7 +1021,8 @@ class TestSitemapMenu:
         # Verify it can be created
         assert isinstance(sitemap_menu, SitemapMenu)
 
-    def test_sitemap_menu_call_returns_sitemap(self):
+    @pytest.mark.asyncio
+    async def test_sitemap_menu_call_returns_sitemap(self):
         """Test that SitemapMenu.__call__() returns a Sitemap."""
         class MockCaller:
             async def invoke(self, contract, **kwargs):
@@ -1024,25 +1033,28 @@ class TestSitemapMenu:
         sitemap_menu = SitemapMenu(caller)
         
         # Test map method
-        result = asyncio.run(sitemap_menu("https://example.com"))
+        result = await sitemap_menu("https://example.com")
         
         # Verify it returns a Sitemap
         assert isinstance(result, Sitemap)
         assert result.id == "map_12345"
         assert result.initial_urls_count == 5
-        assert len(result.urls) == 5
+        assert len(result._initial_urls) == 5
 
-        """Test that SitemapMenu.__call__() adds https:// to bare domains."""
+    @pytest.mark.asyncio
+    async def test_sitemap_menu_call_passes_url_as_is(self):
+        """Test that SitemapMenu.__call__() passes URL to API as provided."""
         class MockCaller:
             async def invoke(self, contract, **kwargs):
                 url = kwargs["body_params"]["url"]
+                assert url == "example.com", f"Expected URL to be passed as-is, got {url}"
                 return MapResponse(**MAP_RESPONSE)
         
         caller = MockCaller()
         sitemap_menu = SitemapMenu(caller)
         
-        # Test with bare domain
-        result = asyncio.run(sitemap_menu("example.com"))
+        # Test with bare domain - should be passed as-is
+        result = await sitemap_menu("example.com")
         assert isinstance(result, Sitemap)
         
 

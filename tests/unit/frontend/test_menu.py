@@ -343,15 +343,13 @@ class TestSitemapEndpoint:
         
         # Assert the sitemap has the expected values
         assert sitemap.initial_urls_count >= 0
-        assert isinstance(sitemap.urls, list)
-        assert len(sitemap.urls) >= 0
         
-        # Test sitemap pagination
+        # Test sitemap pagination using async method
         urls_batch = []
-        # sitemap.urls is a property, not a method
-        urls_batch = list(sitemap.urls)
-        if len(urls_batch) >= 10:  # Limit to avoid long test
-            urls_batch = urls_batch[:10]
+        async for url in sitemap.urls():
+            urls_batch.append(url)
+            if len(urls_batch) >= 10:  # Limit to avoid long test
+                break
         
         # Assert we got URLs
         assert len(urls_batch) > 0
@@ -377,15 +375,13 @@ class TestSitemapEndpoint:
         
         # Assert the sitemap has the expected values
         assert sitemap.initial_urls_count >= 0
-        assert isinstance(sitemap.urls, list)
-        assert len(sitemap.urls) >= 0
         
-        # Test sitemap pagination
+        # Test sitemap pagination using async method
         urls_batch = []
-        # sitemap.urls is a property, not a method
-        urls_batch = list(sitemap.urls)
-        if len(urls_batch) >= 10:  # Limit to avoid long test
-            urls_batch = urls_batch[:10]
+        async for url in sitemap.urls():
+            urls_batch.append(url)
+            if len(urls_batch) >= 10:  # Limit to avoid long test
+                break
         
         # Assert we got URLs
         assert len(urls_batch) > 0
@@ -413,7 +409,7 @@ class TestSitemapEndpoint:
             validate_request=False,
             top_n=100
         )
-        assert sitemap.urls_count >= 0
+        assert sitemap.initial_urls_count >= 0
         assert isinstance(sitemap, Sitemap)
 
 
@@ -595,14 +591,11 @@ class TestFullWorkflow:
         assert isinstance(sitemap, Sitemap)
         assert sitemap.initial_urls_count >= 0
         
-        # Access URLs
-        urls = list(sitemap.urls)
+        # Access URLs using async method (pagination is automatic)
+        urls = []
+        async for url in sitemap.urls():
+            urls.append(url)
         assert isinstance(urls, list)
-        
-        # Test pagination (if cursor exists)
-        next_sitemap = await sitemap.next()
-        if next_sitemap is not None:
-            assert isinstance(next_sitemap, Sitemap)
         
         # Test retrieve operation at the end - create a scrape from one of the URLs
         if urls:
