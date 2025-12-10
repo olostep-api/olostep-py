@@ -97,8 +97,7 @@ class TestQuickStartSync:
         """Test AI-powered answers example."""
         client = Olostep()
         answer = client.answers.create(
-            url="https://example.com",
-            question="What is the main topic of this page?"
+            task="What is the main topic of https://example.com?"
         )
         assert answer.answer is not None
         assert len(answer.answer) > 0
@@ -219,8 +218,7 @@ class TestAdvancedFeatures:
         client = Olostep()
         # First create an answer
         created_answer = client.answers.create(
-            url="https://example.com",
-            question="What is the main topic of this page?"
+            task="What is the main topic of https://example.com?"
         )
         assert created_answer.id is not None
         

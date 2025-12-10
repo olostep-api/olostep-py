@@ -114,8 +114,7 @@ class TestQuickStartAsync:
         """Test AI-powered answers example."""
         async with AsyncOlostep() as c:
             answer = await c.answers.create(
-                url="https://example.com",
-                question="What is the main topic of this page?"
+                task="What is the main topic of https://example.com?"
             )
             assert answer.answer is not None
             assert len(answer.answer) > 0
@@ -247,8 +246,7 @@ class TestAdvancedFeatures:
         async with AsyncOlostep() as c:
             # First create an answer
             created_answer = await c.answers.create(
-                url="https://example.com",
-                question="What is the main topic of this page?"
+                task="What is the main topic of https://example.com?"
             )
             assert created_answer.id is not None
             

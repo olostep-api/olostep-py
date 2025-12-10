@@ -135,8 +135,7 @@ async def main():
     async with AsyncOlostep(api_key="your-api-key") as client:
         # Get answers from web pages using AI
         answer = await client.answers.create(
-            url="https://example.com",
-            question="What is the main topic of this page?"
+            task="What is the main topic of https://example.com?"
         )
         print(f"Answer: {answer.answer}")
 

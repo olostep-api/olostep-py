@@ -65,7 +65,7 @@ batch = await client.batch.create(urls)
 crawl = await client.crawl.create(url)
 sitemap = await client.sitemap.create(url)
 content = await client.retrieve.get(retrieve_id)
-answers = await client.answers.create(url, question="What is this page about?")
+answers = await client.answers.create(task="What is this page about?")
 
 # New
 result = await client.scrapes.create(url)
@@ -73,7 +73,7 @@ batch = await client.batches.create(urls)
 crawl = await client.crawls.create(url)
 maps = await client.maps.create(url)
 content = await client.retrievals.get(retrieve_id)
-answers = await client.answers.create(url, question="What is this page about?")
+answers = await client.answers.create(task="What is this page about?")
 ```
 
 ### Endpoint Methods
@@ -323,8 +323,7 @@ client = Olostep(api_key="your-api-key")
 
 # First create an answer
 created_answer = client.answers.create(
-    url="https://example.com",
-    question="What is the main topic of this page?"
+    task="What is the main topic of https://example.com?"
 )
 
 # Then retrieve it using the ID

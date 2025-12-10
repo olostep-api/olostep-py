@@ -109,8 +109,7 @@ client = Olostep(api_key="your-api-key")
 
 # Get answers from web pages using AI
 answer = client.answers.create(
-    url="https://example.com",
-    question="What is the main topic of this page?"
+    task="What is the main topic of https://example.com?"
 )
 print(f"Answer: {answer.answer}")
 ```
