@@ -133,8 +133,12 @@ dmypy.json
 .idea/
 *.swp
 *.swo
-*~
+*~ave two ng 
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Project specific
+todo.txt
+OFFER.md
