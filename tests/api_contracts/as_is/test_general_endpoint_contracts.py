@@ -32,6 +32,8 @@ class TestContractCoverage:
     def test_all_expected_endpoints_are_present_in_contracts(self):
         # Define expected endpoints based on the actual API specification
         expected_endpoints = {
+            ('answers', 'create'),
+            ('answers', 'get'),
             ('batch', 'info'),
             ('batch', 'items'),
             ('batch', 'start'),
