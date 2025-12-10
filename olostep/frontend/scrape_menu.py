@@ -55,10 +55,12 @@ class ScrapeMenu:
         country: Country | str | None = None,
         wait_before_scraping: int | None = None,
         remove_css_selectors: list[str] | str | None = None,
-        actions: list[WaitAction | ClickAction | FillInputAction | ScrollAction]
-        | list[dict[str, Any]]
-        | dict[str, Any]
-        | None = None,
+        actions: (
+            list[WaitAction | ClickAction | FillInputAction | ScrollAction]
+            | list[dict[str, Any]]
+            | dict[str, Any]
+            | None
+        ) = None,
         transformer: Transformer | str | None = None,
         remove_images: bool | None = None,
         remove_class_names: list[str] | None = None,

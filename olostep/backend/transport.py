@@ -152,11 +152,15 @@ class HttpxTransport(Transport):
                         "method": request.method,
                         "url": request.url,
                         "query": request.query,
-                        "url_formatted": str(
-                            httpx.URL(str(request.url)).copy_merge_params(request.query)
-                        )
-                        if request.query
-                        else str(request.url),
+                        "url_formatted": (
+                            str(
+                                httpx.URL(str(request.url)).copy_merge_params(
+                                    request.query
+                                )
+                            )
+                            if request.query
+                            else str(request.url)
+                        ),
                         "headers": full_headers,
                         "json": request.json,
                     },
@@ -195,13 +199,15 @@ class HttpxTransport(Transport):
                             "method": request.method,
                             "url": request.url,
                             "query": request.query,
-                            "url_formatted": str(
-                                httpx.URL(str(request.url)).copy_merge_params(
-                                    request.query
+                            "url_formatted": (
+                                str(
+                                    httpx.URL(str(request.url)).copy_merge_params(
+                                        request.query
+                                    )
                                 )
-                            )
-                            if request.query
-                            else str(request.url),
+                                if request.query
+                                else str(request.url)
+                            ),
                             "headers": full_headers,
                             "json": request.json,
                         },
@@ -238,13 +244,15 @@ class HttpxTransport(Transport):
                             "method": request.method,
                             "url": request.url,
                             "query": request.query,
-                            "url_formatted": str(
-                                httpx.URL(str(request.url)).copy_merge_params(
-                                    request.query
+                            "url_formatted": (
+                                str(
+                                    httpx.URL(str(request.url)).copy_merge_params(
+                                        request.query
+                                    )
                                 )
-                            )
-                            if request.query
-                            else str(request.url),
+                                if request.query
+                                else str(request.url)
+                            ),
                             "headers": full_headers,
                             "json": request.json,
                         },

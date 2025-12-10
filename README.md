@@ -4,11 +4,7 @@
 
   <h2>Olostep Python SDK</h2>
 
-
-  ✨ [Get a free API key](https://www.olostep.com/?utm_source=python_sdk_readme) • [Full Documentation](https://docs.olostep.com?utm_source=python_sdk_readme) • [GitHub Issues](https://github.com/olostep-api/olostep-py/issues) ✨
-
-
-
+✨ [Get a free API key](https://www.olostep.com/?utm_source=python_sdk_readme) • [Full Documentation](https://docs.olostep.com?utm_source=python_sdk_readme) • [GitHub Issues](https://github.com/olostep-api/olostep-py/issues) ✨
 
   <br>
 
@@ -47,15 +43,15 @@ Fetch clean, ready-to-use data for your AI from any website in **1–5 seconds**
 
 The Olostep Python SDK offers significant advantages over direct API usage:
 
-| Feature | SDK Advantage | Direct API |
-|---------|---------------|------------|
-| **Interface** | Discoverable dot-notation namespaces | REST endpoints |
-| **Type Safety** | Full Pydantic validation & type hints | Manual validation |
-| **State Management** | Stateful return objects with rich `__repr__`s | Manual state tracking |
-| **Error Handling** | Automatic retries & connection management | Manual implementation |
-| **Pagination** | Elegant `async for` loops | Manual cursor handling |
-| **Input Coercion** | Smart type coercion & validation | Manual data preparation |
-| **Performance** | Async-first with sync facade | HTTP request overhead |
+| Feature              | SDK Advantage                                 | Direct API              |
+| -------------------- | --------------------------------------------- | ----------------------- |
+| **Interface**        | Discoverable dot-notation namespaces          | REST endpoints          |
+| **Type Safety**      | Full Pydantic validation & type hints         | Manual validation       |
+| **State Management** | Stateful return objects with rich `__repr__`s | Manual state tracking   |
+| **Error Handling**   | Automatic retries & connection management     | Manual implementation   |
+| **Pagination**       | Elegant `async for` loops                     | Manual cursor handling  |
+| **Input Coercion**   | Smart type coercion & validation              | Manual data preparation |
+| **Performance**      | Async-first with sync facade                  | HTTP request overhead   |
 
 ### Key Benefits
 
@@ -65,16 +61,16 @@ The Olostep Python SDK offers significant advantages over direct API usage:
 - **Enterprise Scale**: Handle 100K+ concurrent requests with robust error handling
 - **Future-Proof**: Built on modern Python patterns (async/await, type hints, dataclasses)
 
-
-
 ## Installation
 
 ### PyPI (Recommended)
+
 ```bash
 pip install olostep
 ```
 
 ### From Source
+
 ```bash
 git clone https://github.com/olostep-api/olostep-py.git
 cd olostep-python
@@ -82,14 +78,15 @@ pip install -e .
 ```
 
 ### Requirements
+
 - Python 3.11+
 - API key from [olostep.com](https://www.olostep.com/?utm_source=python_sdk_readme)
 
 ## Quick Start
 
 ```python
-""" 
-The quickstart uses the async/await interface as it's the default and generally preferred. 
+"""
+The quickstart uses the async/await interface as it's the default and generally preferred.
 * If you need a blocking interface scroll to the end of this codeblock.
 * If you want to see the full interfaces scroll to the next section.
 """
@@ -141,8 +138,6 @@ async with OlostepClient(
 ```
 
 See [docs/retry_strategy.md](docs/retry_strategy.md) for detailed configuration options.
-
-
 
 ## Usage Examples
 
@@ -215,17 +210,12 @@ async for url in sitemap.urls():
 print(f"Found {len(urls)} URLs")
 ```
 
-
-
-
-
-
-
 ## API Reference
 
 ### Core Clients
 
 #### OlostepClient (Async)
+
 The main async client for high-performance applications.
 
 ```python
@@ -244,6 +234,7 @@ finally:
 ```
 
 #### SyncOlostepClient
+
 Synchronous wrapper for blocking applications.
 
 ```python
@@ -258,13 +249,13 @@ result = client.scrape.create(url_to_scrape="https://example.com")
 
 The SDK provides a clean, Pythonic interface organized into logical namespaces:
 
-| Namespace | Purpose | Key Methods |
-|-----------|---------|-------------|
-| `scrape` | Single URL extraction | `create()`, `get()` |
-| `batch` | Multi-URL processing | `start()`, `info()`, `items()` |
-| `crawl` | Website traversal | `start()`, `pages()` |
-| `sitemap` | Link extraction | `create()`, `urls()` |
-| `retrieve` | Content retrieval | `get()` |
+| Namespace  | Purpose               | Key Methods                    |
+| ---------- | --------------------- | ------------------------------ |
+| `scrape`   | Single URL extraction | `create()`, `get()`            |
+| `batch`    | Multi-URL processing  | `start()`, `info()`, `items()` |
+| `crawl`    | Website traversal     | `start()`, `pages()`           |
+| `sitemap`  | Link extraction       | `create()`, `urls()`           |
+| `retrieve` | Content retrieval     | `get()`                        |
 
 Each operation returns stateful objects with ergonomic methods for follow-up operations.
 
@@ -380,6 +371,7 @@ result = await client.retrieve.get(retrieve_id="ret_123", formats=["html", "mark
 ### Common Issues
 
 #### Connection Errors
+
 ```python
 # Enable detailed logging for debugging
 import logging
@@ -394,6 +386,7 @@ except OlostepAPIConnectionError as e:
 ```
 
 #### Rate Limiting
+
 ```python
 # The SDK handles rate limiting automatically with exponential backoff
 # Custom backoff for specific use cases:
@@ -422,6 +415,7 @@ async def scrape_with_backoff(url, max_retries=3):
 We love contributions! Here's how you can help improve the Olostep Python SDK:
 
 ### Development Setup
+
 ```bash
 git clone https://github.com/olostep-api/olostep-py/issues.git
 cd olostep-python
@@ -429,6 +423,7 @@ pip install -e ".[dev]"
 ```
 
 ### Running Tests
+
 ```bash
 # Run all tests
 pytest
@@ -440,10 +435,10 @@ pytest tests/unit/
 ```
 
 ### Code Style
+
 ```bash
 # Format code
-black olostep/
-isort olostep/
+ruff format olostep/
 
 # Lint code
 ruff check olostep/
@@ -451,6 +446,7 @@ mypy olostep/
 ```
 
 ### Submitting Changes
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-enhancement`)
 3. Make your changes with comprehensive tests
@@ -459,6 +455,7 @@ mypy olostep/
 6. Submit a pull request with a clear description
 
 ### Guidelines
+
 - Follow PEP 8 and existing code style
 - Add type hints for new functions
 - Write comprehensive tests for new functionality
