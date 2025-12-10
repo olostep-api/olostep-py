@@ -1,13 +1,24 @@
 <div align="center">
   <img src="https://www.olostep.com/images/olostep-logo-cropped.svg" alt="Olostep Logo" width="150"/>
-  <h1>Olostep Python SDK</h1>
-  <p><strong>Programmatic web access for AI applications</strong></p>
-  <p>Fetch clean, structured data from any website in 1–5 seconds<br>Scale to 100K+ parallel requests with enterprise reliability</p>
+  <br>
+
+  <h2>Olostep Python SDK</h2>
+
+
+  ✨ [Get a free API key](https://www.olostep.com/?utm_source=python_sdk_readme) • [Full Documentation](https://docs.olostep.com?utm_source=python_sdk_readme) • [GitHub Issues](https://github.com/olostep-api/olostep-py/issues) ✨
+
+
+
+
+  <br>
+
+  <p><strong>Programmatic web access for AI applications</strong>
+  <br>
+  Fetch clean, structured data from any website in 1–5 seconds<br>Scale to 100K+ parallel requests with enterprise reliability</p>
+  <br>
 </div>
 
 ---
-
-[Get a free API key](https://www.olostep.com/?utm_source=python_readme) • [Full Documentation](https://docs.olostep.com) • [GitHub Issues](https://github.com/olostep/olostep-python/issues)
 
 ## Table of Contents
 
@@ -65,14 +76,14 @@ pip install olostep
 
 ### From Source
 ```bash
-git clone https://github.com/olostep/olostep-python.git
+git clone https://github.com/olostep-api/olostep-py.git
 cd olostep-python
 pip install -e .
 ```
 
 ### Requirements
 - Python 3.11+
-- API key from [olostep.com](https://www.olostep.com/?utm_source=github)
+- API key from [olostep.com](https://www.olostep.com/?utm_source=python_sdk_readme)
 
 ## Quick Start
 
@@ -378,9 +389,9 @@ async def scrape_with_backoff(url, max_retries=3):
 ### Getting Help
 
 - [Full Documentation](https://docs.olostep.com)
-- [Report Issues](https://github.com/olostep/olostep-python/issues)
-- [Community Forum](https://community.olostep.com)
-- [Support Email](mailto:support@olostep.com)
+- [Report Issues](https://github.com/olostep-api/olostep-py/issues/issues)
+- [Community Slack](https://join.slack.com/t/olostep-users/shared_invite/zt-2pn2ce0uu-~591qIdhAfJy~LXCWQS5UQ)
+- [Support Email](mailto:info@olostep.com)
 
 ## Contributing
 
@@ -388,7 +399,7 @@ We love contributions! Here's how you can help improve the Olostep Python SDK:
 
 ### Development Setup
 ```bash
-git clone https://github.com/olostep/olostep-python.git
+git clone https://github.com/olostep-api/olostep-py/issues.git
 cd olostep-python
 pip install -e ".[dev]"
 ```
@@ -400,10 +411,8 @@ pytest
 
 # Run specific test categories
 pytest tests/unit/
-pytest tests/api_contracts/
 
-# Run with coverage
-pytest --cov=olostep
+# DO NOT RUN THE API CONTRACT TEST!
 ```
 
 ### Code Style
@@ -441,7 +450,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
 
 **Built with ❤️ by the Olostep team**
-
-[🌐 Website](https://olostep.com) • [📖 Docs](https://docs.olostep.com) • [🐛 Issues](https://github.com/olostep/olostep-python/issues) • [💬 Community](https://community.olostep.com) • [📧 Contact](mailto:hello@olostep.com)
 
 </div>
