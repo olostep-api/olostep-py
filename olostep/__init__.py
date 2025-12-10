@@ -1,33 +1,38 @@
 # Core clients
+# Error hierarchy
+from . import errors
 from .clients.async_client import OlostepClient
 from .clients.sync_client import SyncOlostepClient
-
-# Configuration
-from .retry_strategy import RetryStrategy
+from .config import VERSION as __version__
 
 # Stateful result objects
-from .frontend.client_state import ScrapeResult, BatchItemResult, CrawlPage, Crawl, CrawlInfo, Sitemap
+from .frontend.client_state import (
+    BatchItemResult,
+    Crawl,
+    CrawlInfo,
+    CrawlPage,
+    ScrapeResult,
+    Sitemap,
+)
 
 # Type system
 from .models.request import (
-    Format,
-    Country,
-    RetrieveFormat,
-    WaitAction,
     ClickAction,
+    Country,
     FillInputAction,
-    ScrollAction,
-    Parser,
-    LLMExtract,
+    Format,
     LinksOnPage,
+    LLMExtract,
+    Parser,
+    RetrieveFormat,
     ScreenSize,
+    ScrollAction,
     Transformer,
+    WaitAction,
 )
 
-# Error hierarchy
-from . import errors
-
-__version__ = "0.10.0"
+# Configuration
+from .retry_strategy import RetryStrategy
 
 # Get all error classes dynamically
 _error_classes = [name for name in dir(errors) if not name.startswith('_') and name.endswith('Error')]

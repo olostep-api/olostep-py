@@ -4,7 +4,7 @@ import os
 from typing import Final
 
 # SDK version
-VERSION: Final[str] = "0.9.0"
+VERSION: Final[str] = "0.11.0"
 
 # Base API URL (can be overridden via env)
 BASE_API_URL: Final[str] = os.getenv("OLOSTEP_BASE_API_URL", "https://api.olostep.com/v1")
