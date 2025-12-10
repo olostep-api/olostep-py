@@ -949,6 +949,39 @@ class AnswersBodyParams(BodyParams):
     task: str
     json_format: dict[str, Any] | None = None
 
+    @field_validator("json_format", mode="before")
+    @classmethod
+    def validate_json_format(cls, v: Any) -> dict[str, Any] | None:
+        """Ensure json_format is either None or a dict with meaningful structure."""
+        if v is None:
+            return None
+        if not isinstance(v, dict):
+            raise ValueError(f"json_format must be a dict or None, got {type(v).__name__}")
+        if not v:
+            raise ValueError("json_format cannot be an empty dict")
+        
+        def has_meaningful_structure(d: dict[str, Any]) -> bool:
+            """Check if dict has at least one key with meaningful structure.
+            
+            A dict with keys is meaningful structure (even if values are empty strings, as they're placeholders).
+            Empty lists are also valid as they define structure. An empty dict is not meaningful.
+            """
+            if not d:
+                return False
+            for value in d.values():
+                if isinstance(value, dict):
+                    if value:
+                        return True
+                elif isinstance(value, list):
+                    return True
+                elif value is not None:
+                    return True
+            return False
+        
+        if not has_meaningful_structure(v):
+            raise ValueError("json_format must have at least one key with meaningful structure (non-empty nested dict, list, or non-empty value)")
+        return v
+
 
 class AnswersRequest(BaseRequestModel):
     """Request for POST /answers."""

@@ -10,6 +10,7 @@ import pytest
 from olostep.backend.api_endpoints import CONTRACTS
 from olostep.errors import (
     OlostepClientError_RequestValidationFailed,
+    OlostepClientError_ResponseValidationFailed,
     OlostepServerError_NoResultInResponse,
     OlostepServerError_RequestUnprocessable,
     OlostepServerError_ResourceNotFound,
@@ -229,16 +230,18 @@ class TestAnswersCreate:
         for invalid_json_format in JSON_FORMAT["param_values"]["invalids"]:
             body_params = {**MINIMAL_REQUEST_BODY, "json_format": invalid_json_format}
 
+            # With request validation enabled, invalid values should be caught
             with pytest.raises(OlostepClientError_RequestValidationFailed):
                 endpoint_caller.validate_request(ANSWERS_CREATE_CONTRACT, body_params=body_params)
 
             # Test API behavior with invalid request (bypass validation)
+            # The API may return garbage responses when given invalid json_format
             request = endpoint_caller._prepare_request(
                 ANSWERS_CREATE_CONTRACT, {}, {}, body_params
             )
             response = await endpoint_caller._transport.request(request)
 
-            # API may accept invalid values (our validation is stricter than API)
+            # API may accept invalid values but return malformed responses
             try:
                 model = endpoint_caller._handle_response(request, response, ANSWERS_CREATE_CONTRACT)
                 # If API accepts invalid values, that's also acceptable for contract testing
@@ -248,6 +251,9 @@ class TestAnswersCreate:
                 pytest.skip("API raised a temporary error")
             except (OlostepServerError_RequestUnprocessable, OlostepServerError_NoResultInResponse):
                 # API rejects invalid values - also acceptable
+                pass
+            except OlostepClientError_ResponseValidationFailed:
+                # API returns garbage/malformed responses when given invalid json_format - expected behavior
                 pass
 
     @pytest.mark.asyncio
@@ -310,7 +316,7 @@ class TestAnswersGet:
     @pytest.mark.asyncio
     async def test_get_existing_answer(self, endpoint_caller):
         """Test getting an existing answer by ID"""
-        # First, create an answer using MINIMAL_REQUEST_BODY
+        # First, create an answer using MINIMAL_REQUEST_BODY and wait for it to be ready
         create_body_params = MINIMAL_REQUEST_BODY
 
         validated_request = endpoint_caller.validate_request(
@@ -322,14 +328,15 @@ class TestAnswersGet:
         )
 
         try:
-            create_response = await endpoint_caller._transport.request(create_request)
-            create_model = endpoint_caller._handle_response(create_request, create_response, ANSWERS_CREATE_CONTRACT)
+            create_model = await retry_request(
+                endpoint_caller, create_request, ANSWERS_CREATE_CONTRACT
+            )
             assert isinstance(create_model, AnswersResponse)
             answer_id = create_model.id
         except OlostepServerError_TemporaryIssue:
             pytest.skip("API raised a temporary error during answer creation")
 
-        # Now get the answer using the ID from GET_ANSWER_REQUEST_ID fixture
+        # Now get the answer using the ID we just created
         answer_id_param_name = GET_ANSWER_REQUEST_ID["param_name"]
         get_path_params = {answer_id_param_name: answer_id}
 
@@ -346,8 +353,9 @@ class TestAnswersGet:
         )
 
         try:
-            get_response = await endpoint_caller._transport.request(get_request)
-            get_model = endpoint_caller._handle_response(get_request, get_response, ANSWERS_GET_CONTRACT)
+            get_model = await retry_request(
+                endpoint_caller, get_request, ANSWERS_GET_CONTRACT
+            )
             assert isinstance(get_model, AnswersResponse)
             assert get_model.id == answer_id
             assert get_model.object == "answer"

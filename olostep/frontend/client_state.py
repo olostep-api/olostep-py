@@ -190,10 +190,7 @@ class AnswersResult:
         """
         content_info = []
         if self.json_content:
-            if isinstance(self.json_content, dict):
-                content_info.append(f"json_content={len(str(self.json_content))}chars")
-            else:
-                content_info.append(f"json_content={len(self.json_content)}chars")
+            content_info.append(f"json_content={len(self.json_content)}chars")
         if self.json_hosted_url:
             content_info.append("hosted_url")
 

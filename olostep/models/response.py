@@ -400,21 +400,21 @@ class RetrieveResponse(ScrapeOutputs):
 class AnswersResult(OlostepResponseBaseModel):
     """Result object containing the answer data."""
 
-    json_content: dict[str, Any] | None = None
+    json_content: str | None = None # should be dict[str, Any] | None but the API returns such inconsistent types that is hopeless. sorry @ users.
     json_hosted_url: str | None = None
     sources: list[str] | None = None
 
-    @field_validator("json_content", mode="before")
-    @classmethod
-    def parse_json_content(cls, v):
-        """Parse JSON string to dictionary if needed."""
-        if isinstance(v, str):
-            try:
-                return json.loads(v)
-            except json.JSONDecodeError:
-                # If it's not valid JSON, return as-is (let Pydantic handle the error)
-                return v
-        return v  # return all other types as is
+    # @field_validator("json_content", mode="before")
+    # @classmethod
+    # def parse_json_content(cls, v):
+    #     """Parse JSON string to dictionary if needed."""
+    #     if isinstance(v, str):
+    #         try:
+    #             return json.loads(v)
+    #         except json.JSONDecodeError:
+    #             # If it's not valid JSON, return as-is (let Pydantic handle the error)
+    #             return v
+    #     return v  # return all other types as is
 
 
 class AnswersResponse(OlostepResponseBaseModel):
