@@ -8,6 +8,24 @@ version = "0.11.0"
 description = "Olostep Python SDK - Programmatic access to the web"
 authors = ["Olostep Team <team@olostep.com>"]
 readme = "README.md"
+license = "MIT"
+homepage = "https://www.olostep.com"
+repository = "https://github.com/olostep-api/olostep-py"
+documentation = "https://docs.olostep.com"
+keywords = ["web-scraping", "api", "sdk", "crawling", "data-extraction", "ai", "automation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
+]
 packages = [{include = "olostep"}]
 
 [tool.poetry.dependencies]
