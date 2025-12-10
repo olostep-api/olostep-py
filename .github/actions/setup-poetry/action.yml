@@ -11,6 +11,7 @@ runs:
   steps:
     - name: Install Poetry
       uses: snok/install-poetry@v1
+      id: install-poetry
       with:
         version: latest
         virtualenvs-create: true
@@ -29,4 +30,6 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: poetry install --no-interaction
+      run: |
+        export PATH="$HOME/.local/bin:$PATH"
+        poetry install --no-interaction
