@@ -446,6 +446,30 @@ class _SyncStateProxy:
 
         return SyncIterator(async_iter, self._sync_client)
 
+    def __dir__(self) -> list[str]:
+        """Return directory including methods from async state object."""
+        # Get all public attributes and methods from async state object
+        async_names = [
+            name for name in dir(self._async_state)
+            if not name.startswith('_')
+        ]
+
+        # Get attributes already copied to self (excluding our internal ones)
+        own_attrs = [
+            name for name in self.__dict__.keys()
+            if not name.startswith('_') and name not in ['_async_state', '_sync_client', '_wrapped_cache']
+        ]
+
+        # Get wrapper-specific methods
+        wrapper_methods = [
+            name for name in dir(_SyncStateProxy)
+            if not name.startswith('_') and name not in ['__class__', '__dir__']
+        ]
+
+        # Combine all names, prioritizing async state methods/attributes
+        all_names = set(async_names + own_attrs + wrapper_methods)
+        return sorted(all_names)
+
     def __repr__(self) -> str:
         """Delegate repr to async object."""
         return repr(self._async_state)
