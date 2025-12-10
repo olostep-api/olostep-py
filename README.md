@@ -261,7 +261,7 @@ batch = client.batches.create([
     {"url": "https://www.google.com/search?q=typescript", "custom_id": "search_3"}
 ],
 country=Country.US,
-parser_id="@olostep/google-search"
+parser="@olostep/google-search"
 )
 
 # Process results by custom ID

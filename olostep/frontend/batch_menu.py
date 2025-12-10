@@ -111,21 +111,16 @@ class BatchMenu:
         urls: list[BatchItem] | list[str] | BatchItem | str | list[dict[str, Any]],
         *,
         country: Country | str | None = None,
-        parser_id: str | None = None,
         parser: Parser | dict[str, Any] | str | None = None,
         links_on_page: LinksOnPage | dict[str, Any] | None = None,
         validate_request: bool | None = None,
     ) -> Batch:
         """Create a batch processing operation (alias for start() to match documentation)."""
-        # Use parser_id if provided, otherwise use parser
-        if parser_id is not None and parser is not None:
-            raise ValueError("Cannot specify both 'parser_id' and 'parser' parameters. Use only one.")
-        actual_parser = parser_id if parser_id is not None else parser
         # coerce_to_batch_items handles list[dict[str, Any]] conversion
         return await self.start(
             urls=urls,  # type: ignore[arg-type]
             country=country,
-            parser=actual_parser,
+            parser=parser,
             links_on_page=links_on_page,
             validate_request=validate_request,
         )

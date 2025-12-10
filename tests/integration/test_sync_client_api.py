@@ -169,7 +169,7 @@ class TestAdvancedFeatures:
             {"url": "https://www.google.com/search?q=typescript", "custom_id": "search_3"}
         ],
         country=Country.US,
-        parser_id="@olostep/google-search"
+        parser="@olostep/google-search"
         )
 
         for item in batch.items():
