@@ -15,8 +15,8 @@ from olostep._log import _enable_stderr_debug, _setup_io_file_handler
 from olostep.backend.api_endpoints import EndpointContract
 from olostep.backend.caller import EndpointCaller
 from olostep.backend.transport_protocol import RawAPIRequest
-from olostep.clients.async_client import OlostepClient
-from olostep.clients.sync_client import SyncOlostepClient
+from olostep.clients.async_client import AsyncOlostep
+from olostep.clients.sync_client import Olostep
 from olostep.errors import (
     OlostepServerError_NoResultInResponse,
     OlostepServerError_RequestUnprocessable,
@@ -94,28 +94,28 @@ def real_api_key() -> str:
 
 # Fake transport clients
 @pytest.fixture
-def async_client_fake(fake_transport: FakeTransportSmart) -> OlostepClient:
-    """Create an async OlostepClient with fake transport."""
-    return OlostepClient(_transport=fake_transport)
+def async_client_fake(fake_transport: FakeTransportSmart) -> AsyncOlostep:
+    """Create an async AsyncOlostep with fake transport."""
+    return AsyncOlostep(_transport=fake_transport)
 
 
 @pytest.fixture
-def sync_client_fake(fake_transport: FakeTransportSmart) -> SyncOlostepClient:
-    """Create a sync OlostepClient with fake transport."""
-    return SyncOlostepClient(_transport=fake_transport)
+def sync_client_fake(fake_transport: FakeTransportSmart) -> Olostep:
+    """Create a sync Olostep with fake transport."""
+    return Olostep(_transport=fake_transport)
 
 
 # Real transport clients
 @pytest.fixture
-def async_client_real(real_api_key: str) -> OlostepClient:
-    """Create an async OlostepClient with real transport."""
-    return OlostepClient(api_key=real_api_key)
+def async_client_real(real_api_key: str) -> AsyncOlostep:
+    """Create an async AsyncOlostep with real transport."""
+    return AsyncOlostep(api_key=real_api_key)
 
 
 @pytest.fixture
-def sync_client_real(real_api_key: str) -> SyncOlostepClient:
-    """Create a sync OlostepClient with real transport."""
-    return SyncOlostepClient(api_key=real_api_key)
+def sync_client_real(real_api_key: str) -> Olostep:
+    """Create a sync Olostep with real transport."""
+    return Olostep(api_key=real_api_key)
 
 
 # Transport fixtures for API contract testing

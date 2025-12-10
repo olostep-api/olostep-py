@@ -329,101 +329,229 @@ class FakeTransportSmart(Transport):
                 elif field.annotation in (list,):
                     val = []
                 else:
-                    val = None
+                    # For unknown types, try to provide a placeholder
+                    # _enrich will replace it with proper values
+                    val = f"fake_{fname}"
             if val is not None:
                 kwargs[fname] = val
-        return model_type(**kwargs)  # type: ignore[call-arg]
+        try:
+            return model_type(**kwargs)  # type: ignore[call-arg]
+        except Exception:
+            # If validation fails, create with minimal required fields
+            # _enrich will populate them properly
+            minimal_kwargs: dict[str, Any] = {}
+            for fname, field in model_type.model_fields.items():
+                if field.default is not None:
+                    minimal_kwargs[fname] = field.default
+                elif field.is_required():
+                    if field.annotation in (str,):
+                        minimal_kwargs[fname] = f"fake_{fname}"
+                    elif field.annotation in (int,):
+                        minimal_kwargs[fname] = 1
+                    elif field.annotation in (bool,):
+                        minimal_kwargs[fname] = False
+                    elif field.annotation in (dict,):
+                        minimal_kwargs[fname] = {}
+                    elif field.annotation in (list,):
+                        minimal_kwargs[fname] = []
+                    else:
+                        minimal_kwargs[fname] = None
+            return model_type(**minimal_kwargs)  # type: ignore[call-arg]
 
-    def _enrich(self, c: EndpointContract, *, path_params: dict[str, str], query: dict[str, Any], body: dict[str, Any], model: BaseModel) -> BaseModel:
-        key = c.key
+    def _enrich_value(
+        self,
+        field_name: str,
+        field_annotation: Any,
+        *,
+        path_params: dict[str, str],
+        query: dict[str, Any],
+        body: dict[str, Any],
+    ) -> Any:
+        """Generate a value for a field based on its name and type, using request data when available."""
+        from typing import get_args, get_origin
+
+        # Try to get value from request data first (path params, query, body)
+        if field_name in path_params:
+            return path_params[field_name]
+        if field_name in query:
+            return query[field_name]
+        if field_name in body:
+            return body[field_name]
+
+        # Try common field name patterns
+        if field_name == "id":
+            # Generate ID based on path params if available
+            for param_name in ["scrape_id", "batch_id", "crawl_id", "answer_id", "retrieve_id", "map_id"]:
+                if param_name in path_params:
+                    return path_params[param_name]
+            return f"{field_name}_fake_{self._seed}"
+        if field_name == "created":
+            return int(time.time())
+        if field_name.endswith("_id") and field_name != "id":
+            return f"ret_{self._seed}"
+        if field_name in ["url_to_scrape", "start_url", "url_to_map", "url"]:
+            # Try to get from body with various possible names
+            for key in ["url_to_scrape", "start_url", "url_to_map", "url"]:
+                if key in body:
+                    return body[key]
+            return "https://example.com"
+        if field_name == "status":
+            return "in_progress"
+        if field_name == "object":
+            # Try to infer from endpoint key
+            return "unknown"
+        if field_name in ["total_urls", "items_count", "pages_count", "urls_count"]:
+            # Try to get from body
+            if "items" in body and isinstance(body["items"], list):
+                return len(body["items"])
+            if "urls" in body and isinstance(body["urls"], list):
+                return len(body["urls"])
+            return 2  # Default count
+        if field_name == "completed_urls":
+            return 0
+        if field_name == "cursor":
+            # Check if cursor should be string or int based on field type
+            from typing import get_args, get_origin
+            origin = get_origin(field_annotation)
+            args = get_args(field_annotation)
+            # If it's Optional[str] or str, return string
+            if origin is not None:  # Optional or Union
+                non_none = [a for a in args if a is not type(None)]  # noqa: E721
+                if non_none and non_none[0] == str:
+                    return "next_1"
+                elif non_none and non_none[0] == int:
+                    return 1
+            elif field_annotation == str:
+                return "next_1"
+            elif field_annotation == int:
+                return 1
+            # Default: try to infer from field name or return string
+            return "next_1"
+        if field_name == "start_date":
+            return "2024-01-01T00:00:00Z"
+        if field_name == "size_exceeded":
+            return False
+        if field_name in ["html_content", "markdown_content", "text_content"]:
+            # Check if formats were requested
+            formats = query.get("formats") or body.get("formats") or []
+            if isinstance(formats, str):
+                formats = [formats]
+            format_name = field_name.replace("_content", "")
+            if format_name in formats or "all" in formats:
+                if format_name == "html":
+                    return "<html><body>Hello World</body></html>"
+                if format_name == "markdown":
+                    return "# Hello World"
+                if format_name == "text":
+                    return "Hello World"
+            return None
+        if field_name == "json_content":
+            formats = query.get("formats") or body.get("formats") or []
+            if isinstance(formats, str):
+                formats = [formats]
+            if "json" in formats or "all" in formats:
+                return {}
+            return None
+        if field_name == "result":
+            # This is a nested model, generate it
+            origin = get_origin(field_annotation)
+            args = get_args(field_annotation)
+            if origin is None and isinstance(field_annotation, type) and issubclass(field_annotation, BaseModel):
+                return self._auto_model(field_annotation)
+            if args:
+                # Try first arg if it's a model
+                for arg in args:
+                    if isinstance(arg, type) and issubclass(arg, BaseModel):
+                        return self._auto_model(arg)
+        if field_name in ["items", "pages", "urls"]:
+            # Generate a list of items
+            origin = get_origin(field_annotation)
+            args = get_args(field_annotation)
+            if origin is list and args:
+                item_type = args[0]
+                if isinstance(item_type, type) and issubclass(item_type, BaseModel):
+                    # Generate 2 sample items
+                    return [self._auto_model(item_type), self._auto_model(item_type)]
+                elif isinstance(item_type, type) and item_type == str:
+                    return ["https://example.com/1", "https://example.com/2"]
+                else:
+                    # Try to generate dict items
+                    return [
+                        {"id": "item1", "url": "https://example.com/1"},
+                        {"id": "item2", "url": "https://example.com/2"},
+                    ]
+            return []
+        if field_name == "metadata":
+            return {}
+        if field_name in ["include_urls", "exclude_urls"]:
+            return body.get(field_name, ["/**"])
+        if field_name in ["include_external", "include_subdomain", "remove_images"]:
+            return body.get(field_name, False)
+        if field_name == "max_pages":
+            return body.get("max_pages", 10)
+        if field_name == "max_depth":
+            return body.get("max_depth", 3)
+        if field_name == "top_n":
+            return body.get("top_n", 10)
+        if field_name == "search_query":
+            return query.get("search_query") or body.get("search_query")
+        if field_name == "answer":
+            return "This is a generated answer."
+        if field_name == "task":
+            return body.get("task", "Generated task")
+        if field_name == "json_content" and "answer" in str(field_annotation).lower():
+            # For AnswersResult.json_content, return a JSON string
+            return '{"answer": "This is a generated answer."}'
+
+        # Fall back to auto_value for type-based generation
+        return self._auto_value(field_annotation, field_name)
+
+    def _enrich(self, c: EndpointContract, *, path_params: dict[str, str], query: dict[str, Any], body: dict[str, Any], model: BaseModel | None) -> BaseModel:
+        """Enrich model with values derived from request data and field patterns."""
+        if c.response_model is None:
+            raise ValueError("Response model is required for enrichment")
+
+        response_model = c.response_model  # type: ignore[assignment]
         update: dict[str, Any] = {}
-        if key == ("scrape", "url"):
-            from olostep.backend.validation import ScrapeResult
-            update = {
-                "id": model.__dict__.get("id") or "scrape_fake_1",
-                "created": int(time.time()),
-                "retrieve_id": model.__dict__.get("retrieve_id") or "ret_1",
-                "url_to_scrape": body.get("url_to_scrape", ""),
-                "result": ScrapeResult(html_content="<html></html>", size_exceeded=False),
-            }
-        elif key == ("scrape", "get"):
-            from olostep.backend.validation import ScrapeResult
-            update = {
-                "id": path_params.get("scrape_id", "scrape_fake_1"),
-                "created": int(time.time()),
-                "retrieve_id": "ret_1",
-                "url_to_scrape": "https://example.com",
-                "result": ScrapeResult(html_content="<html></html>", size_exceeded=False),
-            }
-        elif key == ("batch", "start"):
-            update = {
-                "id": "batch_fake_1",
-                "status": model.__dict__.get("status") or "in_progress",
-                "created": int(time.time()),
-                "total_urls": len(body.get("items", [])),
-                "completed_urls": 0,
-            }
-        elif key == ("batch", "items"):
-            bid = path_params.get("batch_id") or query.get("batch_id", "batch_fake_1")
-            items = [
-                {"custom_id": "item1", "retrieve_id": "ret_1", "url": "https://a"},
-                {"custom_id": "item2", "retrieve_id": "ret_2", "url": "https://b"},
-            ]
-            update = {
-                "id": bid,
-                "status": "in_progress",
-                "items": items,
-                "items_count": len(items),
-                "cursor": 1,
-            }
-        elif key == ("crawl", "start"):
-            update = {
-                "id": "crawl_fake_1",
-                "status": "in_progress",
-                "created": int(time.time()),
-                "start_date": "2024-01-01T00:00:00Z",
-                "start_url": body.get("start_url", ""),
-                "max_pages": body.get("max_pages", 10),
-                "include_urls": body.get("include_urls", ["/**"]),
-                "include_external": bool(body.get("include_external", False)),
-                "pages_count": 0,
-            }
-        elif key == ("crawl", "pages"):
-            cid = path_params.get("crawl_id", "crawl_fake_1")
-            pages = [
-                {"id": "p1", "retrieve_id": "ret_1", "url": "https://p1", "is_external": False},
-                {"id": "p2", "retrieve_id": "ret_2", "url": "https://p2", "is_external": True},
-            ]
-            update = {
-                "id": cid,
-                "status": "in_progress",
-                "search_query": query.get("search_query"),
-                "pages": pages,
-                "pages_count": len(pages),
-                "cursor": 1,
-                "metadata": {"external_urls": ["https://p2"], "failed_urls": []},
-            }
-        elif key == ("map", "create"):
-            urls = ["https://a", "https://b", "https://c"]
-            update = {"urls": urls, "urls_count": len(urls), "id": "map_1", "cursor": "next_1"}
-        elif key == ("retrieve", "get"):
-            fmts = query.get("formats") or []
-            payload: dict[str, Any] = {"size_exceeded": False}
-            if "html" in fmts:
-                payload["html_content"] = "<html></html>"
-            if "markdown" in fmts:
-                payload["markdown_content"] = "# md"
-            if "json" in fmts:
-                payload["json_content"] = {}
-            update = payload
+
+        # Generate values for all fields in the response model
+        for field_name, field in response_model.model_fields.items():
+            # Skip if field already has a default and we have a model with that value
+            if model and hasattr(model, field_name):
+                existing_value = getattr(model, field_name, None)
+                if existing_value is not None and field.default is not None:
+                    continue
+
+            # Generate value for this field
+            value = self._enrich_value(
+                field_name,
+                field.annotation,
+                path_params=path_params,
+                query=query,
+                body=body,
+            )
+            if value is not None:
+                update[field_name] = value
+
+        # Create or update the model
         if update:
+            if model is None:
+                # Create model from scratch with update values
+                return response_model(**update)  # type: ignore[call-arg]
             try:
                 return model.model_copy(update=update)
             except Exception:
                 # fallback: reconstruct
-                data = model.model_dump(mode="python")
-                data.update(update)
-                return model.__class__(**data)
+                try:
+                    data = model.model_dump(mode="python")
+                    data.update(update)
+                    return model.__class__(**data)
+                except Exception:
+                    # Final fallback: create new model with update
+                    return response_model(**update)  # type: ignore[call-arg]
+        if model is None:
+            # No update but model is None, create minimal model
+            return self._auto_model(response_model)  # type: ignore[arg-type]
         return model
 
     async def request(
@@ -479,9 +607,18 @@ class FakeTransportSmart(Transport):
             body="{}"
         )
 
-        # build model
-        model = self._auto_model(matched.response_model)  # type: ignore[arg-type]
-        model = self._enrich(matched, path_params=path_params, query=(params or {}), body=(json or {}), model=model)
+        # Parse request body
+        body_json: dict[str, Any] = {}
+        if request.json:
+            body_json = request.json
+
+        # build model - let _enrich handle it since it knows what values to use
+        try:
+            model = self._auto_model(matched.response_model)  # type: ignore[arg-type]
+        except Exception:
+            # If auto_model fails, create empty dict and let _enrich populate everything
+            model = None
+        model = self._enrich(matched, path_params=path_params, query=(params or {}), body=body_json, model=model)
         return RawAPIResponse(
             status_code=200,
             headers={},

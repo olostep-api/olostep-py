@@ -9,7 +9,7 @@ import os
 import pytest
 from dotenv import load_dotenv
 
-from olostep import OlostepClient
+from olostep import AsyncOlostep
 from olostep.models.request import Format
 
 # Load environment variables from .env file
@@ -42,7 +42,7 @@ async def test_scrape_random_hacker_news_page(hacker_news_urls: list[str]) -> No
     # Use the first URL from the fixture
     test_url = hacker_news_urls[0]
     
-    async with OlostepClient(api_key=api_key) as client:
+    async with AsyncOlostep(api_key=api_key) as client:
         # Scrape the Hacker News page with multiple formats
         result = await client.scrape.url(
             url_to_scrape=test_url,
