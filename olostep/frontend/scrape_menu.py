@@ -50,9 +50,9 @@ class ScrapeMenu:
 
     async def create(
         self,
-        url: HttpUrl | str | None = None,
         url_to_scrape: HttpUrl | str | None = None,
         *,
+        url: HttpUrl | str | None = None,
         formats: list[Format] | list[str] | Format | str | None = None,
         country: Country | str | None = None,
         wait_before_scraping: int | None = None,
@@ -80,8 +80,9 @@ class ScrapeMenu:
         better IDE support.
 
         Args:
-            url: URL to scrape (supports bare domains like "example.com").
-            url_to_scrape: Alternative parameter name for url (for documentation compatibility).
+            url_to_scrape: url to scrape.
+                If both url and url_to_scrape are provided, ValueError is raised.
+            url: Alias for url_to_scrape (univerals naming convention).
                 If both url and url_to_scrape are provided, ValueError is raised.
             formats: Output formats - single format or list of formats.
                 Can be Format enum values, strings, or mixed lists.

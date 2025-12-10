@@ -111,7 +111,7 @@ from olostep import AsyncOlostep
 async def main():
     async with AsyncOlostep(api_key="your-api-key") as client:
         # Extract all links from a website
-        maps = await client.maps.create(url_to_map="https://example.com")
+        maps = await client.maps.create(url="https://example.com")
 
         # Get all discovered URLs
         urls = []

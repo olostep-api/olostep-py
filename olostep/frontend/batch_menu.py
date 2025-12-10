@@ -33,23 +33,24 @@ class BatchMenu:
         self._caller = caller
         self._validate_request = validate_request
 
-    async def start(
+    async def create(
         self,
-        urls: list[BatchItem] | list[str] | BatchItem | str,
+        urls: list[BatchItem] | list[str] | BatchItem | str | list[dict[str, Any]],
         *,
         country: Country | str | None = None,
         parser: Parser | dict[str, Any] | str | None = None,
         links_on_page: LinksOnPage | dict[str, Any] | None = None,
         validate_request: bool | None = None,
     ) -> Batch:
-        """Start a batch processing operation with rich type hints and smart input coercion.
+        """Create new a batch processing operation. Supports rich type hints and smart input coercion.
 
         Creates a new batch processing job that can handle multiple URLs efficiently.
         Supports various input formats and provides smart coercion for better usability.
 
         Args:
             urls: Single URL string, list of URLs, or batch items with custom IDs.
-                Can be a string, list of strings, BatchItem object, or list of BatchItem objects.
+                Can be a string, list of strings, BatchItem object, list of BatchItem objects,
+                or list of dictionaries matching the BatchItem schema.
             country: Country for geolocation when scraping URLs. Can be a Country enum
                 or string representation.
             parser: Parser configuration for content extraction. Can be a Parser object,
@@ -104,26 +105,7 @@ class BatchMenu:
         )
         return Batch(self._caller, res)
 
-    __call__ = start
-
-    async def create(
-        self,
-        urls: list[BatchItem] | list[str] | BatchItem | str | list[dict[str, Any]],
-        *,
-        country: Country | str | None = None,
-        parser: Parser | dict[str, Any] | str | None = None,
-        links_on_page: LinksOnPage | dict[str, Any] | None = None,
-        validate_request: bool | None = None,
-    ) -> Batch:
-        """Create a batch processing operation (alias for start() to match documentation)."""
-        # coerce_to_batch_items handles list[dict[str, Any]] conversion
-        return await self.start(
-            urls=urls,  # type: ignore[arg-type]
-            country=country,
-            parser=parser,
-            links_on_page=links_on_page,
-            validate_request=validate_request,
-        )
+    __call__ = create
 
     async def info(self, batch_id: str) -> BatchInfo:
         """Get detailed information about a batch processing operation.
@@ -133,7 +115,7 @@ class BatchMenu:
 
         Args:
             batch_id: The unique identifier of the batch to get information for.
-                This is returned when creating a batch with the start() method.
+                This is returned when creating a batch with the create() method.
 
         Returns:
             BatchInfo: An object containing batch status, progress metrics,
@@ -173,7 +155,7 @@ class BatchMenu:
 
         Args:
             batch_id: The unique identifier of the batch to get items for.
-                This is returned when creating a batch with the start() method.
+                This is returned when creating a batch with the create() method.
             batch_size: Number of items to fetch per API request (default: 50).
                 Larger values reduce API calls but use more memory.
             status: Optional filter to only return items with specific status.

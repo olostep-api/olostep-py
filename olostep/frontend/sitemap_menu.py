@@ -28,8 +28,7 @@ class SitemapMenu:
 
     async def create(
         self,
-        url: str | None = None,
-        url_to_map: str | None = None,
+        url: str,
         *,
         search_query: str | None = None,
         top_n: int | None = None,
@@ -46,8 +45,6 @@ class SitemapMenu:
 
         Args:
             url: URL to map (supports bare domains like "example.com").
-            url_to_map: Alternative parameter name for url (for documentation compatibility).
-                If both url and url_to_map are provided, ValueError is raised.
             search_query: Search query to filter links during extraction.
                 Only links matching the query will be included.
             top_n: Maximum number of links to return (must be positive).
@@ -84,13 +81,6 @@ class SitemapMenu:
                 exclude_urls=["/admin/**"]
             )
         """
-        # Normalize url_to_map to url
-        if url is not None and url_to_map is not None:
-            raise ValueError("Cannot specify both 'url' and 'url_to_map' parameters. Use only one.")
-        if url is None and url_to_map is not None:
-            url = url_to_map
-        if url is None:
-            raise ValueError("Either 'url' or 'url_to_map' parameter must be provided.")
 
         # local validation setting overrides global validation setting
         validate_request = (

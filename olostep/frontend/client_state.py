@@ -427,7 +427,7 @@ class Batch:
 
     This class provides access to batch operations including status monitoring,
     item iteration, and completion waiting. It supports pagination and filtering
-    of batch items. Typically created by the BatchMenu.start() method.
+    of batch items. Typically created by the BatchMenu.create() method.
 
     Attributes:
         id: Unique identifier for the batch.
@@ -837,7 +837,7 @@ class Crawl:
 
     This class provides access to crawl operations including status monitoring,
     page iteration, and completion waiting. It supports pagination and filtering
-    of discovered pages. Typically created by the CrawlMenu.start() method.
+    of discovered pages. Typically created by the CrawlMenu.create() method.
 
     Attributes:
         id: Unique identifier for the crawl.

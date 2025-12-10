@@ -304,7 +304,7 @@ client = Olostep(api_key="your-api-key")
 
 # Extract all links with advanced filtering
 maps = client.maps.create(
-    url_to_map="https://www.bbc.com",
+    url="https://www.bbc.com",
     include_subdomain=True,
     include_urls=["/articles/**", "/news/**"],
     exclude_urls=["/ads/**", "/tracking/**"]

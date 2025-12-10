@@ -83,7 +83,7 @@ class TestQuickStartSync:
     def test_site_mapping(self) -> None:
         """Test site mapping example."""
         client = Olostep()
-        maps = client.maps.create(url_to_map="https://example.com")
+        maps = client.maps.create(url="https://example.com")
 
         urls = []
         for url in maps.urls():
@@ -201,7 +201,7 @@ class TestAdvancedFeatures:
         """Test site mapping with filters example."""
         client = Olostep()
         maps = client.maps.create(
-            url_to_map="https://www.bbc.com",
+            url="https://www.bbc.com",
             include_subdomain=True,
             include_urls=["/articles/**", "/news/**"],
             exclude_urls=["/ads/**", "/tracking/**"]

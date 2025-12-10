@@ -88,7 +88,7 @@ from olostep import Olostep
 client = Olostep(api_key="your-api-key")
 
 # Extract all links from a website
-maps = client.maps.create(url_to_map="https://example.com")
+maps = client.maps.create(url="https://example.com")
 
 # Get all discovered URLs
 urls = []

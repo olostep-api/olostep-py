@@ -30,11 +30,11 @@ class CrawlMenu:
         self._validate_request = validate_request
         self._caller = caller
 
-    async def start(
+    async def create(
         self,
-        url: HttpUrl | str | None = None,
         start_url: HttpUrl | str | None = None,
         *,
+        url: HttpUrl | str | None = None, # Alias for start_url (univerals naming convention)
         max_pages: int | None = None,
         include_urls: list[str] | str | None = None,
         exclude_urls: list[str] | str | None = None,
@@ -46,7 +46,7 @@ class CrawlMenu:
         webhook_url: HttpUrl | str | None = None,
         validate_request: bool | None = None,
     ) -> Crawl:
-        """Start a web crawling operation with smart input coercion.
+        """Create a web crawling operation with smart input coercion.
 
         Creates a new web crawling job that will discover and process pages
         starting from the specified URL. Supports various filtering options
@@ -65,9 +65,7 @@ class CrawlMenu:
             max_depth: Maximum crawl depth from the starting URL (must be positive).
                 If None, no depth limit is applied.
             include_external: Whether to include external links in the crawl.
-                If None, uses default behavior.
             include_subdomain: Whether to include subdomain links in the crawl.
-                If None, uses default behavior.
             search_query: Search query to filter pages during crawling.
                 Only pages matching the query will be processed.
             top_n: Maximum number of results to return (must be positive).
@@ -135,45 +133,7 @@ class CrawlMenu:
 
         return Crawl(self._caller, res)
 
-    __call__ = start
-
-    async def create(
-        self,
-        start_url: HttpUrl | str | None = None,
-        url: HttpUrl | str | None = None,
-        *,
-        max_pages: int | None = None,
-        include_urls: list[str] | str | None = None,
-        exclude_urls: list[str] | str | None = None,
-        max_depth: int | None = None,
-        include_external: bool | None = None,
-        include_subdomain: bool | None = None,
-        search_query: str | None = None,
-        top_n: int | None = None,
-        webhook_url: HttpUrl | str | None = None,
-        validate_request: bool | None = None,
-    ) -> Crawl:
-        """Create a crawl operation (alias for start() to match documentation)."""
-        # Normalize start_url to url
-        if url is not None and start_url is not None:
-            raise ValueError("Cannot specify both 'url' and 'start_url' parameters. Use only one.")
-        if url is None and start_url is not None:
-            url = start_url
-        if url is None:
-            raise ValueError("Either 'url' or 'start_url' parameter must be provided.")
-        return await self.start(
-            url=url,
-            max_pages=max_pages,
-            include_urls=include_urls,
-            exclude_urls=exclude_urls,
-            max_depth=max_depth,
-            include_external=include_external,
-            include_subdomain=include_subdomain,
-            search_query=search_query,
-            top_n=top_n,
-            webhook_url=webhook_url,
-            validate_request=validate_request,
-        )
+    __call__ = create
 
     async def info(self, crawl_id: str) -> CrawlInfo:
         """Get detailed information about a crawl operation.
@@ -183,7 +143,7 @@ class CrawlMenu:
 
         Args:
             crawl_id: The unique identifier of the crawl to get information for.
-                This is returned when creating a crawl with the start() method.
+                This is returned when creating a crawl with the create() method.
 
         Returns:
             CrawlInfo: An object containing crawl status, progress metrics,
@@ -221,7 +181,7 @@ class CrawlMenu:
 
         Args:
             crawl_id: The unique identifier of the crawl to get pages for.
-                This is returned when creating a crawl with the start() method.
+                This is returned when creating a crawl with the create() method.
             batch_size: Number of pages to fetch per API request (default: 50).
                 Larger values reduce API calls but use more memory.
             search_query: Optional filter to only return pages matching the search query.

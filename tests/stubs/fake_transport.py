@@ -389,9 +389,9 @@ class FakeTransportSmart(Transport):
             return int(time.time())
         if field_name.endswith("_id") and field_name != "id":
             return f"ret_{self._seed}"
-        if field_name in ["url_to_scrape", "start_url", "url_to_map", "url"]:
+        if field_name in ["url_to_scrape", "start_url", "url"]:
             # Try to get from body with various possible names
-            for key in ["url_to_scrape", "start_url", "url_to_map", "url"]:
+            for key in ["url_to_scrape", "start_url", "url"]:
                 if key in body:
                     return body[key]
             return "https://example.com"
