@@ -522,6 +522,68 @@ class TestBatchInfo:
             pytest.skip("API raised a temporary error during batch retrieval")
     
     @pytest.mark.asyncio
+    async def test_get_batch_info_with_country(self, endpoint_caller):
+        """Test getting batch info when batch was created with country parameter.
+        
+        The API can optionally return a country field in batch info responses.
+        This test verifies that the BatchInfoResponse model correctly handles
+        the country field when it is present in the API response.
+        """
+        # First, create a batch with a country parameter
+        create_body_params = {
+            "items": [
+                {"url": "https://example.com", "custom_id": "item1"},
+                {"url": "https://http.cat/200", "custom_id": "item2"},
+            ],
+            "country": COUNTRY["param_values"]["valids"][0],  # Use first valid country
+        }
+        
+        validated_request = endpoint_caller.validate_request(
+            BATCH_START_CONTRACT, body_params=create_body_params
+        )
+        
+        create_request = endpoint_caller._prepare_request(
+            BATCH_START_CONTRACT, **validated_request
+        )
+        
+        try:
+            create_model = await retry_request(
+                endpoint_caller, create_request, BATCH_START_CONTRACT
+            )
+            assert isinstance(create_model, BatchCreateResponse)
+            batch_id = create_model.id
+        except OlostepServerError_TemporaryIssue:
+            pytest.skip("API raised a temporary error during batch creation")
+        
+        # Now get the batch info
+        batch_id_param_name = GET_BATCH_INFO_REQUEST_ID["param_name"]
+        get_path_params = {batch_id_param_name: batch_id}
+        
+        validated_request = endpoint_caller.validate_request(
+            BATCH_INFO_CONTRACT, path_params=get_path_params
+        )
+        
+        get_request = endpoint_caller._prepare_request(
+            BATCH_INFO_CONTRACT, **validated_request
+        )
+        
+        try:
+            get_model = await retry_request(
+                endpoint_caller, get_request, BATCH_INFO_CONTRACT
+            )
+            assert isinstance(get_model, BatchInfoResponse)
+            assert get_model.id == batch_id
+            
+            # Verify that country field is present and accessible
+            # The API may or may not return it, but if it does, it should be valid
+            if hasattr(get_model, "country") and get_model.country is not None:
+                # If country is present, verify it's a valid Country enum value
+                from olostep.models.request import Country
+                assert get_model.country in [c.value for c in Country]
+        except OlostepServerError_TemporaryIssue:
+            pytest.skip("API raised a temporary error during batch retrieval")
+    
+    @pytest.mark.asyncio
     async def test_get_nonexistent_batch(self, endpoint_caller):
         """Test getting a non-existent batch by ID"""
         # Try to get a batch with an invalid ID from GET_BATCH_INFO_REQUEST_ID fixture
