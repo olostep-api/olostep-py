@@ -4,6 +4,8 @@
 
 ✨ [Get a free API key](https://www.olostep.com/?utm_source=python_sdk_readme) • [Full Documentation](https://docs.olostep.com?utm_source=python_sdk_readme) • [GitHub Issues](https://github.com/olostep-api/olostep-py/issues) ✨
 
+[![CI](https://github.com/olostep-api/olostep-py/actions/workflows/ci.yml/badge.svg)](https://github.com/olostep-api/olostep-py/actions/workflows/ci.yml)
+
   <br>
   </div>
   <h3>A programmatic web access for AI applications</h3>

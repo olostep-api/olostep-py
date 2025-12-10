@@ -86,9 +86,7 @@ class ScrapeResult:
         Raises:
             ValueError: If the response type is not supported.
         """
-        if isinstance(response, CreateScrapeResponse) or isinstance(
-            response, GetScrapeResponse
-        ):
+        if isinstance(response, (CreateScrapeResponse, GetScrapeResponse)):
             self.id = response.id
             self.created = response.created
             self.url_to_scrape = response.url_to_scrape

@@ -174,9 +174,7 @@ def _setup_io_file_handler() -> None:
             if re.search(r"api[_-]?key[=:]\s*[a-za-z0-9]{10,}", text, re.I):
                 return True
             # Check for tokens
-            if re.search(r"token[=:]\s*[a-za-z0-9\-_\.]{10,}", text, re.I):
-                return True
-            return False
+            return bool(re.search(r"token[=:]\s*[a-za-z0-9\-_\.]{10,}", text, re.I))
 
         def _redact_string(self, text: str) -> str:
             """Redact secrets in a string."""

@@ -14,7 +14,7 @@ from .transport_protocol import RawAPIRequest, RawAPIResponse, Transport
 logger = get_logger("backend.transport")
 
 try:
-    import h2
+    import h2  # noqa: F401
 
     USE_HTTP2 = True
 except ImportError:
@@ -66,7 +66,7 @@ class HttpxTransport(Transport):
         self,
         api_key: str,
         *,
-        enable_io_logging: bool = False,
+        enable_io_logging: bool = False,  # noqa: ARG002
         max_connection_retries: int = 3,
     ) -> None:
         self._client = httpx.AsyncClient(

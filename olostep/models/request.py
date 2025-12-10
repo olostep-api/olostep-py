@@ -447,7 +447,7 @@ class ScrapeUrlBodyParams(BodyParams):
         except (json.JSONDecodeError, ValueError) as e:
             raise ValueError(
                 f"Must be 'default', 'none', or a valid JSON array of strings: {e}"
-            )
+            ) from e
 
         return v
 
@@ -969,12 +969,7 @@ class AnswersBodyParams(BodyParams):
             if not d:
                 return False
             for value in d.values():
-                if isinstance(value, dict):
-                    if value:
-                        return True
-                elif isinstance(value, list):
-                    return True
-                elif value is not None:
+                if (isinstance(value, dict) and value) or isinstance(value, list) or value is not None:
                     return True
             return False
         

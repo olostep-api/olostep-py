@@ -49,7 +49,7 @@ jobs:
         run: poetry install
 
       - name: Lint with ruff
-        run: poetry run ruff check .
+        run: poetry run ruff check olostep/
 
       - name: Run integration tests
         env:

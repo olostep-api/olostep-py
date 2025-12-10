@@ -209,8 +209,7 @@ def _generate_type_schema(field_type: Any, field_name: str) -> dict[str, Any]:
     # Handle list types
     origin = get_origin(field_type)
     args = get_args(field_type)
-    if origin is list:
-        if args:
+    if origin is list and args:
             element_type = args[0]
             element_schema = _generate_type_schema_for_field(element_type, field_name)
             return {"type": "array", "items": element_schema}
@@ -220,13 +219,13 @@ def _generate_type_schema(field_type: Any, field_name: str) -> dict[str, Any]:
         return _generate_json_schema(field_type)
 
     # Handle basic types
-    if field_type == str:
+    if field_type is str:
         return {"type": "string"}
-    elif field_type == int:
+    elif field_type is int:
         return {"type": "integer"}
-    elif field_type == bool:
+    elif field_type is bool:
         return {"type": "boolean"}
-    elif field_type == float:
+    elif field_type is float:
         return {"type": "number"}
     elif hasattr(field_type, "__name__") and field_type.__name__ == "HttpUrl":
         return {"type": "string", "format": "uri"}

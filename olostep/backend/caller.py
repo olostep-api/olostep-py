@@ -134,16 +134,15 @@ class EndpointCaller:
                 raise OlostepServerError_FeatureApprovalRequired()
 
         if response.status_code == 404:
-            if parsed_body:
-                # special case: not enough scraping resources available for a given (usually specific) request.
-                if (
-                    parsed_body.get("malformed_request") is False
-                    and parsed_body.get("message", "").lower()
-                    == "not enough resources available for the batch execution."
-                ):
-                    raise OlostepServerError_OutOfResources(
-                        request=request, response=response
-                    )
+            # special case: not enough scraping resources available for a given (usually specific) request.
+            if parsed_body and (
+                parsed_body.get("malformed_request") is False
+                and parsed_body.get("message", "").lower()
+                == "not enough resources available for the batch execution."
+            ):
+                raise OlostepServerError_OutOfResources(
+                    request=request, response=response
+                )
             # if "not_found" in response.body:
             raise OlostepServerError_ResourceNotFound(server_response=response.body)
 
@@ -272,7 +271,7 @@ class EndpointCaller:
             logger.error(
                 f"Response from '{contract.name}' contains invalid JSON", exc_info=err
             )
-            raise err
+            raise err from None
 
         logger.debug(
             f"Response from '{contract.name}' contains valid JSON. Evaluating against [{contract.response_model.__name__}] model."
@@ -281,16 +280,16 @@ class EndpointCaller:
             return contract.response_model(**data) if contract.response_model else data
         except ValidationError as e:
             raise OlostepClientError_ResponseValidationFailed(
-                request=request, response=response, errors=e.errors()
+                request=request, response=response, errors=[dict(error) for error in e.errors()]
             ) from e
 
     def validate_request(
         self,
         contract: EndpointContract,
         *,
-        path_params: dict[str, Any] | None = {},
-        query_params: dict[str, Any] | None = {},
-        body_params: dict[str, Any] | None = {},
+        path_params: dict[str, Any] | None = None,
+        query_params: dict[str, Any] | None = None,
+        body_params: dict[str, Any] | None = None,
     ) -> Any:
         unvalidated_data = {
             "path_params": path_params,
@@ -337,11 +336,11 @@ class EndpointCaller:
 
     def _compress_request(
         self,
-        contract: EndpointContract,  # noqa: F841, type: ignore  # intentionally unused, required for signature
+        contract: EndpointContract,  # noqa: ARG002
         *,
-        path_params: dict[str, Any] | None = {},
-        query_params: dict[str, Any] | None = {},
-        body_params: dict[str, Any] | None = {},
+        path_params: dict[str, Any] | None = None,
+        query_params: dict[str, Any] | None = None,
+        body_params: dict[str, Any] | None = None,
     ) -> Any:
         """
         Recursively compress request data by removing empty values.
