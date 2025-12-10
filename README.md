@@ -4,7 +4,7 @@
 
 ✨ [Get a free API key](https://www.olostep.com/?utm_source=python_sdk_readme) • [Full Documentation](https://docs.olostep.com?utm_source=python_sdk_readme) • [GitHub Issues](https://github.com/olostep-api/olostep-py/issues) ✨
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![CI](https://github.com/olostep-api/olostep-py/actions/workflows/ci.yml/badge.svg)](https://github.com/olostep-api/olostep-py/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![CI](https://github.com/olostep-api/olostep-py/actions/workflows/ci.yml/badge.svg?branch=v.1.0.0)](https://github.com/olostep-api/olostep-py/actions/workflows/ci.yml)
 
   <br>
   </div>
