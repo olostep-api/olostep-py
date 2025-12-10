@@ -4,36 +4,42 @@ Scrape endpoint contract validation tests.
 This test suite validates scrape endpoint contracts against the API using httpx transport directly.
 """
 
+
 import pytest
-import pytest_asyncio
-import json
-import asyncio
-import time
-from typing import Any, Dict, List, Optional
-from itertools import product
-from dataclasses import dataclass
 
 from olostep.backend.api_endpoints import CONTRACTS
-from olostep.backend.caller import EndpointCaller
-from olostep.backend.transport_protocol import RawAPIRequest
-from olostep.models.request import (
-    Format, Country, ActionType, WaitAction, ClickAction, FillInputAction, ScrollAction,
-    ScrollDirection, ScrapeUrlRequest, ScrapeUrlBodyParams
+from olostep.errors import (
+    OlostepClientError_RequestValidationFailed,
+    OlostepServerError_NoResultInResponse,
+    OlostepServerError_ParserNotFound,
+    OlostepServerError_RequestUnprocessable,
+    OlostepServerError_ResourceNotFound,
+    OlostepServerError_TemporaryIssue,
+    OlostepServerError_UnknownIssue,
 )
 from olostep.models.response import (
-    CreateScrapeResponse, GetScrapeResponse,
-)
-from olostep.errors import OlostepClientError_RequestValidationFailed, OlostepServerError_RequestUnprocessable, OlostepServerError_NoResultInResponse, OlostepServerError_TemporaryIssue, OlostepServerError_UnknownIssue, OlostepServerError_NetworkBusy, OlostepServerError_ResourceNotFound, OlostepServerError_ParserNotFound
-
-from tests.fixtures.api.requests.scrape import (
-    MINIMAL_REQUEST_BODY, URL_TO_SCRAPE, WAIT_BEFORE_SCRAPING, FORMATS,
-    REMOVE_CSS_SELECTORS, ACTIONS, COUNTRY, TRANSFORMER, REMOVE_IMAGES,
-    REMOVE_CLASS_NAMES, PARSER, LLM_EXTRACT, LINKS_ON_PAGE, SCREEN_SIZE, METADATA, GET_SCRAPE_REQUEST_ID
+    CreateScrapeResponse,
+    GetScrapeResponse,
 )
 from tests.conftest import extract_request_parameters, retry_request
-
-
-
+from tests.fixtures.api.requests.scrape import (
+    ACTIONS,
+    COUNTRY,
+    FORMATS,
+    GET_SCRAPE_REQUEST_ID,
+    LINKS_ON_PAGE,
+    LLM_EXTRACT,
+    METADATA,
+    MINIMAL_REQUEST_BODY,
+    PARSER,
+    REMOVE_CLASS_NAMES,
+    REMOVE_CSS_SELECTORS,
+    REMOVE_IMAGES,
+    SCREEN_SIZE,
+    TRANSFORMER,
+    URL_TO_SCRAPE,
+    WAIT_BEFORE_SCRAPING,
+)
 
 SCRAPE_URL_CONTRACT = CONTRACTS[('scrape', 'url')]
 GET_SCRAPE_CONTRACT = CONTRACTS[('scrape', 'get')]

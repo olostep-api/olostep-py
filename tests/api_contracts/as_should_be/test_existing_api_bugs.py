@@ -6,25 +6,31 @@ behaves differently than expected. These tests serve as documentation of
 current API limitations and should be updated when the API is fixed.
 """
 
+
 import pytest
-import pytest_asyncio
-from typing import Any
 
 from olostep.backend.api_endpoints import CONTRACTS
-from olostep.backend.caller import EndpointCaller
-from olostep.backend.transport_protocol import RawAPIRequest
-from olostep.models.response import CreateCrawlResponse, BatchCreateResponse, BatchInfoResponse
 from olostep.errors import (
-    OlostepServerError_NetworkBusy,
-    OlostepServerError_RequestUnprocessable,
     OlostepClientError_RequestValidationFailed,
+    OlostepServerError_RequestUnprocessable,
     OlostepServerError_ResourceNotFound,
     OlostepServerError_TemporaryIssue,
-    OlostepServerError_UnknownIssue,
 )
-from tests.conftest import extract_request_parameters, retry_request
+from olostep.models.response import (
+    BatchCreateResponse,
+    BatchInfoResponse,
+)
+from tests.fixtures.api.requests.batch import (
+    GET_BATCH_INFO_REQUEST_ID,
+)
+from tests.fixtures.api.requests.batch import (
+    MINIMAL_REQUEST_BODY as BATCH_MINIMAL_REQUEST_BODY,
+)
 from tests.fixtures.api.requests.crawl import (
+    CRAWL_SEARCH_QUERY,
+    CURSOR,
     EXCLUDE_URLS,
+    GET_CRAWL_PAGES_REQUEST_ID,
     INCLUDE_EXTERNAL,
     INCLUDE_SUBDOMAIN,
     INCLUDE_URLS,
@@ -36,13 +42,6 @@ from tests.fixtures.api.requests.crawl import (
     START_URL,
     TOP_N,
     WEBHOOK_URL,
-    CURSOR,
-    CRAWL_SEARCH_QUERY,
-    GET_CRAWL_PAGES_REQUEST_ID,
-)
-from tests.fixtures.api.requests.batch import (
-    MINIMAL_REQUEST_BODY as BATCH_MINIMAL_REQUEST_BODY,
-    GET_BATCH_INFO_REQUEST_ID,
 )
 
 CRAWL_START_CONTRACT = CONTRACTS[('crawl', 'start')]

@@ -1,6 +1,5 @@
 from olostep.models.request import RetrieveFormat
 
-
 ########################################
 # --- Retrieve Request Fixtures ---
 ########################################

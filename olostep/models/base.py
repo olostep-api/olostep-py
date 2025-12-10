@@ -1,13 +1,12 @@
-import typing
 import types
-from typing import get_origin, get_args
-import json
-import warnings
-from typing import Any, Literal, TypeVar, Optional
+import typing
 from enum import Enum
-from pydantic import BaseModel, Field, StrictBool, field_validator, model_validator, ConfigDict, HttpUrl
+from typing import Any, get_args, get_origin
 
-
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+)
 
 # ============================================================================
 # JSON Schema Generation
@@ -123,9 +122,9 @@ def _generate_field_schema(field_name: str, field_type: Any, field_info: Any) ->
 
 def _generate_type_schema_for_field(field_type: Any, field_name: str) -> dict[str, Any]:
     """Generate JSON schema for a specific field type."""
-    import typing
     import types
-    from typing import get_origin, get_args
+    import typing
+    from typing import get_args, get_origin
     
     # Handle different field types
     origin = get_origin(field_type)

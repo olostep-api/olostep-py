@@ -5,26 +5,22 @@ This test suite validates crawl endpoint contracts against the API using httpx t
 """
 
 import asyncio
-from dataclasses import dataclass
-from itertools import product
-import json
-import time
-from typing import Any, Dict, List, Optional
 import math
+import time
+
 import pytest
-import pytest_asyncio
 
 from olostep.backend.api_endpoints import CONTRACTS
+from olostep.errors import (
+    OlostepClientError_RequestValidationFailed,
+    OlostepServerError_RequestUnprocessable,
+    OlostepServerError_ResourceNotFound,
+    OlostepServerError_TemporaryIssue,
+)
 from olostep.models.response import (
     CrawlInfoResponse,
     CrawlPagesResponse,
     CreateCrawlResponse,
-)
-from olostep.errors import (
-    OlostepServerError_RequestUnprocessable,
-    OlostepClientError_RequestValidationFailed,
-    OlostepServerError_ResourceNotFound,
-    OlostepServerError_TemporaryIssue,
 )
 from tests.conftest import extract_request_parameters, retry_request
 from tests.fixtures.api.requests.crawl import (
@@ -46,7 +42,6 @@ from tests.fixtures.api.requests.crawl import (
     WEBHOOK_URL,
     WORKFLOW_REQUEST_BODY,
 )
-
 
 CRAWL_START_CONTRACT = CONTRACTS[('crawl', 'start')]
 CRAWL_INFO_CONTRACT = CONTRACTS[('crawl', 'info')]
@@ -2043,8 +2038,8 @@ class TestCrawlWorkflow:
         all_pages = paginated_pages  # Use paginated pages for summary
         
         # Step 4: Summary
-        print(f"🎉 Workflow completed successfully!")
-        print(f"📊 Summary:")
+        print("🎉 Workflow completed successfully!")
+        print("📊 Summary:")
         print(f"   - Crawl ID: {crawl_id}")
         print(f"   - Total pages fetched: {len(all_pages)}")
         print(f"   - Total pagination requests: {page_count}")

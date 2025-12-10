@@ -7,26 +7,25 @@ This test suite validates map endpoint contracts against the API using httpx tra
 import pytest
 
 from olostep.backend.api_endpoints import CONTRACTS
-from olostep.models.response import MapResponse
 from olostep.errors import (
-    OlostepServerError_RequestUnprocessable,
     OlostepClientError_RequestValidationFailed,
+    OlostepServerError_RequestUnprocessable,
     OlostepServerError_ResourceNotFound,
     OlostepServerError_TemporaryIssue,
 )
+from olostep.models.response import MapResponse
 from tests.conftest import extract_request_parameters, retry_request
 from tests.fixtures.api.requests.map import (
-    URL,
-    SEARCH_QUERY,
-    TOP_N,
+    CURSOR,
+    EXCLUDE_URLS,
     INCLUDE_SUBDOMAIN,
     INCLUDE_URLS,
-    EXCLUDE_URLS,
-    CURSOR,
     MINIMAL_REQUEST_BODY,
     PAGINATION_REQUEST_BODY,
+    SEARCH_QUERY,
+    TOP_N,
+    URL,
 )
-
 
 MAP_CREATE_CONTRACT = CONTRACTS[('map', 'create')]
 
@@ -732,7 +731,7 @@ class TestMapCreate:
             
             # Step 3: Validate pagination results
             print("🔍 Step 3: Validating pagination results...")
-            print(f"📊 Pagination Summary:")
+            print("📊 Pagination Summary:")
             print(f"   - Total pages fetched: {page_count}")
             print(f"   - Total URLs across all pages: {total_urls}")
             print(f"   - Unique URLs collected: {len(all_urls)}")

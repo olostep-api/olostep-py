@@ -5,6 +5,7 @@ Test file demonstrating the Hacker News fixture.
 from __future__ import annotations
 
 import os
+
 import pytest
 from dotenv import load_dotenv
 

@@ -10,30 +10,31 @@ all transport logic to the EndpointCaller.
 """
 
 from __future__ import annotations
-import asyncio
-from typing import Any, AsyncIterator, Iterator
-from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
 
+import asyncio
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, AsyncIterator
+
+from .._log import get_logger
 from ..backend.api_endpoints import CONTRACTS
 from ..backend.caller import EndpointCaller
 from ..errors import OlostepClientError_Timeout
-from ..models.response import CrawlResponseStatus
-from .._log import get_logger
 from ..models.response import (
-    CreateScrapeResponse,
-    GetScrapeResponse,
-    RetrieveResponse,
+    AnswersResponse,
     BatchCreateResponse,
     BatchInfoResponse,
     BatchItemsResponse,
     BatchItemsResponseListItem,
-    CreateCrawlResponse,
     CrawlInfoResponse,
     CrawlPagesResponse,
     CrawlPagesResponseListItem,
+    CrawlResponseStatus,
+    CreateCrawlResponse,
+    CreateScrapeResponse,
+    GetScrapeResponse,
     MapResponse,
-    AnswersResponse,
+    RetrieveResponse,
 )
 
 logger = get_logger("frontend.client_state")
@@ -1088,7 +1089,7 @@ class Sitemap:
             
             # Check if there are more URLs to fetch
             if not current_sitemap.cursor:
-                logger.debug(f"Pagination for sitemap complete: no more URLs")
+                logger.debug("Pagination for sitemap complete: no more URLs")
                 break
             
             # Fetch next batch using cursor and original URL

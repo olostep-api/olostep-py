@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
+
 from .config import IO_LOG_PATH
+
 # Top-level package logger
 logger = logging.getLogger("olostep")
 logger.addHandler(logging.NullHandler())   # library-safe default

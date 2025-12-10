@@ -1,4 +1,5 @@
-from olostep.models.request import Country, BatchItemsQueryStatus, LinksOnPage
+from olostep.models.request import BatchItemsQueryStatus, Country, LinksOnPage
+
 ########################################
 # --- Create Batch Request Fixtures ---
 ########################################

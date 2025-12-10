@@ -72,21 +72,24 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Callable
 
-from .async_client import OlostepClient
-from ..frontend.scrape_menu import ScrapeMenu
-from ..frontend.batch_menu import BatchMenu
-from ..frontend.crawl_menu import CrawlMenu
-from ..frontend.sitemap_menu import SitemapMenu
-from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.answers_menu import AnswersMenu
-from ..retry_strategy import RetryStrategy
+from ..frontend.batch_menu import BatchMenu
 
 # Import state objects for wrapping
 from ..frontend.client_state import (
-    Batch, BatchInfo, BatchItemResult,
-    ScrapeResult, Crawl, CrawlInfo,
-    CrawlPage, Sitemap
+    Batch,
+    BatchItemResult,
+    Crawl,
+    CrawlPage,
+    ScrapeResult,
+    Sitemap,
 )
+from ..frontend.crawl_menu import CrawlMenu
+from ..frontend.retrieve_menu import RetrieveMenu
+from ..frontend.scrape_menu import ScrapeMenu
+from ..frontend.sitemap_menu import SitemapMenu
+from ..retry_strategy import RetryStrategy
+from .async_client import OlostepClient
 
 
 class _SyncProxy:

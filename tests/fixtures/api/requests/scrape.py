@@ -1,6 +1,6 @@
-from olostep.models.request import Format, Country, LinksOnPage, ScreenSize
 from typing import Any
 
+from olostep.models.request import Country, Format, LinksOnPage, ScreenSize
 
 ########################################
 # --- Create Scrape Request Fixtures ---

@@ -7,9 +7,9 @@ and error handling for API requests.
 
 from __future__ import annotations
 
-import asyncio
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import AsyncMock, patch, call
 
 from olostep.backend.caller import EndpointCaller
 from olostep.backend.transport_protocol import RawAPIResponse

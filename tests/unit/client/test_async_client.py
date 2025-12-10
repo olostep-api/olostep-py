@@ -2,15 +2,15 @@
 Tests for the async client with fake transport and menu items.
 """
 
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 from olostep.clients.async_client import OlostepClient
-from olostep.frontend.scrape_menu import ScrapeMenu
 from olostep.frontend.batch_menu import BatchMenu
 from olostep.frontend.crawl_menu import CrawlMenu
-from olostep.frontend.sitemap_menu import SitemapMenu
 from olostep.frontend.retrieve_menu import RetrieveMenu
+from olostep.frontend.scrape_menu import ScrapeMenu
+from olostep.frontend.sitemap_menu import SitemapMenu
 
 
 class TestOlostepClient:
@@ -75,24 +75,24 @@ class TestOlostepClient:
     def test_client_menu_access(self, async_client_fake: OlostepClient) -> None:
         """Test that all menu items are accessible and have expected methods."""
         # Test scrape menu
-        assert hasattr(async_client_fake.scrape, '__call__')
+        assert callable(async_client_fake.scrape)
         assert hasattr(async_client_fake.scrape, 'get')
         
         # Test batch menu
-        assert hasattr(async_client_fake.batch, '__call__')
+        assert callable(async_client_fake.batch)
         assert hasattr(async_client_fake.batch, 'info')
         assert hasattr(async_client_fake.batch, 'items')
         
         # Test crawl menu
-        assert hasattr(async_client_fake.crawl, '__call__')
+        assert callable(async_client_fake.crawl)
         assert hasattr(async_client_fake.crawl, 'info')
         assert hasattr(async_client_fake.crawl, 'pages')
         
         # Test map menu
-        assert hasattr(async_client_fake.sitemap, '__call__')
+        assert callable(async_client_fake.sitemap)
         
         # Test retrieve menu
-        assert hasattr(async_client_fake.retrieve, '__call__')
+        assert callable(async_client_fake.retrieve)
         assert hasattr(async_client_fake.retrieve, 'get')
 
 

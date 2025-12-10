@@ -2,17 +2,18 @@
 """
 Simple test to verify the logging module works without requiring aiohttp.
 """
-import sys
 import os
+import sys
 
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def test_logging_module():
     """Test that the logging module can be imported and basic functionality works."""
-    from olostep.logging import OlostepLogger, get_io_logger, setup_logger_hierarchy
-    from olostep.config import IO_LOG_PATH
     import logging
+
+    from olostep.config import IO_LOG_PATH
+    from olostep.logging import OlostepLogger, setup_logger_hierarchy
     
     print("✅ Successfully imported logging module")
     print(f"✅ IO_LOG_PATH config: {IO_LOG_PATH}")

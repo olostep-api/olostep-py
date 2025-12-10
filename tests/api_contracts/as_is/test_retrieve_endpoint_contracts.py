@@ -6,41 +6,38 @@ This test suite validates retrieve endpoint contracts against the API using http
 
 import asyncio
 import time
+
 import pytest
-import pytest_asyncio
 
 from olostep.backend.api_endpoints import CONTRACTS
-from olostep.backend.caller import EndpointCaller
-from olostep.models.response import (
-    RetrieveResponse,
-    CreateScrapeResponse,
-    GetScrapeResponse,
-    CreateCrawlResponse,
-    CrawlInfoResponse,
-    CrawlPagesResponse,
-    BatchCreateResponse,
-    BatchInfoResponse,
-    BatchItemsResponse,
-)
-from olostep.models.request import (
-    RetrieveFormat,
-)
 from olostep.errors import (
     OlostepServerError_ResourceNotFound,
     OlostepServerError_TemporaryIssue,
 )
+from olostep.models.request import (
+    RetrieveFormat,
+)
+from olostep.models.response import (
+    BatchCreateResponse,
+    BatchInfoResponse,
+    BatchItemsResponse,
+    CrawlInfoResponse,
+    CrawlPagesResponse,
+    CreateCrawlResponse,
+    CreateScrapeResponse,
+    GetScrapeResponse,
+    RetrieveResponse,
+)
 from tests.conftest import retry_request
-from tests.fixtures.api.requests.scrape import (
-    MINIMAL_REQUEST_BODY as SCRAPE_MINIMAL_REQUEST_BODY,
-    URL_TO_SCRAPE,
+from tests.fixtures.api.requests.batch import (
+    MINIMAL_REQUEST_BODY as BATCH_MINIMAL_REQUEST_BODY,
 )
 from tests.fixtures.api.requests.crawl import (
     START_URL,
 )
-from tests.fixtures.api.requests.batch import (
-    MINIMAL_REQUEST_BODY as BATCH_MINIMAL_REQUEST_BODY,
+from tests.fixtures.api.requests.scrape import (
+    URL_TO_SCRAPE,
 )
-
 
 SCRAPE_URL_CONTRACT = CONTRACTS[('scrape', 'url')]
 GET_SCRAPE_CONTRACT = CONTRACTS[('scrape', 'get')]
@@ -107,10 +104,10 @@ class TestRetrieveFromScrape:
                 
                 # Check if scrape has content (completed)
                 if scrape_info.result and (scrape_info.result.html_content or scrape_info.result.markdown_content or scrape_info.result.text_content):
-                    print(f"✅ Scrape completed with content available")
+                    print("✅ Scrape completed with content available")
                     break
                 else:
-                    print(f"⏳ Scrape still processing, waiting...")
+                    print("⏳ Scrape still processing, waiting...")
                     await asyncio.sleep(5)
                     
             except OlostepServerError_TemporaryIssue:
@@ -160,10 +157,10 @@ class TestRetrieveFromScrape:
                 for format_type in formats:
                     if format_type == RetrieveFormat.HTML:
                         assert retrieve_response.html_content is not None or retrieve_response.html_hosted_url is not None
-                        print(f"✅ HTML content available")
+                        print("✅ HTML content available")
                     elif format_type == RetrieveFormat.MARKDOWN:
                         assert retrieve_response.markdown_content is not None or retrieve_response.markdown_hosted_url is not None
-                        print(f"✅ Markdown content available")
+                        print("✅ Markdown content available")
                 
                 print(f"✅ Successfully retrieved content in {len(formats)} format(s)")
                 
@@ -341,13 +338,13 @@ class TestRetrieveFromCrawl:
                 for format_type in formats:
                     if format_type == RetrieveFormat.HTML:
                         assert retrieve_response.html_content is not None or retrieve_response.html_hosted_url is not None
-                        print(f"✅ HTML content available")
+                        print("✅ HTML content available")
                     elif format_type == RetrieveFormat.MARKDOWN:
                         assert retrieve_response.markdown_content is not None or retrieve_response.markdown_hosted_url is not None
-                        print(f"✅ Markdown content available")
+                        print("✅ Markdown content available")
                     elif format_type == RetrieveFormat.JSON:
                         assert retrieve_response.json_content is not None or retrieve_response.json_hosted_url is not None
-                        print(f"✅ JSON content available")
+                        print("✅ JSON content available")
                 
                 print(f"✅ Successfully retrieved content in {len(formats)} format(s)")
                 
@@ -523,13 +520,13 @@ class TestRetrieveFromBatch:
                 for format_type in formats:
                     if format_type == RetrieveFormat.HTML:
                         assert retrieve_response.html_content is not None or retrieve_response.html_hosted_url is not None
-                        print(f"✅ HTML content available")
+                        print("✅ HTML content available")
                     elif format_type == RetrieveFormat.MARKDOWN:
                         assert retrieve_response.markdown_content is not None or retrieve_response.markdown_hosted_url is not None
-                        print(f"✅ Markdown content available")
+                        print("✅ Markdown content available")
                     elif format_type == RetrieveFormat.JSON:
                         assert retrieve_response.json_content is not None or retrieve_response.json_hosted_url is not None
-                        print(f"✅ JSON content available")
+                        print("✅ JSON content available")
                 
                 print(f"✅ Successfully retrieved content in {len(formats)} format(s)")
                 

@@ -4,12 +4,9 @@ Site mapping operations.
 
 from __future__ import annotations
 
-from olostep.models.request import MapCreateBodyParams, MapCreateRequest
-
 from .._log import get_logger
-
-from ..backend.caller import EndpointCaller
 from ..backend.api_endpoints import MAP_CREATE
+from ..backend.caller import EndpointCaller
 from ..frontend.client_state import Sitemap
 from ..frontend.input_coersion import coerce_to_list
 from ..models.response import MapResponse

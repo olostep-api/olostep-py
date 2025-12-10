@@ -5,48 +5,38 @@ This test suite validates batch endpoint contracts against the API using httpx t
 """
 
 import asyncio
-from dataclasses import dataclass
-from itertools import product
-import json
-import time
-from typing import Any, Dict, List, Optional
 import math
+import time
+
 import pytest
-import pytest_asyncio
 
 from olostep.backend.api_endpoints import CONTRACTS
-from olostep.backend.caller import EndpointCaller
-from olostep.backend.transport_protocol import RawAPIRequest
+from olostep.errors import (
+    OlostepClientError_RequestValidationFailed,
+    OlostepClientError_ResponseValidationFailed,
+    OlostepServerError_RequestUnprocessable,
+    OlostepServerError_ResourceNotFound,
+    OlostepServerError_TemporaryIssue,
+)
 from olostep.models.response import (
     BatchCreateResponse,
     BatchInfoResponse,
     BatchItemsResponse,
 )
-from olostep.errors import (
-    OlostepServerError_NetworkBusy,
-    OlostepServerError_RequestUnprocessable,
-    OlostepClientError_RequestValidationFailed,
-    OlostepServerError_ResourceNotFound,
-    OlostepClientError_ResponseValidationFailed,
-    OlostepServerError_NoResultInResponse,
-    OlostepServerError_TemporaryIssue,
-    OlostepServerError_UnknownIssue,
-)
 from tests.conftest import extract_request_parameters, retry_request
 from tests.fixtures.api.requests.batch import (
-    ITEMS,
     COUNTRY,
-    PARSER,
-    LINKS_ON_PAGE,
+    CURSOR,
     GET_BATCH_INFO_REQUEST_ID,
     GET_BATCH_ITEMS_REQUEST_ID,
-    STATUS,
-    CURSOR,
+    ITEMS,
     LIMIT,
+    LINKS_ON_PAGE,
     MINIMAL_REQUEST_BODY,
+    PARSER,
+    STATUS,
     WORKFLOW_REQUEST_BODY,
 )
-
 
 BATCH_START_CONTRACT = CONTRACTS[('batch', 'start')]
 BATCH_INFO_CONTRACT = CONTRACTS[('batch', 'info')]
@@ -1479,8 +1469,8 @@ class TestBatchWorkflow:
         all_items = paginated_items  # Use paginated items for summary
         
         # Step 4: Summary
-        print(f"🎉 Workflow completed successfully!")
-        print(f"📊 Summary:")
+        print("🎉 Workflow completed successfully!")
+        print("📊 Summary:")
         print(f"   - Batch ID: {batch_id}")
         print(f"   - Total items fetched: {len(all_items)}")
         print(f"   - Total pagination requests: {page_count}")

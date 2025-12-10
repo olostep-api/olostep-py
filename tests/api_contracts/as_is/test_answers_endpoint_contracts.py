@@ -4,27 +4,25 @@ Answers endpoint contract validation tests.
 This test suite validates answers endpoint contracts against the API using httpx transport directly.
 """
 
+
 import pytest
-import pytest_asyncio
-import json
-import asyncio
-import time
-from typing import Any, Dict, List, Optional
-from itertools import product
-from dataclasses import dataclass
 
 from olostep.backend.api_endpoints import CONTRACTS
-from olostep.backend.caller import EndpointCaller
-from olostep.backend.transport_protocol import RawAPIRequest
-from olostep.models.request import AnswersRequest, AnswersBodyParams
-from olostep.models.response import AnswersResponse
-from olostep.errors import OlostepClientError_RequestValidationFailed, OlostepServerError_RequestUnprocessable, OlostepServerError_NoResultInResponse, OlostepServerError_TemporaryIssue, OlostepServerError_UnknownIssue, OlostepServerError_NetworkBusy, OlostepServerError_ResourceNotFound
-
-from tests.fixtures.api.requests.answers import (
-    MINIMAL_REQUEST_BODY, TASK, JSON_FORMAT, GET_ANSWER_REQUEST_ID
+from olostep.errors import (
+    OlostepClientError_RequestValidationFailed,
+    OlostepServerError_NoResultInResponse,
+    OlostepServerError_RequestUnprocessable,
+    OlostepServerError_ResourceNotFound,
+    OlostepServerError_TemporaryIssue,
 )
+from olostep.models.response import AnswersResponse
 from tests.conftest import extract_request_parameters, retry_request
-
+from tests.fixtures.api.requests.answers import (
+    GET_ANSWER_REQUEST_ID,
+    JSON_FORMAT,
+    MINIMAL_REQUEST_BODY,
+    TASK,
+)
 
 ANSWERS_CREATE_CONTRACT = CONTRACTS[('answers', 'create')]
 ANSWERS_GET_CONTRACT = CONTRACTS[('answers', 'get')]

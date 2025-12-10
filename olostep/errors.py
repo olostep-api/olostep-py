@@ -32,10 +32,9 @@ Our exception hierarchy:
     + OlostepClientError_Timeout
 """
 
-from typing import Any, TYPE_CHECKING
-import sys
 import pprint
-
+import sys
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from olostep.backend.transport_protocol import RawAPIRequest, RawAPIResponse

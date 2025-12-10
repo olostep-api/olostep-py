@@ -6,24 +6,21 @@ error handling, retry logic, and organized test structure.
 """
 
 import asyncio
+
 import pytest
-import pytest_asyncio
-from typing import Any
-
-from olostep.backend.api_endpoints import CONTRACTS, EndpointContract
-from olostep.backend.caller import EndpointCaller
-from olostep.models.response import CreateScrapeResponse
-
-from olostep.errors import (
-    OlostepServerError_AuthFailed,
-    OlostepServerError_InvalidEndpointCalled,
-    OlostepServerError_RequestUnprocessable,
-    OlostepServerError_NoResultInResponse,
-    OlostepClientError_RequestValidationFailed,
-)
 
 from olostep._log import _enable_stderr_debug
+from olostep.backend.api_endpoints import CONTRACTS, EndpointContract
+from olostep.backend.caller import EndpointCaller
+from olostep.errors import (
+    OlostepClientError_RequestValidationFailed,
+    OlostepServerError_AuthFailed,
+    OlostepServerError_InvalidEndpointCalled,
+    OlostepServerError_NoResultInResponse,
+    OlostepServerError_RequestUnprocessable,
+)
 from tests.conftest import retry_request
+
 _enable_stderr_debug()
 
 
@@ -287,7 +284,7 @@ class TestBrokenWebsiteScrapingBehavior:
                 failed_passthroughs.append((status_code, error))
                 print(f"❌ HTTP {status_code} failed: {error}")
 
-        print(f"\n📊 Status Code Passthrough Results:")
+        print("\n📊 Status Code Passthrough Results:")
         print(f"✅ Successful passthroughs: {len(successful_passthroughs)}")
         print(f"❌ Failed passthroughs: {len(failed_passthroughs)}")
 

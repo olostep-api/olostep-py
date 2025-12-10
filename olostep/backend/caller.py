@@ -2,35 +2,36 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
-from pydantic import ValidationError
 import pprint
+from typing import Any
+
+from pydantic import ValidationError
+
 from olostep.models.response import Country
 
-from .api_endpoints import EndpointContract
-from .transport_protocol import Transport, RawAPIResponse, RawAPIRequest
-from ..retry_strategy import RetryStrategy
+from .._log import get_logger
 from ..errors import (
-    OlostepServerError_CreditsExhausted,
-    OlostepServerError_NetworkBusy,
-    OlostepServerError_ResourceNotFound,
-    OlostepServerError_InternalNetworkIssue,
-    OlostepServerError_OutOfResources,
-    OlostepServerError_UnknownIssue,
-    OlostepServerError_AuthFailed,
-    OlostepServerError_InvalidEndpointCalled,
-    OlostepServerError_BlacklistedDomain,
-    OlostepServerError_FeatureApprovalRequired,
-    # OlostepRateLimitError,
-    OlostepServerError_RequestUnprocessable,
-    OlostepServerError_NoResultInResponse,
-    OlostepServerError_TemporaryIssue,
     OlostepClientError_RequestValidationFailed,
     OlostepClientError_ResponseValidationFailed,
+    OlostepServerError_AuthFailed,
+    OlostepServerError_BlacklistedDomain,
+    OlostepServerError_CreditsExhausted,
+    OlostepServerError_FeatureApprovalRequired,
+    OlostepServerError_InternalNetworkIssue,
+    OlostepServerError_InvalidEndpointCalled,
+    OlostepServerError_NetworkBusy,
+    OlostepServerError_NoResultInResponse,
+    OlostepServerError_OutOfResources,
+    OlostepServerError_ParserNotFound,
+    # OlostepRateLimitError,
+    OlostepServerError_RequestUnprocessable,
     OlostepServerError_ResourceNotFound,
-    OlostepServerError_ParserNotFound
+    OlostepServerError_TemporaryIssue,
+    OlostepServerError_UnknownIssue,
 )
-from .._log import get_logger
+from ..retry_strategy import RetryStrategy
+from .api_endpoints import EndpointContract
+from .transport_protocol import RawAPIRequest, RawAPIResponse, Transport
 
 logger = get_logger("backend.caller")
 # T = TypeVar('T')
@@ -211,7 +212,7 @@ class EndpointCaller:
         # Parse JSON manually - transport returns raw text
         try:
             data = json.loads(response.body or "{}")
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             err = OlostepServerError_UnknownIssue(
                 status_code=response.status_code, 
                 server_response={"body": response.body, "headers": response.headers}
@@ -411,7 +412,7 @@ class EndpointCaller:
                     await asyncio.sleep(delay)
                     continue
                 raise
-            except OlostepServerError_RequestUnprocessable as e:
+            except OlostepServerError_RequestUnprocessable:
                 # The API seems to have sporadic validations errors. If we have validated the request client side, we can retry.
                 if (validate_request 
                     and attempt < self._retry_strategy.max_retries - 1):

@@ -1,18 +1,15 @@
 from __future__ import annotations
 
+import json
+from enum import Enum
+from typing import Any
+
+from pydantic import field_validator, model_validator
+
 # =============================================================================
 # RESPONSE MODELS
 # =============================================================================
-
-
 from .base import OlostepResponseBaseModel
-
-import json
-
-from typing import Any
-from enum import Enum
-from pydantic import field_validator, model_validator
-
 
 # =============================================================================
 # =============================================================================

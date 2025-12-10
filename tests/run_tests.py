@@ -9,9 +9,9 @@ Supports three test modes:
 """
 
 import argparse
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 
@@ -115,9 +115,9 @@ def run_contracts_tests(project_root: Path, extra_args: list[str]) -> int:
     
     print("🚀 Running CONTRACTS tests (as_is folder)")
     print("=" * 60)
-    print(f"📁 Test directory: tests/api_contracts/as_is/")
-    print(f"🏷️  Filter: All tests in as_is folder")
-    print(f"⚡ Parallel workers: 32")
+    print("📁 Test directory: tests/api_contracts/as_is/")
+    print("🏷️  Filter: All tests in as_is folder")
+    print("⚡ Parallel workers: 32")
     print(f"🔑 API Key: {'✅ Set' if check_api_key() else '❌ Missing'}")
     print("=" * 60)
     print(f"Command: {' '.join(cmd)}")
@@ -151,9 +151,9 @@ def run_bugs_tests(project_root: Path, extra_args: list[str]) -> int:
     
     print("🐛 Running BUGS tests (as_should_be folder)")
     print("=" * 60)
-    print(f"📁 Test directory: tests/api_contracts/as_should_be/")
-    print(f"🏷️  Filter: All tests in as_should_be folder")
-    print(f"⚡ Parallel workers: 32")
+    print("📁 Test directory: tests/api_contracts/as_should_be/")
+    print("🏷️  Filter: All tests in as_should_be folder")
+    print("⚡ Parallel workers: 32")
     print(f"🔑 API Key: {'✅ Set' if check_api_key() else '❌ Missing'}")
     print("=" * 60)
     print(f"Command: {' '.join(cmd)}")

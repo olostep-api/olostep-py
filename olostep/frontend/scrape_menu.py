@@ -7,26 +7,30 @@ from __future__ import annotations
 from typing import Any
 
 from pydantic import HttpUrl
-from .._log import get_logger
 
+from .._log import get_logger
+from ..backend.api_endpoints import SCRAPE_GET, SCRAPE_URL
 from ..backend.caller import EndpointCaller
-from ..backend.api_endpoints import SCRAPE_URL, SCRAPE_GET
 from ..frontend.client_state import ScrapeResult
+from ..frontend.input_coersion import (
+    coerce_to_key_in_dict,
+    coerce_to_list,
+    coerce_to_string,
+)
 from ..models.request import (
-    Format,
-    Country,
-    WaitAction,
     ClickAction,
+    Country,
     FillInputAction,
-    ScrollAction,
-    Parser,
-    LLMExtract,
+    Format,
     LinksOnPage,
+    LLMExtract,
+    Parser,
     ScreenSize,
+    ScrollAction,
     Transformer,
+    WaitAction,
 )
 from ..models.response import CreateScrapeResponse, GetScrapeResponse
-from ..frontend.input_coersion import coerce_to_list, coerce_to_key_in_dict, coerce_to_string
 
 logger = get_logger("frontend.scrape_menu")
 

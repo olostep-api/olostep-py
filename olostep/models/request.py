@@ -1,20 +1,24 @@
 from __future__ import annotations
 
+import json
+import warnings
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Literal
+
+from pydantic import (
+    HttpUrl,
+    StrictBool,
+    field_validator,
+    model_validator,
+)
+
 # =============================================================================
 # REQUEST MODELS
 # =============================================================================
-from olostep.errors import OlostepClientError_RequestValidationFailed
 from .base import OlostepBaseModel
 
-import json
-import warnings
-from typing import Any, Literal, TYPE_CHECKING
-from enum import Enum
-from pydantic import StrictBool, ValidationError, field_validator, model_validator, HttpUrl
-
-
 if TYPE_CHECKING:
-    from olostep.backend.api_endpoints import EndpointContract 
+    from olostep.backend.api_endpoints import EndpointContract
 else:
     EndpointContract = Any
 

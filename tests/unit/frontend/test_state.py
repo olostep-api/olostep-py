@@ -5,48 +5,56 @@ These tests verify the behavior of stateful client objects against the real API
 based on the expected behavior described in the README.
 """
 
-import pytest
 import asyncio
+
+import pytest
 
 from olostep.errors import OlostepClientError_Timeout
 from olostep.frontend.client_state import (
-    ScrapeResult, Batch, BatchInfo, BatchItemResult,
-    Crawl, CrawlInfo, CrawlPage, Sitemap#, RetrievableID
+    Batch,
+    BatchInfo,
+    BatchItemResult,
+    Crawl,  #, RetrievableID
+    CrawlInfo,
+    CrawlPage,
+    ScrapeResult,
+    Sitemap,
 )
 from olostep.frontend.retrieve_menu import RetrieveMenu
 from olostep.frontend.sitemap_menu import SitemapMenu
 from olostep.models.response import (
-    CreateScrapeResponse, GetScrapeResponse, RetrieveResponse,
-    BatchCreateResponse, BatchInfoResponse, BatchItemsResponse, BatchItemsResponseListItem,
-    CreateCrawlResponse, CrawlInfoResponse, CrawlPagesResponse, CrawlPagesResponseListItem,
-    MapResponse
-)
-
-from tests.fixtures.api.responses.scrape import (
-    CREATE_SCRAPE_RESPONSE,
-    GET_SCRAPE_RESPONSE, 
-    RETRIEVE_RESPONSE
+    BatchCreateResponse,
+    BatchInfoResponse,
+    BatchItemsResponseListItem,
+    CrawlInfoResponse,
+    CrawlPagesResponseListItem,
+    CreateCrawlResponse,
+    CreateScrapeResponse,
+    GetScrapeResponse,
+    MapResponse,
+    RetrieveResponse,
 )
 from tests.fixtures.api.responses.batch import (
     BATCH_CREATE_RESPONSE,
     BATCH_INFO_RESPONSE,
-    BATCH_ITEMS_RESPONSE,
-    BATCH_ITEMS_RESPONSE_WITH_CURSOR,
+    BATCH_INFO_RESPONSE_FAILED,
     BATCH_INFO_RESPONSE_IN_PROGRESS,
-    BATCH_INFO_RESPONSE_FAILED
 )
 from tests.fixtures.api.responses.crawl import (
     CRAWL_CREATE_RESPONSE,
     CRAWL_INFO_RESPONSE,
     CRAWL_INFO_RESPONSE_IN_PROGRESS,
-    CRAWL_PAGES_RESPONSE,
-    CRAWL_PAGES_RESPONSE_WITH_CURSOR
 )
 from tests.fixtures.api.responses.map import (
     MAP_RESPONSE,
-    MAP_RESPONSE_WITH_CURSOR,
+    MAP_RESPONSE_EMPTY_CURSOR,
     MAP_RESPONSE_NO_ID,
-    MAP_RESPONSE_EMPTY_CURSOR
+    MAP_RESPONSE_WITH_CURSOR,
+)
+from tests.fixtures.api.responses.scrape import (
+    CREATE_SCRAPE_RESPONSE,
+    GET_SCRAPE_RESPONSE,
+    RETRIEVE_RESPONSE,
 )
 
 

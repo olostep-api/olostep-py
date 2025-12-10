@@ -5,12 +5,11 @@ Data retrieval operations with rich IDE support.
 from __future__ import annotations
 
 from .._log import get_logger
-
-from ..backend.caller import EndpointCaller
 from ..backend.api_endpoints import RETRIEVE_GET
-from ..frontend.client_state import ScrapeResult#, RetrievableID
+from ..backend.caller import EndpointCaller
+from ..frontend.client_state import ScrapeResult  #, RetrievableID
 from ..frontend.input_coersion import coerce_to_list
-from ..models.request import RetrieveFormat, RetrieveGetQueryParams, RetrieveGetRequest
+from ..models.request import RetrieveFormat
 from ..models.response import RetrieveResponse
 
 logger = get_logger("frontend.retrieve_menu")

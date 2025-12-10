@@ -7,14 +7,13 @@ and passes through all HTTP responses to the caller layer using a real test serv
 
 from __future__ import annotations
 
-import asyncio
 import json
-import pytest
-from typing import Any
-from unittest.mock import AsyncMock, patch, call
+from unittest.mock import AsyncMock, call, patch
 
 import httpx
-from hypothesis import given, strategies as st, settings
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from olostep.backend.transport import HttpxTransport
 from olostep.backend.transport_protocol import RawAPIRequest, RawAPIResponse

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-import httpx
 import time
 import uuid
 
+import httpx
 
-from ..config import USER_AGENT, API_TIMEOUT
-from .._log import io_logger, get_logger
+from .._log import get_logger, io_logger
+from ..config import API_TIMEOUT, USER_AGENT
 from ..errors import Olostep_APIConnectionError
-from .transport_protocol import Transport, RawAPIResponse, RawAPIRequest
+from .transport_protocol import RawAPIRequest, RawAPIResponse, Transport
 
 logger = get_logger("backend.transport")
 

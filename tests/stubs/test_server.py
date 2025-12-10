@@ -7,16 +7,14 @@ for testing the transport layer with configurable responses.
 
 from __future__ import annotations
 
-import asyncio
-import json
 import socket
 import threading
 import time
-from dataclasses import dataclass
-from typing import Any, Callable, Generator
 from contextlib import asynccontextmanager
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from threading import Thread, Event
+from dataclasses import dataclass
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from threading import Event, Thread
+from typing import Any, Callable
 
 
 @dataclass

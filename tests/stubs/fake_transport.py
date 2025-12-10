@@ -10,8 +10,8 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel
 
-from olostep.backend.transport_protocol import Transport, RawAPIResponse, RawAPIRequest
 from olostep.backend.api_endpoints import CONTRACTS, EndpointContract
+from olostep.backend.transport_protocol import RawAPIRequest, RawAPIResponse, Transport
 
 
 class FakeTransport(Transport):
@@ -273,7 +273,7 @@ class FakeTransportSmart(Transport):
     def _auto_value(self, annotation: Any, name: str) -> Any:
         try:
             from enum import Enum
-            from typing import get_origin, get_args
+            from typing import get_args, get_origin
         except Exception:
             return None
         origin = get_origin(annotation)
