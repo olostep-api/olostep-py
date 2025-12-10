@@ -359,6 +359,7 @@ class BatchInfo:
         created: Unix timestamp when the batch was created.
         total_urls: Total number of URLs in the batch.
         completed_urls: Number of URLs that have been processed.
+        country: Country code used for the batch (if specified).
     """
 
     def __init__(self, response: BatchInfoResponse) -> None:
@@ -373,6 +374,7 @@ class BatchInfo:
         self.created = response.created
         self.total_urls = response.total_urls
         self.completed_urls = response.completed_urls
+        self.country = response.country
 
     def __repr__(self) -> str:
         """Return a string representation of the BatchInfo.

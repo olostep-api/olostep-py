@@ -176,6 +176,15 @@ class BatchInfoResponse(OlostepResponseBaseModel):
     number_retried: int
     parser: str
     start_date: str
+    country: Country | None = None
+
+    @field_validator("country", mode="before")
+    @classmethod
+    def country_literal_none_string_to_none_type(cls, v: Any | None) -> Any:
+        """Type-normalize country field: convert 'none' string to None."""
+        if isinstance(v, str) and v == "none":
+            return None
+        return v
 
     @model_validator(mode="before")
     def no_batch_id(cls, data: dict[str, Any]) -> dict[str, Any]:
