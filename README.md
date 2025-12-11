@@ -373,6 +373,30 @@ The Olostep Python SDK offers significant advantages over direct API usage:
 - **Enterprise Scale**: Handle 100K+ concurrent requests with robust error handling
 - **Future-Proof**: Built on modern Python patterns (async/await, type hints, dataclasses)
 
+## Logging
+
+Enable logging to debug issues:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("olostep")
+logger.setLevel(logging.INFO)  # Use DEBUG for verbose output
+```
+
+**Log Levels**: `INFO` (recommended), `DEBUG` (verbose), `WARNING`, `ERROR`
+
+## Configuration
+
+### Environment Variables
+
+| Variable               | Description               | Default                      |
+| ---------------------- | ------------------------- | ---------------------------- |
+| `OLOSTEP_API_KEY`      | Your API key              | Required                     |
+| `OLOSTEP_BASE_API_URL` | API base URL              | `https://api.olostep.com/v1` |
+| `OLOSTEP_API_TIMEOUT`  | Request timeout (seconds) | `150`                        |
+
 ### Getting Help
 
 - [Full Documentation](https://docs.olostep.com)
