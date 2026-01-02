@@ -45,6 +45,7 @@ pytest-xdist = {extras = ["psutil"], version = "^3.8.0"}
 pyright = "^1.1.407"
 pytest-cov = "^7.0.0"
 pytest-rerunfailures = "^14.0"
+tqdm = "^4.67.1"
 
 
 [tool.ruff]
