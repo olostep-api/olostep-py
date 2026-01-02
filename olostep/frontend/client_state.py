@@ -57,6 +57,7 @@ class ScrapeResult:
         url_to_scrape: The URL that was scraped (scrapes endpoints only)
         metadata: Metadata dictionary (scrapes endpoints only)
         retrieve_id: Unique identifier for retrieve operations (scrapes endpoints only)
+        credits_consumed: Number of credits consumed for this scrape (scrapes endpoints only)
         html_content: Raw HTML content of the scraped page (if available)
         markdown_content: Markdown-formatted content (if available)
         text_content: Plain text content (if available)
@@ -65,6 +66,7 @@ class ScrapeResult:
         markdown_hosted_url: URL to hosted Markdown content (if available)
         json_hosted_url: URL to hosted JSON content (if available)
         text_hosted_url: URL to hosted text content (if available)
+        file_hosted_url: URL to hosted file content (if available)
         screenshot_hosted_url: URL to screenshot (if available)
         links_on_page: List of links found on the page (if available)
         page_metadata: Page-level metadata (if available)
@@ -92,6 +94,7 @@ class ScrapeResult:
             self.url_to_scrape = response.url_to_scrape
             self.metadata = response.metadata
             self.retrieve_id = response.retrieve_id
+            self.credits_consumed = response.credits_consumed
 
             results = response.result  # result is nested for these endpoints
         elif isinstance(response, RetrieveResponse):
