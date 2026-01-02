@@ -11,7 +11,7 @@ from typing import Any, Generator
 import pytest
 import pytest_asyncio
 
-from olostep._log import _enable_stderr_debug, _setup_io_file_handler
+from olostep._log import _enable_file_logging, _enable_stderr_debug
 from olostep.backend.api_endpoints import EndpointContract
 from olostep.backend.caller import EndpointCaller
 from olostep.backend.transport_protocol import RawAPIRequest
@@ -25,7 +25,7 @@ from tests.stubs.fake_transport import FakeTransportSmart
 from tests.stubs.test_server import StubServer, cleanup_test_server, get_test_server
 
 _enable_stderr_debug()
-_setup_io_file_handler()
+_enable_file_logging()
 
 def pytest_configure(config):
     """Configure pytest markers for test categorization."""

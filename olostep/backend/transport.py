@@ -14,7 +14,7 @@ from .transport_protocol import RawAPIRequest, RawAPIResponse, Transport
 logger = get_logger("backend.transport")
 
 try:
-    import h2  # noqa: F401
+    import h2  # noqa: F401  # type: ignore[unused-import]
 
     USE_HTTP2 = True
 except ImportError:
@@ -66,7 +66,6 @@ class HttpxTransport(Transport):
         self,
         api_key: str,
         *,
-        enable_io_logging: bool = False,  # noqa: ARG002
         max_connection_retries: int = 3,
     ) -> None:
         self._client = httpx.AsyncClient(
@@ -84,7 +83,6 @@ class HttpxTransport(Transport):
             http2=USE_HTTP2,
             # retries=3,
         )
-        # self._enable_io_logging = enable_io_logging
         self._max_connection_retries = max_connection_retries
 
     async def close(self) -> None:
@@ -140,34 +138,7 @@ class HttpxTransport(Transport):
 
         for attempt in range(max_retries + 1):
             start_time = time.time()
-
-            # if self._enable_io_logging:
             request_id = f"req_{uuid.uuid4().hex[:12]}"
-            io_logger.debug(
-                f"API REQUEST [ref: {request_id}]",
-                extra={
-                    "skip_file_logging": True,
-                    "request_id": request_id,
-                    "I": {
-                        "method": request.method,
-                        "url": request.url,
-                        "query": request.query,
-                        "url_formatted": (
-                            str(
-                                httpx.URL(str(request.url)).copy_merge_params(
-                                    request.query
-                                )
-                            )
-                            if request.query
-                            else str(request.url)
-                        ),
-                        "headers": full_headers,
-                        "json": request.json,
-                    },
-                },
-            )
-            # else:
-            #     request_id = None
 
             attempt_timeout = httpx.Timeout(
                 API_TIMEOUT + (attempt * timeout_bump_per_attempt), connect=30.0
@@ -188,10 +159,8 @@ class HttpxTransport(Transport):
                 response_text = response.text
                 response_time_ms = (time.time() - start_time) * 1000
 
-                # Log the response
-                # if self._enable_io_logging:
                 io_logger.debug(
-                    f"API RESPONSE [ref: {request_id}]",
+                    f"HTTP RESPONSE {request_id}",
                     extra={
                         "request_id": request_id,
                         "response_time_ms": response_time_ms,
@@ -234,9 +203,8 @@ class HttpxTransport(Transport):
                 # Only handle communication/timeout errors - let caller handle everything else
                 response_time_ms = (time.time() - start_time) * 1000
 
-                # if self._enable_io_logging:
                 io_logger.debug(
-                    f"API ERROR '{type(e).__name__}' [ref: {request_id}]",
+                    f"API ERROR {request_id} [{type(e).__name__}]",
                     extra={
                         "request_id": request_id,
                         "response_time_ms": response_time_ms,
@@ -275,3 +243,6 @@ class HttpxTransport(Transport):
                     f"API connection attempt {attempt + 1} failed with connection error, retrying in {delay}s (timeout: {attempt_timeout}s): {e}"
                 )
                 await asyncio.sleep(delay)
+
+        # Unreachable, but satisfies type checker
+        raise RuntimeError("Unexpected: request loop completed without returning or raising")
