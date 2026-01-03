@@ -48,6 +48,7 @@ class ScrapeOutputs(OlostepResponseBaseModel):
     markdown_hosted_url: str | None = None
     json_hosted_url: str | None = None
     text_hosted_url: str | None = None
+    file_hosted_url: str | None = None
 
     screenshot_hosted_url: str | None = None  # Beta feature
 
@@ -81,8 +82,9 @@ class CreateScrapeResponse(OlostepResponseBaseModel):
     created: int
     metadata: dict[str, Any] | None = None
     retrieve_id: str | None = None
-    url_to_scrape: str
+    url: str
     result: ScrapeOutputs
+    credits_consumed: int | None = None
     # image_queued: bool | None = None
 
 

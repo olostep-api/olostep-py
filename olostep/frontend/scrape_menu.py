@@ -188,7 +188,7 @@ class ScrapeMenu:
         Examples:
             # Get existing scrape result
             result = await client.scrape.get("scrape_123")
-            print(f"URL: {result.url_to_scrape}")
+            print(f"URL: {result.url}")
             print(f"HTML length: {len(result.html_content)}")
         """
         path_params = {"scrape_id": scrape_id}

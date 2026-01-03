@@ -102,6 +102,7 @@ design_docs/
 
 # Runtime logs and temporary files
 tests/runtime/
+.runtime/
 
 # API keys and secrets
 .env

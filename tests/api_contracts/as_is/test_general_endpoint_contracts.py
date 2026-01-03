@@ -14,6 +14,7 @@ from olostep.backend.api_endpoints import CONTRACTS, EndpointContract
 from olostep.backend.caller import EndpointCaller
 from olostep.errors import (
     OlostepClientError_RequestValidationFailed,
+    OlostepClientError_ResponseValidationFailed,
     OlostepServerError_AuthFailed,
     OlostepServerError_InvalidEndpointCalled,
     OlostepServerError_NoResultInResponse,
@@ -163,7 +164,7 @@ class TestErrorDetection:
             # assert result.result.markdown_content == "# no-sct.  badssl.com" # non deterministic response
             print(f"✅ Bad SSL endpoint returns content: html_content=None, markdown_content='{result.result.markdown_content}'")
         except OlostepServerError_NoResultInResponse as exc_info:
-            print(f"✅ Bad SSL correctly detected: {exc_info.type.__name__}: {exc_info.value}")
+            print(f"✅ Bad SSL correctly detected: {type(exc_info).__name__}: {exc_info.value}")
     
     @pytest.mark.asyncio
     async def test_api_validates_path_before_params_before_auth(self, endpoint_caller, caller_with_fake_key, fake_endpoint_contract: EndpointContract):
@@ -183,7 +184,9 @@ class TestErrorDetection:
         }
         
         # Real API key with missing required parameter
-        with pytest.raises(OlostepServerError_NoResultInResponse):
+        # API OBSERVED BEHAVIOR: API returns 200 OK but response is missing the 'url' field,
+        # causing response validation to fail with OlostepClientError_ResponseValidationFailed
+        with pytest.raises(OlostepClientError_ResponseValidationFailed):
             await endpoint_caller._invoke(contract, path_params={}, body_params=missing_required_body)#, validate_request=False)
         
         # Fake API key with missing required parameter

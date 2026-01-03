@@ -79,6 +79,16 @@ INCLUDE_SUBDOMAIN = {
 }
 
 
+FOLLOW_ROBOTS_TXT = {
+    "param_name": "follow_robots_txt",
+    "param_type": bool,
+    "param_values": {
+        "valids": [True, False],
+        "invalids": ["invalid_string", {"invalid": "object"}, []],
+    },
+}
+
+
 SEARCH_QUERY = {
     "param_name": "search_query",
     "param_type": str,
@@ -170,4 +180,5 @@ WORKFLOW_REQUEST_BODY = {
     "start_url": "https://www.bbc.com/",
     "max_pages": 50,
     "max_depth": 10,
+    "follow_robots_txt": False,
 }

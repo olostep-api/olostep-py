@@ -704,6 +704,7 @@ class CrawlStartBodyParams(BodyParams):
     search_query: str | None = None
     top_n: int | None = None
     webhook_url: HttpUrl | None = None
+    follow_robots_txt: bool = True
 
     @field_validator("max_pages")
     @classmethod

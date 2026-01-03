@@ -252,7 +252,6 @@ class OlostepBaseModel(BaseModel):
 
 
 class OlostepResponseBaseModel(BaseModel):
-    """Base class for all models."""
+    """Base class for all response models."""
 
-    # we want to be very strict with the models to find all unexpected behavior
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="allow")

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import pprint
+import warnings
 from typing import Any
 
 from pydantic import ValidationError
@@ -10,6 +11,7 @@ from pydantic import ValidationError
 from olostep.models.response import Country
 
 from .._log import get_logger
+from ..config import VERSION
 from ..errors import (
     OlostepClientError_RequestValidationFailed,
     OlostepClientError_ResponseValidationFailed,
@@ -176,7 +178,7 @@ class EndpointCaller:
                 and parsed_body.get("malformed_request") is False
                 and parsed_body.get("message", "").lower()
                 == "not enough resources available for the batch execution."
-                and (request.json.get("country") not in [c.value for c in Country])
+                and (request.json is not None and request.json.get("country") not in [c.value for c in Country])
             ):
                 # "body": {
                 #   "malformed_request": false,
@@ -276,12 +278,37 @@ class EndpointCaller:
         logger.debug(
             f"Response from '{contract.name}' contains valid JSON. Evaluating against [{contract.response_model.__name__}] model."
         )
+        model_fields = set(contract.response_model.model_fields.keys())
+        response_keys = set(data.keys())
+        extra_fields = response_keys - model_fields
+        
+        if extra_fields:
+            warnings.warn(
+                f"The API response from '{contract.name}' contains {len(extra_fields)} extra field(s) "
+                f"not defined in the SDK model: {', '.join(sorted(extra_fields))}. "
+                f"This may indicate new API features. Please check for a newer SDK version on Slack (best place to ask), PyPI or Github. "
+                f"(current: {VERSION}). Visit https://docs.olostep.com/sdks/python "
+                f"for updates.",
+                UserWarning,
+                stacklevel=3,
+            )
+            logger.warning(
+                f"Extra fields detected in response from '{contract.name}': {extra_fields}"
+            )
+        
         try:
-            return contract.response_model(**data) if contract.response_model else data
+            return contract.response_model(**data)
         except ValidationError as e:
-            raise OlostepClientError_ResponseValidationFailed(
-                request=request, response=response, errors=[dict(error) for error in e.errors()]
-            ) from e
+            filtered_errors = [
+                error for error in e.errors()
+                if error.get("type") != "extra_forbidden"
+            ]
+            
+            if filtered_errors:
+                raise OlostepClientError_ResponseValidationFailed(
+                    request=request, response=response, errors=[dict(error) for error in filtered_errors]
+                ) from e
+            return contract.response_model(**data)
 
     def validate_request(
         self,
@@ -309,7 +336,7 @@ class EndpointCaller:
                     body_params=body_params,
                 )
             except ValidationError as e:
-                raise OlostepClientError_RequestValidationFailed(e.errors()) from e
+                raise OlostepClientError_RequestValidationFailed([dict(error) for error in e.errors()]) from e
 
             validated: dict[str, Any] = dict(request_data.model_dump(mode="json"))
             # Defensive extraction of the three top-level fields as dicts
