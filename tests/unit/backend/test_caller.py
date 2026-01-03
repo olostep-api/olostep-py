@@ -7,14 +7,16 @@ and error handling for API requests.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pydantic import BaseModel
 
 from olostep.backend.api_endpoints import EndpointContract
 from olostep.backend.caller import EndpointCaller
 from olostep.backend.transport_protocol import RawAPIRequest, RawAPIResponse
 from olostep.errors import Olostep_APIConnectionError
+from olostep.retry_strategy import RetryStrategy
 
 
 @pytest.mark.unit
@@ -24,7 +26,6 @@ class TestEndpointCallerRetryLogic:
     @pytest.fixture
     def mock_transport(self) -> AsyncMock:
         """Create mock transport for testing."""
-        from unittest.mock import MagicMock
         transport = AsyncMock()
         # max_duration is a synchronous method, not async
         transport.max_duration = MagicMock(return_value=0.0)
@@ -33,7 +34,6 @@ class TestEndpointCallerRetryLogic:
     @pytest.fixture
     def caller(self, mock_transport: AsyncMock) -> EndpointCaller:
         """Create caller instance with mock transport."""
-        from olostep.retry_strategy import RetryStrategy
         return EndpointCaller(
             transport=mock_transport, 
             base_url="https://api.test.com", 
@@ -55,8 +55,6 @@ class TestEndpointCallerRetryLogic:
         mock_transport.request.return_value = expected_response
 
         # Create a simple contract for testing
-        from pydantic import BaseModel
-        
         class TestResponse(BaseModel):
             success: bool
         

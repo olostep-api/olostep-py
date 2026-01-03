@@ -13,7 +13,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Iterator
 
 from .config import IO_LOG_PATH
 
@@ -169,7 +169,7 @@ class InterceptFileHandler(logging.Handler):
         conn.commit()
 
     @contextmanager
-    def _db_connection(self):
+    def _db_connection(self) -> Iterator[sqlite3.Connection]:
         """Context manager for database connections.
         
         Uses WAL mode for thread-safe concurrent writes. Since this is write-only
@@ -256,22 +256,24 @@ class InterceptFileHandler(logging.Handler):
 
             request_id = log_entry["request_id"]
             filename = self.intercepts_dir / f"{request_id}.json"
-
-            self.intercepts_dir.mkdir(parents=True, exist_ok=True)
-
-            with open(filename, "w", encoding="utf-8") as f:
-                json.dump(log_entry, f, indent=2)
-
             url, http_method, http_status = self._extract_url_and_method(log_entry)
 
-            # Use context manager for automatic connection lifecycle management
-            # WAL mode allows concurrent writes efficiently
+            # Ensure directory exists before starting transaction
+            self.intercepts_dir.mkdir(parents=True, exist_ok=True)
+
+            # Insert into database first, then write file to ensure atomicity
+            # If file write fails, database transaction will rollback
             with self._db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT INTO intercepts (timestamp, url, http_method, http_status, request_id)
                     VALUES (?, ?, ?, ?, ?)
                 """, (log_entry["timestamp"], url, http_method, http_status, request_id))
+                
+                # File write happens within transaction context
+                # If this fails, the database transaction will rollback
+                with open(filename, "w", encoding="utf-8") as f:
+                    json.dump(log_entry, f, indent=2)
 
         except (OSError, sqlite3.Error) as e:
             # Log database/file errors but don't crash the application
