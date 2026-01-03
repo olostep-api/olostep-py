@@ -72,7 +72,8 @@ class TestQuickStartSync:
             start_url="https://www.bbc.com",
             max_pages=100,
             include_urls=["/articles/**", "/blog/**"],
-            exclude_urls=["/admin/**"]
+            exclude_urls=["/admin/**"],
+            follow_robots_txt=False
         )
 
         for page in crawl.pages():
@@ -190,6 +191,7 @@ class TestAdvancedFeatures:
             exclude_urls=["/ads/**", "/tracking/**"],
             include_external=False,
             include_subdomain=True,
+            follow_robots_txt=False
         )
 
         for page in crawl.pages():

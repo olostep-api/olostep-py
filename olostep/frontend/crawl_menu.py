@@ -44,6 +44,7 @@ class CrawlMenu:
         search_query: str | None = None,
         top_n: int | None = None,
         webhook_url: HttpUrl | str | None = None,
+        follow_robots_txt: bool = True,
         validate_request: bool | None = None,
     ) -> Crawl:
         """Create a web crawling operation with smart input coercion.
@@ -71,6 +72,8 @@ class CrawlMenu:
             top_n: Maximum number of results to return (must be positive).
                 If None, no limit is applied.
             webhook_url: Webhook URL for receiving notifications about crawl progress.
+            follow_robots_txt: Whether to follow robots.txt rules when crawling.
+                Defaults to True. Set to False to ignore robots.txt restrictions.
             validate_request: Override the global validation setting for this request.
                 If None, uses the instance's default validation setting.
 
@@ -120,6 +123,7 @@ class CrawlMenu:
             "search_query": search_query,
             "top_n": top_n,
             "webhook_url": webhook_url,
+            "follow_robots_txt": follow_robots_txt,
         }
 
         # local validation setting overrides global validation setting

@@ -86,8 +86,9 @@ class TestQuickStartAsync:
             crawl = await c.crawls.create(
                 start_url="https://www.bbc.com",
                 max_pages=100,
-                include_urls=["/articles/**", "/blog/**"],
-                exclude_urls=["/admin/**"]
+                include_urls=["/news/**"],
+                exclude_urls=["/admin/**", "/nonexistent/**"],
+                follow_robots_txt=False
             )
 
             async for page in crawl.pages():
@@ -212,10 +213,11 @@ class TestAdvancedFeatures:
                 start_url="https://www.bbc.com",
                 max_pages=1000,
                 max_depth=3,
-                include_urls=["/articles/**", "/news/**"],
-                exclude_urls=["/ads/**", "/tracking/**"],
+                include_urls=["/news/**"],
+                exclude_urls=["/ads/**", "/tracking/**", "/nonexistent/**"],
                 include_external=False,
                 include_subdomain=True,
+                follow_robots_txt=False
             )
 
             async for page in crawl.pages():
@@ -230,8 +232,8 @@ class TestAdvancedFeatures:
             maps = await c.maps.create(
                 url="https://www.bbc.com",
                 include_subdomain=True,
-                include_urls=["/articles/**", "/news/**"],
-                exclude_urls=["/ads/**", "/tracking/**"]
+                include_urls=["/news/**"],
+                exclude_urls=["/ads/**", "/tracking/**", "/nonexistent/**"]
             )
 
             urls = []

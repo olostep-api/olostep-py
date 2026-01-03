@@ -27,6 +27,7 @@ from tests.fixtures.api.requests.crawl import (
     CRAWL_SEARCH_QUERY,
     CURSOR,
     EXCLUDE_URLS,
+    FOLLOW_ROBOTS_TXT,
     GET_CRAWL_INFO_REQUEST_ID,
     GET_CRAWL_PAGES_REQUEST_ID,
     INCLUDE_EXTERNAL,
@@ -749,6 +750,92 @@ class TestCrawlStart:
         except OlostepServerError_TemporaryIssue:
             # API raised a temporary error - skip this test
             pytest.skip("API raised a temporary error")
+    
+    @pytest.mark.asyncio
+    async def test_parameter_follow_robots_txt_valid(self, endpoint_caller):
+        """Test follow_robots_txt parameter with valid values from fixtures"""
+        for valid_follow_robots_txt in FOLLOW_ROBOTS_TXT["param_values"]["valids"]:
+            body_params = {**MINIMAL_REQUEST_BODY, "follow_robots_txt": valid_follow_robots_txt}
+            
+            validated_request = endpoint_caller.validate_request(
+                CRAWL_START_CONTRACT, body_params=body_params
+            )
+            
+            validated_body = validated_request["body_params"]
+            assert "follow_robots_txt" in validated_body
+            assert validated_body["follow_robots_txt"] == valid_follow_robots_txt
+            
+            request = endpoint_caller._prepare_request(
+                CRAWL_START_CONTRACT, **validated_request
+            )
+            
+            # Valid requests should either succeed or have transient errors (not server errors)
+            try:
+                model = await retry_request(
+                    endpoint_caller, request, CRAWL_START_CONTRACT
+                )
+                assert isinstance(model, CreateCrawlResponse)
+            except OlostepServerError_TemporaryIssue:
+                # API raised a temporary error - skip this test
+                pytest.skip("API raised a temporary error")
+    
+    @pytest.mark.asyncio
+    async def test_parameter_follow_robots_txt_invalid(self, endpoint_caller):
+        """Test follow_robots_txt parameter with invalid values from fixtures"""
+        for invalid_follow_robots_txt in FOLLOW_ROBOTS_TXT["param_values"]["invalids"]:
+            body_params = {**MINIMAL_REQUEST_BODY, "follow_robots_txt": invalid_follow_robots_txt}
+            
+            with pytest.raises(OlostepClientError_RequestValidationFailed):
+                endpoint_caller.validate_request(CRAWL_START_CONTRACT, body_params=body_params)
+            
+            # Test API behavior with invalid request (bypass validation)
+            request = endpoint_caller._prepare_request(
+                CRAWL_START_CONTRACT, {}, {}, body_params
+            )
+            response = await endpoint_caller._transport.request(request)
+            
+            # API is observed to accept invalid values for follow_robots_txt (strings, lists, dicts, None all return 200)
+            # This test documents the API's actual behavior - it does not validate this parameter
+            try:
+                model = endpoint_caller._handle_response(request, response, CRAWL_START_CONTRACT)
+                # API accepts invalid values - this documents weak API validation
+                assert isinstance(model, CreateCrawlResponse)
+            except OlostepServerError_TemporaryIssue:
+                # API raised a temporary error - skip this test
+                pytest.skip("API raised a temporary error")
+            # Note: API does not reject invalid follow_robots_txt values - all invalid types return 200
+            # except (OlostepServerError_RequestUnprocessable):
+            #     # API rejects invalid values or server errors - also acceptable
+            #     pass
+    
+    @pytest.mark.asyncio
+    async def test_parameter_follow_robots_txt_null(self, endpoint_caller):
+        """Test follow_robots_txt parameter with null value"""
+        body_params = {**MINIMAL_REQUEST_BODY, "follow_robots_txt": None}
+        
+        # follow_robots_txt has a default value (True), so None should be rejected
+        with pytest.raises(OlostepClientError_RequestValidationFailed):
+            endpoint_caller.validate_request(CRAWL_START_CONTRACT, body_params=body_params)
+        
+        # Test API behavior with null request (bypass validation)
+        request = endpoint_caller._prepare_request(
+            CRAWL_START_CONTRACT, {}, {}, body_params
+        )
+        response = await endpoint_caller._transport.request(request)
+        
+        # API is observed to accept null values for follow_robots_txt (None returns 200)
+        # This test documents the API's actual behavior - it does not validate this parameter
+        try:
+            model = endpoint_caller._handle_response(request, response, CRAWL_START_CONTRACT)
+            # API accepts null values - this documents weak API validation
+            assert isinstance(model, CreateCrawlResponse)
+        except OlostepServerError_TemporaryIssue:
+            # API raised a temporary error - skip this test
+            pytest.skip("API raised a temporary error")
+        # Note: API does not reject null follow_robots_txt values - None returns 200
+        # except (OlostepServerError_RequestUnprocessable):
+        #     # API rejects null values or server errors - also acceptable
+        #     pass
     
     @pytest.mark.asyncio
     async def test_parameter_search_query_valid(self, endpoint_caller):
