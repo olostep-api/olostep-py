@@ -62,13 +62,13 @@ class FakeTransport(Transport):
                 body=_json.dumps(self._responses[key])
             )
 
-        if path.endswith("/scrapes") and method.upper() == "POST":
+        if path.endswith("/scrapes") and request.method.upper() == "POST":
             body = {
                 "id": "scrape_fake_1",
                 "object": "scrape",
                 "created": 1,
                 "retrieve_id": "ret_1",
-                "url_to_scrape": (json or {}).get("url_to_scrape", ""),
+                "url": (request.json or {}).get("url_to_scrape", ""),
                 "result": {"html_content": "<html></html>", "size_exceeded": False},
             }
             return RawAPIResponse(
@@ -76,14 +76,14 @@ class FakeTransport(Transport):
                 headers={},
                 body=_json.dumps(body)
             )
-        if "/scrapes/" in path and method.upper() == "GET":
+        if "/scrapes/" in path and request.method.upper() == "GET":
             sid = path.rsplit("/", 1)[-1]
             body = {
                 "id": sid,
                 "object": "scrape",
                 "created": 1,
                 "retrieve_id": "ret_1",
-                "url_to_scrape": "https://example.com",
+                "url": "https://example.com",
                 "result": {"html_content": "<html></html>", "size_exceeded": False},
             }
             return RawAPIResponse(
@@ -91,23 +91,23 @@ class FakeTransport(Transport):
                 headers={},
                 body=_json.dumps(body)
             )
-        if path.endswith("/batches") and method.upper() == "POST":
+        if path.endswith("/batches") and request.method.upper() == "POST":
             body = {
                 "id": "batch_fake_1",
                 "object": "batch",
                 "status": "in_progress",
                 "created": 1,
-                "total_urls": len((json or {}).get("items", [])),
+                "total_urls": len((request.json or {}).get("items", [])),
                 "completed_urls": 0,
-                "parser": {"id": (json or {}).get("parser", {}).get("id", "default")},
-                "country": (json or {}).get("country", "US"),
+                "parser": {"id": (request.json or {}).get("parser", {}).get("id", "default")},
+                "country": (request.json or {}).get("country", "US"),
             }
             return RawAPIResponse(
                 status_code=200,
                 headers={},
                 body=_json.dumps(body)
             )
-        if "/batches/" in path and method.upper() == "GET":
+        if "/batches/" in path and request.method.upper() == "GET":
             parts = path.strip("/").split("/")
             if parts[-1] != "items":
                 body = {
@@ -138,31 +138,31 @@ class FakeTransport(Transport):
                 headers={},
                 body=_json.dumps(body)
             )
-        if path.endswith("/crawls") and method.upper() == "POST":
+        if path.endswith("/crawls") and request.method.upper() == "POST":
             body = {
                 "id": "crawl_fake_1",
                 "object": "crawl",
                 "status": "in_progress",
                 "created": 1,
                 "start_date": "2024-01-01T00:00:00Z",
-                "start_url": (json or {}).get("start_url", ""),
-                "max_pages": (json or {}).get("max_pages", 10),
-                "max_depth": (json or {}).get("max_depth"),
-                "exclude_urls": (json or {}).get("exclude_urls"),
-                "include_urls": (json or {}).get("include_urls", ["/**"]),
-                "include_external": (json or {}).get("include_external", False),
-                "search_query": (json or {}).get("search_query"),
-                "top_n": (json or {}).get("top_n"),
+                "start_url": (request.json or {}).get("start_url", ""),
+                "max_pages": (request.json or {}).get("max_pages", 10),
+                "max_depth": (request.json or {}).get("max_depth"),
+                "exclude_urls": (request.json or {}).get("exclude_urls"),
+                "include_urls": (request.json or {}).get("include_urls", ["/**"]),
+                "include_external": (request.json or {}).get("include_external", False),
+                "search_query": (request.json or {}).get("search_query"),
+                "top_n": (request.json or {}).get("top_n"),
                 "current_depth": 0,
                 "pages_count": 0,
-                "webhook_url": (json or {}).get("webhook_url"),
+                "webhook_url": (request.json or {}).get("webhook_url"),
             }
             return RawAPIResponse(
                 status_code=200,
                 headers={},
                 body=_json.dumps(body)
             )
-        if path.endswith("/pages") and "/crawls/" in path and method.upper() == "GET":
+        if path.endswith("/pages") and "/crawls/" in path and request.method.upper() == "GET":
             cid = path.split("/")[-3] if path.endswith("/pages") else path.split("/")[-2]
             body = {
                 "id": cid,
@@ -182,7 +182,7 @@ class FakeTransport(Transport):
                 headers={},
                 body=_json.dumps(body)
             )
-        if "/crawls/" in path and method.upper() == "GET":
+        if "/crawls/" in path and request.method.upper() == "GET":
             cid = path.strip("/").split("/")[-1]
             body = {
                 "id": cid,
@@ -207,7 +207,7 @@ class FakeTransport(Transport):
                 headers={},
                 body=_json.dumps(body)
             )
-        if path.endswith("/maps") and method.upper() == "POST":
+        if path.endswith("/maps") and request.method.upper() == "POST":
             body = {
                 "urls_count": 3,
                 "urls": ["https://a", "https://b", "https://c"],
@@ -219,7 +219,7 @@ class FakeTransport(Transport):
                 headers={},
                 body=_json.dumps(body)
             )
-        if path.endswith("/retrieve") and method.upper() == "GET":
+        if path.endswith("/retrieve") and request.method.upper() == "GET":
             body = {
                 "html_content": None,
                 "markdown_content": None,

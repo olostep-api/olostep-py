@@ -12,6 +12,7 @@ all transport logic to the EndpointCaller.
 from __future__ import annotations
 
 import asyncio
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, AsyncIterator
@@ -54,7 +55,7 @@ class ScrapeResult:
     Attributes:
         id: Unique identifier for the scrape operation (scrapes endpoints only)
         created: Creation timestamp as Unix epoch (scrapes endpoints only)
-        url_to_scrape: The URL that was scraped (scrapes endpoints only)
+        url: The URL that was scraped (scrapes endpoints only)
         metadata: Metadata dictionary (scrapes endpoints only)
         retrieve_id: Unique identifier for retrieve operations (scrapes endpoints only)
         credits_consumed: Number of credits consumed for this scrape (scrapes endpoints only)
@@ -91,7 +92,7 @@ class ScrapeResult:
         if isinstance(response, (CreateScrapeResponse, GetScrapeResponse)):
             self.id = response.id
             self.created = response.created
-            self.url_to_scrape = response.url_to_scrape
+            self.url = response.url
             self.metadata = response.metadata
             self.retrieve_id = response.retrieve_id
             self.credits_consumed = response.credits_consumed
@@ -108,6 +109,23 @@ class ScrapeResult:
         for k, v in results.model_dump().items():
             if v is not None:
                 setattr(self, k, v)
+
+    @property
+    def url_to_scrape(self) -> str | None:
+        """Deprecated: Use 'url' instead.
+        
+        This property is provided for backwards compatibility and will be removed
+        in a future version. Use the 'url' attribute instead.
+        
+        Returns:
+            The URL that was scraped, or None if not available (e.g., for RetrieveResponse).
+        """
+        warnings.warn(
+            "The 'url_to_scrape' attribute is deprecated. Use 'url' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return getattr(self, 'url', None)
 
     def __repr__(self) -> str:
         content_keys = [
@@ -798,7 +816,7 @@ class CrawlInfo:
             str: Human-readable string showing id, age, status, pages count, and depth.
         """
         age_str = f", age={self.age}" if self.created else ""
-        return f"CrawlInfo: (id: {self.id!r}, age: {age_str}, status: {self.status}, pages_count: {self.pages_count}, current_depth: {self.current_depth})"
+        return f"CrawlInfo: (id: {self.id!r}{age_str}, status={self.status}, pages_count={self.pages_count}, current_depth={self.current_depth})"
 
     @property
     def time_since_start(self) -> int:
@@ -906,7 +924,7 @@ class Crawl:
         Returns:
             str: Human-readable string showing key crawl information.
         """
-        return f"Crawl (start_url: {self.start_url!r}, id: {self.id!r}, max_pages: {self.max_pages!r}, max_depth: {self.max_depth!r}, webhook_url: {self.webhook_url!r})"
+        return f"Crawl (start_url: {self.start_url!r}, id: {self.id!r}, status: {self.status}, pages_count={self.pages_count}, max_pages: {self.max_pages!r}, max_depth: {self.max_depth!r}, webhook_url: {self.webhook_url!r})"
 
     @classmethod
     async def _info(cls, caller: EndpointCaller, crawl_id: str) -> CrawlInfo:

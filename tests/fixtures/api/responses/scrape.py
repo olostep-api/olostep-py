@@ -4,7 +4,7 @@ CREATE_SCRAPE_RESPONSE = {
     "object": "scrape",
     "created": 1703001600,
     "retrieve_id": "ret_123",
-    "url_to_scrape": "https://example.com",
+    "url": "https://example.com",
     "result": {
         "html_content": "<html><body>Hello World</body></html>",
         "markdown_content": "# Hello World",
@@ -18,7 +18,7 @@ GET_SCRAPE_RESPONSE = {
     "object": "scrape", 
     "created": 1703001600,
     "retrieve_id": "ret_456",
-    "url_to_scrape": "https://example.com",
+    "url": "https://example.com",
     "result": {
         "html_content": "<html><body>Hello World</body></html>",
         "markdown_content": "# Hello World",

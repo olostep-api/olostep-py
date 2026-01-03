@@ -82,7 +82,7 @@ class CreateScrapeResponse(OlostepResponseBaseModel):
     created: int
     metadata: dict[str, Any] | None = None
     retrieve_id: str | None = None
-    url_to_scrape: str
+    url: str
     result: ScrapeOutputs
     credits_consumed: int | None = None
     # image_queued: bool | None = None

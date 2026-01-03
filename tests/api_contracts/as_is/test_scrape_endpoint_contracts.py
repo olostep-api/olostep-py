@@ -303,9 +303,18 @@ class TestScrapeUrlCreation:
     
     @pytest.mark.asyncio
     async def test_parameter_formats_valid(self, endpoint_caller):
-        """Test formats parameter with valid values from fixtures"""
-        # Test with the full list of valid formats
-        valid_formats = FORMATS["param_values"]["valids"]
+        """Test formats parameter with valid values from fixtures
+        
+        API OBSERVED BEHAVIOR: The API rejects requests with 'json' format when no parser
+        or llm_extract is provided, returning 400 with message: "When requesting 'json'
+        format, you must provide either a 'parser' (pre-defined or custom) or an 'llm_extract'
+        object to define how data should be extracted."
+        
+        This test uses all Format enum values including 'json', which requires additional
+        parameters. The test should exclude 'json' from the formats list or add parser/llm_extract.
+        """
+        # Exclude 'json' format as it requires parser or llm_extract
+        valid_formats = [f for f in FORMATS["param_values"]["valids"] if f != "json"]
         body_params = {**MINIMAL_REQUEST_BODY, "formats": valid_formats}
         
         validated_request = endpoint_caller.validate_request(
@@ -1330,7 +1339,7 @@ class TestScrapeGet:
             assert get_model.id == scrape_id
             assert get_model.object == "scrape"
             # The API may modify the URL (add parameters), so just check it contains the original URL
-            assert "example.com" in get_model.url_to_scrape
+            assert "example.com" in get_model.url
         except OlostepServerError_TemporaryIssue:
             pytest.skip("API raised a temporary error during scrape retrieval")
     
