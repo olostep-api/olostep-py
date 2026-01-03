@@ -278,9 +278,22 @@ class EndpointCaller:
         logger.debug(
             f"Response from '{contract.name}' contains valid JSON. Evaluating against [{contract.response_model.__name__}] model."
         )
-        model_fields = set(contract.response_model.model_fields.keys())
-        response_keys = set(data.keys())
-        extra_fields = response_keys - model_fields
+        
+        try:
+            validated_model = contract.response_model(**data)
+        except ValidationError as e:
+            filtered_errors = [
+                error for error in e.errors()
+                if error.get("type") != "extra_forbidden"
+            ]
+            
+            if filtered_errors:
+                raise OlostepClientError_ResponseValidationFailed(
+                    request=request, response=response, errors=[dict(error) for error in filtered_errors]
+                ) from e
+            validated_model = contract.response_model(**data)
+        
+        extra_fields = set(getattr(validated_model, "__pydantic_extra__", {}) or {})
         
         if extra_fields:
             warnings.warn(
@@ -296,19 +309,7 @@ class EndpointCaller:
                 f"Extra fields detected in response from '{contract.name}': {extra_fields}"
             )
         
-        try:
-            return contract.response_model(**data)
-        except ValidationError as e:
-            filtered_errors = [
-                error for error in e.errors()
-                if error.get("type") != "extra_forbidden"
-            ]
-            
-            if filtered_errors:
-                raise OlostepClientError_ResponseValidationFailed(
-                    request=request, response=response, errors=[dict(error) for error in filtered_errors]
-                ) from e
-            return contract.response_model(**data)
+        return validated_model
 
     def validate_request(
         self,

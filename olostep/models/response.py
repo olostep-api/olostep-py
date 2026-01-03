@@ -189,11 +189,14 @@ class BatchInfoResponse(OlostepResponseBaseModel):
         return v
 
     @model_validator(mode="before")
-    def no_batch_id(cls, data: dict[str, Any]) -> dict[str, Any]:
-        # Remove 'batch_id' if present before validation, as it should not exist
+    def normalize_batch_id(cls, data: dict[str, Any]) -> dict[str, Any]:
+        # batch_id is an alias to id - API sometimes returns both, but they're the same value
+        # This allows the SDK to accept batch_id from the API without warnings
         if isinstance(data, dict) and "batch_id" in data:
-            data = dict(data)
-            data.pop("batch_id")
+            if "id" not in data:
+                data["id"] = data["batch_id"]
+            # Remove batch_id after normalizing to id to avoid extra field warning
+            data.pop("batch_id", None)
         return data
 
 
