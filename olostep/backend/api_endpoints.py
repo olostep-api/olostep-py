@@ -72,8 +72,8 @@ class EndpointContract:
     path: str  # e.g., "/scrapes" or "/scrapes/{scrape_id}"
 
     # IO models (backend validation only)
+    response_model: type[Any]
     request_model: type[Any] | None = None
-    response_model: type[Any] | None = None
 
     # Optional examples for docs/SDK help
     examples: list[dict[str, Any]] = field(default_factory=list)
