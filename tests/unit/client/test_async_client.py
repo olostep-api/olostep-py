@@ -18,17 +18,17 @@ class TestOlostepClient:
     
     def test_client_initialization(self, async_client_fake: AsyncOlostep) -> None:
         """Test that client initializes with all menu items."""
-        assert hasattr(async_client_fake, 'scrape')
-        assert hasattr(async_client_fake, 'batch')
-        assert hasattr(async_client_fake, 'crawl')
-        assert hasattr(async_client_fake, 'sitemap')
+        assert hasattr(async_client_fake, 'scrapes')
+        assert hasattr(async_client_fake, 'batches')
+        assert hasattr(async_client_fake, 'crawls')
+        assert hasattr(async_client_fake, 'maps')
         assert hasattr(async_client_fake, 'retrieve')
         
         # Verify menu items are the correct types
-        assert isinstance(async_client_fake.scrape, ScrapeMenu)
-        assert isinstance(async_client_fake.batch, BatchMenu)
-        assert isinstance(async_client_fake.crawl, CrawlMenu)
-        assert isinstance(async_client_fake.sitemap, SitemapMenu)
+        assert isinstance(async_client_fake.scrapes, ScrapeMenu)
+        assert isinstance(async_client_fake.batches, BatchMenu)
+        assert isinstance(async_client_fake.crawls, CrawlMenu)
+        assert isinstance(async_client_fake.maps, SitemapMenu)
         assert isinstance(async_client_fake.retrieve, RetrieveMenu)
     
     def test_client_context_manager(self, async_client_fake: AsyncOlostep) -> None:
@@ -39,8 +39,8 @@ class TestOlostepClient:
             async with async_client_fake as client:
                 assert client is async_client_fake
                 # Test that we can access menu items within context
-                assert hasattr(client, 'scrape')
-                assert hasattr(client, 'batch')
+                assert hasattr(client, 'scrapes')
+                assert hasattr(client, 'batches')
         
         asyncio.run(_test_context())
     
@@ -48,20 +48,20 @@ class TestOlostepClient:
         """Test client initialization with fake transport."""
         client = AsyncOlostep(_transport=fake_transport)
         assert client._transport is fake_transport
-        assert hasattr(client, 'scrape')
-        assert hasattr(client, 'batch')
+        assert hasattr(client, 'scrapes')
+        assert hasattr(client, 'batches')
     
     def test_client_with_api_key(self) -> None:
         """Test client initialization with API key."""
         client = AsyncOlostep(api_key="test_key")
         assert client._api_key == "test_key"
-        assert hasattr(client, 'scrape')
+        assert hasattr(client, 'scrapes')
     
     def test_client_with_base_url(self) -> None:
         """Test client initialization with custom base URL."""
         client = AsyncOlostep(api_key="test_key", _base_url="https://custom.api.com")
         assert client._base_url == "https://custom.api.com"
-        assert hasattr(client, 'scrape')
+        assert hasattr(client, 'scrapes')
     
     def test_client_without_api_key_raises_error(self) -> None:
         """Test that client raises error when no API key is provided."""
@@ -75,24 +75,23 @@ class TestOlostepClient:
     def test_client_menu_access(self, async_client_fake: AsyncOlostep) -> None:
         """Test that all menu items are accessible and have expected methods."""
         # Test scrape menu
-        assert callable(async_client_fake.scrape)
-        assert hasattr(async_client_fake.scrape, 'get')
+        assert hasattr(async_client_fake.scrapes, 'create')
+        assert hasattr(async_client_fake.scrapes, 'get')
         
         # Test batch menu
-        assert callable(async_client_fake.batch)
-        assert hasattr(async_client_fake.batch, 'info')
-        assert hasattr(async_client_fake.batch, 'items')
+        assert hasattr(async_client_fake.batches, 'create')
+        assert hasattr(async_client_fake.batches, 'info')
+        assert hasattr(async_client_fake.batches, 'items')
         
         # Test crawl menu
-        assert callable(async_client_fake.crawl)
-        assert hasattr(async_client_fake.crawl, 'info')
-        assert hasattr(async_client_fake.crawl, 'pages')
+        assert hasattr(async_client_fake.crawls, 'create')
+        assert hasattr(async_client_fake.crawls, 'info')
+        assert hasattr(async_client_fake.crawls, 'pages')
         
         # Test map menu
-        assert callable(async_client_fake.sitemap)
+        assert hasattr(async_client_fake.maps, 'create')
         
         # Test retrieve menu
-        assert callable(async_client_fake.retrieve)
         assert hasattr(async_client_fake.retrieve, 'get')
 
 
