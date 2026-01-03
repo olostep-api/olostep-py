@@ -11,8 +11,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from olostep.backend.api_endpoints import EndpointContract
 from olostep.backend.caller import EndpointCaller
-from olostep.backend.transport_protocol import RawAPIResponse
+from olostep.backend.transport_protocol import RawAPIRequest, RawAPIResponse
 from olostep.errors import Olostep_APIConnectionError
 
 
@@ -23,7 +24,11 @@ class TestEndpointCallerRetryLogic:
     @pytest.fixture
     def mock_transport(self) -> AsyncMock:
         """Create mock transport for testing."""
-        return AsyncMock()
+        from unittest.mock import MagicMock
+        transport = AsyncMock()
+        # max_duration is a synchronous method, not async
+        transport.max_duration = MagicMock(return_value=0.0)
+        return transport
 
     @pytest.fixture
     def caller(self, mock_transport: AsyncMock) -> EndpointCaller:
@@ -49,10 +54,31 @@ class TestEndpointCallerRetryLogic:
         )
         mock_transport.request.return_value = expected_response
 
-        response = await caller._make_request("GET", "https://api.test.com/test", None, {})
+        # Create a simple contract for testing
+        from pydantic import BaseModel
+        
+        class TestResponse(BaseModel):
+            success: bool
+        
+        contract = EndpointContract(
+            key=("test", "endpoint"),
+            name="Test Endpoint",
+            description="Test endpoint for unit testing",
+            method="GET",
+            path="/test",
+            response_model=TestResponse
+        )
 
-        assert response == expected_response
-        mock_transport.request.assert_called_once_with("GET", "https://api.test.com/test", json=None, params={}, headers=None)
+        result = await caller._invoke(contract)
+
+        assert isinstance(result, TestResponse)
+        assert result.success is True
+        # Verify transport.request was called with a RawAPIRequest
+        assert mock_transport.request.called
+        call_args = mock_transport.request.call_args[0][0]
+        assert isinstance(call_args, RawAPIRequest)
+        assert call_args.method == "GET"
+        assert call_args.url == "https://api.test.com/test"
 
     @pytest.mark.asyncio
     async def test_connection_error_propagated(
@@ -61,7 +87,17 @@ class TestEndpointCallerRetryLogic:
         """Test that connection errors are propagated from transport."""
         mock_transport.request.side_effect = Olostep_APIConnectionError()
 
+        # Create a simple contract for testing
+        contract = EndpointContract(
+            key=("test", "endpoint"),
+            name="Test Endpoint",
+            description="Test endpoint for unit testing",
+            method="GET",
+            path="/test",
+            response_model=None
+        )
+
         with pytest.raises(Olostep_APIConnectionError):
-            await caller._make_request("GET", "https://api.test.com/test", None, {})
+            await caller._invoke(contract)
 
         mock_transport.request.assert_called_once()
