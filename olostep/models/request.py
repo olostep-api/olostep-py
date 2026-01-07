@@ -16,7 +16,7 @@ from pydantic import (
 # REQUEST MODELS
 # =============================================================================
 from .base import OlostepBaseModel
-from .common import CertainCountries, Country
+from .common import Country
 
 if TYPE_CHECKING:
     from olostep.backend.api_endpoints import EndpointContract

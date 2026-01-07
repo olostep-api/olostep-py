@@ -154,9 +154,11 @@ class TestCountry:
 
     def test_pydantic_validation_rejects_invalid(self):
         """Test that Pydantic validation rejects invalid country codes."""
+        from pydantic import ValidationError
+
         from olostep.models.request import ScrapeUrlBodyParams
         
-        with pytest.raises(Exception):  # Pydantic validation error
+        with pytest.raises(ValidationError):
             ScrapeUrlBodyParams(
                 url_to_scrape="https://example.com",
                 country="ZZ"
