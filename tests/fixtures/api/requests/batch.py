@@ -1,4 +1,5 @@
-from olostep.models.request import BatchItemsQueryStatus, Country, LinksOnPage
+from olostep.models.common import Country
+from olostep.models.request import BatchItemsQueryStatus, LinksOnPage
 
 ########################################
 # --- Create Batch Request Fixtures ---
@@ -43,7 +44,7 @@ COUNTRY = {
     "param_name": "country",
     "param_type": str,
     "param_values": {
-        "valids": [c.value for c in Country],
+        "valids": [c.value for c in Country] + ["RANDOM"],
         "invalids": ["INVALID", "XX", 1000, {"invalid": "object"}],
     },
 }

@@ -211,7 +211,9 @@ class TestBatchStart:
     @pytest.mark.asyncio
     async def test_parameter_country_valid(self, endpoint_caller):
         """Test country parameter with valid values from fixtures"""
-        for valid_country in COUNTRY["param_values"]["valids"]:
+        # Truncate to representative sample to avoid 250 API calls
+        valid_countries = COUNTRY["param_values"]["valids"][:5] + ["RANDOM"]
+        for valid_country in valid_countries:
             body_params = {**MINIMAL_REQUEST_BODY, "country": valid_country}
             
             validated_request = endpoint_caller.validate_request(
@@ -577,9 +579,8 @@ class TestBatchInfo:
             # Verify that country field is present and accessible
             # The API may or may not return it, but if it does, it should be valid
             if hasattr(get_model, "country") and get_model.country is not None:
-                # If country is present, verify it's a valid Country enum value
-                from olostep.models.request import Country
-                assert get_model.country in [c.value for c in Country]
+                from olostep.models.common import Country
+                assert get_model.country in Country
         except OlostepServerError_TemporaryIssue:
             pytest.skip("API raised a temporary error during batch retrieval")
     

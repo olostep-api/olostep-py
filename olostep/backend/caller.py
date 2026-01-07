@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from olostep.models.response import Country
+from olostep.models.common import Country
 
 from .._log import get_logger
 from ..config import VERSION

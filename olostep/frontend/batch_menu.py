@@ -15,7 +15,8 @@ from ..frontend.input_coersion import (
     coerce_to_batch_items,
     coerce_to_key_in_dict,
 )
-from ..models.request import BatchItem, Country, LinksOnPage, Parser
+from ..models.common import Country
+from ..models.request import BatchItem, LinksOnPage, Parser
 from ..models.response import BatchCreateResponse, BatchInfoResponse
 
 logger = get_logger("frontend.batch_menu")

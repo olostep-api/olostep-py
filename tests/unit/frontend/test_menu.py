@@ -21,7 +21,8 @@ from olostep.frontend.client_state import (
     ScrapeResult,
     Sitemap,
 )
-from olostep.models.request import Country, FillInputAction, Format, WaitAction
+from olostep.models.common import Country
+from olostep.models.request import FillInputAction, Format, WaitAction
 
 _enable_stderr_debug()
 

@@ -559,7 +559,9 @@ class TestScrapeUrlCreation:
     @pytest.mark.asyncio
     async def test_parameter_country_valid(self, endpoint_caller):
         """Test country parameter with valid values from fixtures"""
-        for valid_country in COUNTRY["param_values"]["valids"]:
+        # Truncate to representative sample to avoid 250 API calls
+        valid_countries = COUNTRY["param_values"]["valids"][:5] + ["RANDOM"]
+        for valid_country in valid_countries:
             body_params = {**MINIMAL_REQUEST_BODY, "country": valid_country}
             
             validated_request = endpoint_caller.validate_request(

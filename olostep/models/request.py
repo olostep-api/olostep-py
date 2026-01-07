@@ -16,6 +16,7 @@ from pydantic import (
 # REQUEST MODELS
 # =============================================================================
 from .base import OlostepBaseModel
+from .common import CertainCountries, Country
 
 if TYPE_CHECKING:
     from olostep.backend.api_endpoints import EndpointContract
@@ -177,26 +178,6 @@ class RawRequest:
 # COMMON SUB MODELS
 # =============================================================================
 # =============================================================================
-
-
-class Country(str, Enum):
-    """Country codes for geolocation. Only supported/tested countries are included."""
-
-    US = "US"  # United States
-    CA = "CA"  # Canada
-    IT = "IT"  # Italy
-    IN = "IN"  # India
-    GB = "GB"  # England
-    JP = "JP"  # Japan
-    MX = "MX"  # Mexico
-    AU = "AU"  # Australia
-    ID = "ID"  # Indonesia
-    UA = "UA"  # UAE
-    RU = "RU"  # Russia
-    RANDOM = "RANDOM"  # Random country selection
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class Format(str, Enum):

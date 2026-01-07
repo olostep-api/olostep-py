@@ -1,6 +1,7 @@
 from typing import Any
 
-from olostep.models.request import Country, Format, LinksOnPage, ScreenSize
+from olostep.models.common import Country
+from olostep.models.request import Format, LinksOnPage, ScreenSize
 
 ########################################
 # --- Create Scrape Request Fixtures ---
@@ -78,8 +79,8 @@ COUNTRY = {
     "param_name": "country",
     "param_type": str,
     "param_values": {
-        "valids": [c.value for c in Country],
-        "invalids": ["invalid", 1000],
+        "valids": [c.value for c in Country] + ["RANDOM"],
+        "invalids": ["invalid", 1000, "ZZ"],
     },
 }
 

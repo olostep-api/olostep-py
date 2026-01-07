@@ -10,6 +10,7 @@ from pydantic import field_validator, model_validator
 # RESPONSE MODELS
 # =============================================================================
 from .base import OlostepResponseBaseModel
+from .common import Country
 
 # =============================================================================
 # =============================================================================
@@ -115,24 +116,6 @@ class Parser(OlostepResponseBaseModel):
     id: str | None = None
 
 
-class Country(str, Enum):
-    """Country codes for geolocation. Only supported/tested countries are included."""
-
-    US = "US"  # United States
-    CA = "CA"  # Canada
-    IT = "IT"  # Italy
-    IN = "IN"  # India
-    GB = "GB"  # England
-    JP = "JP"  # Japan
-    MX = "MX"  # Mexico
-    AU = "AU"  # Australia
-    ID = "ID"  # Indonesia
-    UA = "UA"  # UAE
-    RU = "RU"  # Russia
-    RANDOM = "RANDOM"  # Random country selection
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class BatchCreateResponse(OlostepResponseBaseModel):

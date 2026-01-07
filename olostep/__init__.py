@@ -16,9 +16,9 @@ from .frontend.client_state import (
 )
 
 # Type system
+from .models.common import Country
 from .models.request import (
     ClickAction,
-    Country,
     FillInputAction,
     Format,
     LinksOnPage,
