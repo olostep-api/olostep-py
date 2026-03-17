@@ -4,7 +4,7 @@ import os
 from typing import Final
 
 # SDK version
-VERSION: Final[str] = "1.0.2"
+VERSION: Final[str] = "1.0.3"
 
 # Base API URL (can be overridden via env)
 BASE_API_URL: Final[str] = os.getenv(
