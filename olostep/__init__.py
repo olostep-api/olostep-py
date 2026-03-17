@@ -34,10 +34,12 @@ from .models.request import (
 # Configuration
 from .retry_strategy import RetryStrategy
 
-# Get all error classes dynamically
+# Get all error classes dynamically and expose on package for "from olostep import Olostep_BaseError"
 _error_classes = [
     name for name in dir(errors) if not name.startswith("_") and name.endswith("Error")
 ]
+for _name in _error_classes:
+    globals()[_name] = getattr(errors, _name)
 
 __all__ = [
     # Clients
