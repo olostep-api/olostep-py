@@ -425,6 +425,7 @@ pytest
 # Run specific test categories
 pytest tests/unit/
 
+pytest tests/docs_commands/ -v
 # DO NOT RUN THE API CONTRACT TEST!
 ```
 
