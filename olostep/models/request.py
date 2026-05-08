@@ -9,6 +9,7 @@ from pydantic import (
     HttpUrl,
     StrictBool,
     field_validator,
+    model_serializer,
     model_validator,
 )
 
@@ -981,3 +982,112 @@ class AnswersGetRequest(BaseRequestModel):
     """Request for GET /answers/{answer_id}."""
 
     path_params: AnswersGetPathParams
+
+
+# =============================================================================
+# =============================================================================
+# SEARCHES API MODELS
+# =============================================================================
+# =============================================================================
+
+
+class SearchesScrapeOptions(OlostepBaseModel):
+    """Optional scrape configuration embedded inside POST /searches.
+
+    The /v1/searches endpoint rejects request bodies that contain explicit
+    null values for optional fields (e.g. ``"remove_css_selectors": null``),
+    so this model strips None values from its serialized output. Pydantic's
+    internal serializer doesn't recurse through ``OlostepBaseModel.model_dump``
+    overrides on nested models, so we use ``@model_serializer`` instead.
+    """
+
+    formats: list[Literal["html", "markdown"]] | None = None
+    remove_css_selectors: str | None = None
+    timeout: int | None = None
+
+    @field_validator("timeout")
+    @classmethod
+    def validate_timeout(cls, v: int | None) -> int | None:
+        if v is None:
+            return None
+        if not 1 <= v <= 60:
+            raise ValueError("timeout must be between 1 and 60 seconds")
+        return v
+
+    @field_validator("formats")
+    @classmethod
+    def validate_formats_non_empty(
+        cls, v: list[str] | None
+    ) -> list[str] | None:
+        if v is None:
+            return None
+        if not v:
+            raise ValueError("formats must contain at least one of 'html' or 'markdown'")
+        return v
+
+    @model_serializer(mode="wrap")
+    def _drop_none(self, handler) -> dict[str, Any]:
+        return {k: v for k, v in handler(self).items() if v is not None}
+
+
+class SearchesBodyParams(BodyParams):
+    """Body parameters for POST /searches."""
+
+    query: str
+    limit: int | None = None
+    include_domains: list[str] | None = None
+    exclude_domains: list[str] | None = None
+    scrape_options: SearchesScrapeOptions | None = None
+
+    @field_validator("query")
+    @classmethod
+    def validate_query(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("query must be a non-empty string")
+        return v
+
+    @field_validator("limit")
+    @classmethod
+    def validate_limit(cls, v: int | None) -> int | None:
+        if v is None:
+            return None
+        if not 1 <= v <= 25:
+            raise ValueError("limit must be between 1 and 25")
+        return v
+
+    @model_serializer(mode="wrap")
+    def _drop_empty(self, handler) -> dict[str, Any]:
+        # Drops top-level Nones AND empty-dict values (e.g. when
+        # SearchesScrapeOptions._drop_none reduces all-None inputs to {}),
+        # keeping the validate_request and _compress_request paths in sync.
+        out: dict[str, Any] = {}
+        for k, v in handler(self).items():
+            if v is None:
+                continue
+            if isinstance(v, dict) and not v:
+                continue
+            out[k] = v
+        return out
+
+
+class SearchesRequest(BaseRequestModel):
+    """Request for POST /searches."""
+
+    body_params: SearchesBodyParams
+
+
+# =============================================================================
+# SEARCHES GET MODELS
+# =============================================================================
+
+
+class SearchesGetPathParams(PathParams):
+    """Path parameters for GET /searches/{search_id}."""
+
+    search_id: str
+
+
+class SearchesGetRequest(BaseRequestModel):
+    """Request for GET /searches/{search_id}."""
+
+    path_params: SearchesGetPathParams

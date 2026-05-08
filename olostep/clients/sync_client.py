@@ -88,6 +88,7 @@ from ..frontend.client_state import (
 from ..frontend.crawl_menu import CrawlMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.scrape_menu import ScrapeMenu
+from ..frontend.searches_menu import SearchesMenu
 from ..frontend.sitemap_menu import SitemapMenu
 from ..retry_strategy import RetryStrategy
 from .async_client import AsyncOlostep
@@ -123,6 +124,7 @@ class _SyncProxy:
         "maps": SitemapMenu,  # Maps to SitemapMenu async class
         "retrieve": RetrieveMenu,  # Maps to RetrieveMenu async class
         "answers": AnswersMenu,  # Maps to AnswersMenu async class
+        "searches": SearchesMenu,  # Maps to SearchesMenu async class
     }
 
     def __init__(self, outer: "Olostep", endpoint_name: str, method_name: str | None = None) -> None:
@@ -664,6 +666,7 @@ class Olostep:
         self.crawls = _SyncProxy(self, "crawls")
         self.maps = _SyncProxy(self, "maps")
         self.answers = _SyncProxy(self, "answers")
+        self.searches = _SyncProxy(self, "searches")
         self.retrieve = _SyncProxy(self, "retrieve")
 
     def __dir__(self) -> list[str]:
@@ -675,7 +678,7 @@ class Olostep:
         Returns:
             List of available endpoint namespaces
         """
-        return ["scrapes", "batches", "crawls", "maps", "retrieve", "answers"]
+        return ["scrapes", "batches", "crawls", "maps", "retrieve", "answers", "searches"]
 
     def close(self) -> None:
         """
