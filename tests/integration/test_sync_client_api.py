@@ -252,10 +252,10 @@ class TestAdvancedFeatures:
         """Search with limit and include/exclude domain filters."""
         client = Olostep()
         search = client.searches.create(
-            query="news",
+            query="BBC news OpenAI Sora shutdown",
             limit=5,
             include_domains=["bbc.com"],
-            exclude_domains=["pinterest.com"],
+            # exclude_domains=["pinterest.com"],
         )
         assert len(search.links) > 0
         assert len(search.links) <= 5

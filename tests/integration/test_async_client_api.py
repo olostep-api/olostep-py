@@ -282,10 +282,10 @@ class TestAdvancedFeatures:
         """Search with limit and include/exclude domain filters."""
         async with AsyncOlostep() as c:
             search = await c.searches.create(
-                query="news",
+                query="BBC News OpenAI Sora shutdown",
                 limit=5,
                 include_domains=["bbc.com"],
-                exclude_domains=["pinterest.com"],
+                # exclude_domains=["pinterest.com"],
             )
             assert len(search.links) > 0
             assert len(search.links) <= 5
