@@ -36,6 +36,7 @@ from ..models.response import (
     GetScrapeResponse,
     MapResponse,
     RetrieveResponse,
+    SearchesResponse,
 )
 
 logger = get_logger("frontend.client_state")
@@ -232,6 +233,60 @@ class AnswersResult:
             str: Human-readable string showing key information.
         """
         return f"Answer: {self.task[:50]}{'...' if len(self.task) > 50 else ''} -> {len(self.sources)} sources"
+
+
+class SearchesResult:
+    """Result object for searches operations.
+
+    Wraps the response of a `client.searches.create()` or `.get()` call,
+    exposing the search id, query, and the list of returned links. When
+    `scrape_options` were provided, each link in `links` carries
+    `markdown_content` / `html_content` directly.
+
+    Attributes:
+        id: Unique identifier for the search operation
+        object: Object type identifier ("search")
+        created: Creation timestamp as Unix epoch
+        metadata: Metadata dictionary (if provided)
+        query: The original search query
+        credits_consumed: Total credits billed for this search (search + any scrapes)
+        links: List of result links (each with url/title/description and optional content)
+        json_content: Inline JSON payload (when present)
+        json_hosted_url: Hosted JSON URL (use when size_exceeded is True)
+        size_exceeded: True when inline content exceeded 9MB and was offloaded
+    """
+
+    def __init__(self, response: SearchesResponse) -> None:
+        """Initialize SearchesResult from an API response.
+
+        Args:
+            response: API response object from /searches endpoint.
+        """
+        self.id = response.id
+        self.object = response.object
+        self.created = response.created
+        self.metadata = response.metadata or {}
+        self.query = response.query
+        self.credits_consumed = response.credits_consumed
+
+        result = response.result
+        self.json_content = result.json_content
+        self.json_hosted_url = result.json_hosted_url
+        self.size_exceeded = bool(result.size_exceeded) if result.size_exceeded is not None else False
+        self.links = [link.model_dump() for link in (result.links or [])]
+
+    def __repr__(self) -> str:
+        """Return a string representation of the SearchesResult."""
+        query_str = self.query[:50] + ("..." if len(self.query) > 50 else "")
+        return (
+            f"SearchesResult(id={self.id!r}, query={query_str!r}, "
+            f"links={len(self.links)}, credits_consumed={self.credits_consumed})"
+        )
+
+    def __str__(self) -> str:
+        """Return a human-readable string representation of the SearchesResult."""
+        query_str = self.query[:50] + ("..." if len(self.query) > 50 else "")
+        return f"Search: {query_str} -> {len(self.links)} links"
 
 
 @dataclass

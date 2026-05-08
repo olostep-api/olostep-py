@@ -9,6 +9,7 @@ from ..frontend.batch_menu import BatchMenu
 from ..frontend.crawl_menu import CrawlMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.scrape_menu import ScrapeMenu
+from ..frontend.searches_menu import SearchesMenu
 from ..frontend.sitemap_menu import SitemapMenu
 from ..retry_strategy import RetryStrategy
 
@@ -92,6 +93,7 @@ class AsyncOlostep:
         self.crawls = CrawlMenu(self._caller)
         self.maps = SitemapMenu(self._caller)
         self.answers = AnswersMenu(self._caller)
+        self.searches = SearchesMenu(self._caller)
         self.retrieve = RetrieveMenu(self._caller)
 
     async def __aenter__(self) -> "AsyncOlostep":

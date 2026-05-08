@@ -423,3 +423,42 @@ class AnswersResponse(OlostepResponseBaseModel):
     metadata: dict[str, Any] | None = None
     task: str
     result: AnswersResult
+
+
+# =============================================================================
+# =============================================================================
+# SEARCHES API MODELS
+# =============================================================================
+# =============================================================================
+
+
+class SearchLink(OlostepResponseBaseModel):
+    """A single deduplicated search result link."""
+
+    url: str
+    title: str | None = None
+    description: str | None = None
+    markdown_content: str | None = None
+    html_content: str | None = None
+
+
+class SearchesResult(OlostepResponseBaseModel):
+    """Result object containing the search data."""
+
+    json_content: str | None = None
+    json_hosted_url: str | None = None
+    size_exceeded: bool | None = None
+    credits_consumed: int | None = None
+    links: list[SearchLink] = []
+
+
+class SearchesResponse(OlostepResponseBaseModel):
+    """Response from POST /searches and GET /searches/{search_id}."""
+
+    id: str
+    object: str = "search"
+    created: int
+    metadata: dict[str, Any] | None = None
+    query: str
+    credits_consumed: int = 0
+    result: SearchesResult
