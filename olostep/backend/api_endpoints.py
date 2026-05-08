@@ -28,6 +28,9 @@ from ..models.request import (
     RetrieveGetRequest,
     # Scrapes
     ScrapeUrlRequest,
+    # Searches
+    SearchesGetRequest,
+    SearchesRequest,
 )
 from ..models.response import (
     # Answers
@@ -47,6 +50,8 @@ from ..models.response import (
     MapResponse,
     # Retrieve
     RetrieveResponse,
+    # Searches
+    SearchesResponse,
 )
 
 Method = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
@@ -368,6 +373,53 @@ ANSWERS_GET = EndpointContract(
 
 
 # =============================================================================
+# SEARCHES
+# =============================================================================
+
+SEARCHES_CREATE = EndpointContract(
+    key=("searches", "create"),
+    name="Create Search",
+    description="Search the web with a natural language query and optionally embed scraped content for each link",
+    method="POST",
+    path="/searches",
+    request_model=SearchesRequest,
+    response_model=SearchesResponse,
+    examples=[
+        {
+            "description": "Basic web search",
+            "request": {"query": "Best Answer Engine Optimization startups"},
+        },
+        {
+            "description": "Search with domain filtering and inline scraping",
+            "request": {
+                "query": "OpenAI Sora shutdown analysis",
+                "limit": 5,
+                "include_domains": ["bbc.com", "nytimes.com"],
+                "exclude_domains": ["pinterest.com"],
+                "scrape_options": {"formats": ["markdown"], "timeout": 25},
+            },
+        },
+    ],
+)
+
+SEARCHES_GET = EndpointContract(
+    key=("searches", "get"),
+    name="Get Search",
+    description="Retrieve a previously created search by ID. Idempotent read - no rebill, no rescrape.",
+    method="GET",
+    path="/searches/{search_id}",
+    request_model=SearchesGetRequest,
+    response_model=SearchesResponse,
+    examples=[
+        {
+            "description": "Retrieve a past search",
+            "path_params": {"search_id": "search_9bi0sbj9xa"},
+        },
+    ],
+)
+
+
+# =============================================================================
 # REGISTRY
 # =============================================================================
 
@@ -386,5 +438,7 @@ CONTRACTS: dict[tuple[str, str], EndpointContract] = {
         RETRIEVE_GET,
         ANSWERS_CREATE,
         ANSWERS_GET,
+        SEARCHES_CREATE,
+        SEARCHES_GET,
     ]
 }

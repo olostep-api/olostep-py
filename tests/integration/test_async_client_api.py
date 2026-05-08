@@ -9,6 +9,8 @@ All tests use the real HTTP transport and require OLOSTEP_API_KEY environment va
 
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import pytest
 
 from olostep import (
@@ -19,6 +21,13 @@ from olostep import (
     RetryStrategy,
     WaitAction,
 )
+
+
+def _hostname_matches(url: str, domain: str) -> bool:
+    """True if the URL's hostname is `domain` or a subdomain of it."""
+    host = (urlparse(url).hostname or "").lower()
+    domain = domain.lower()
+    return host == domain or host.endswith("." + domain)
 
 
 class TestQuickStartAsync:
@@ -119,6 +128,17 @@ class TestQuickStartAsync:
             )
             assert answer.answer is not None
             assert len(answer.answer) > 0
+
+    @pytest.mark.asyncio
+    async def test_basic_web_search(self) -> None:
+        """Search the web with a natural language query."""
+        async with AsyncOlostep() as c:
+            search = await c.searches.create("Best Answer Engine Optimization startups")
+            assert search.id is not None
+            assert search.object == "search"
+            assert search.query == "Best Answer Engine Optimization startups"
+            assert isinstance(search.links, list)
+            assert len(search.links) > 0
 
 
 class TestAdvancedFeatures:
@@ -251,11 +271,52 @@ class TestAdvancedFeatures:
                 task="What is the main topic of https://example.com?"
             )
             assert created_answer.id is not None
-            
+
             # Then retrieve it using the ID
             answer = await c.answers.get(answer_id=created_answer.id)
             assert answer.answer is not None
             assert len(answer.answer) > 0
+
+    @pytest.mark.asyncio
+    async def test_search_with_limit_and_filters(self) -> None:
+        """Search with limit and include/exclude domain filters."""
+        async with AsyncOlostep() as c:
+            search = await c.searches.create(
+                query="news",
+                limit=5,
+                include_domains=["bbc.com"],
+                exclude_domains=["pinterest.com"],
+            )
+            assert len(search.links) > 0
+            assert len(search.links) <= 5
+            for link in search.links:
+                assert _hostname_matches(link["url"], "bbc.com")
+                assert not _hostname_matches(link["url"], "pinterest.com")
+
+    @pytest.mark.asyncio
+    async def test_search_with_scrape_options(self) -> None:
+        """Inline scrape: at least one link should carry markdown_content."""
+        async with AsyncOlostep() as c:
+            search = await c.searches.create(
+                query="OpenAI Sora shutdown",
+                limit=5,
+                scrape_options={"formats": ["markdown"], "timeout": 25},
+            )
+            assert len(search.links) > 0
+            assert any(link.get("markdown_content") for link in search.links)
+
+    @pytest.mark.asyncio
+    async def test_search_retrieval(self) -> None:
+        """Idempotent get: the persisted search round-trips."""
+        async with AsyncOlostep() as c:
+            created = await c.searches.create(query="AI agent frameworks", limit=3)
+            assert created.id is not None
+
+            fetched = await c.searches.get(search_id=created.id)
+            assert fetched.id == created.id
+            assert fetched.query == created.query
+            assert fetched.object == "search"
+            assert len(fetched.links) == len(created.links)
 
     @pytest.mark.asyncio
     async def test_content_retrieval_basic(self) -> None:

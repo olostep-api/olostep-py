@@ -18,6 +18,7 @@ Fetch clean, ready-to-use data for your AI from any website in **1–5 seconds**
 - **Crawl** websites with intelligent filtering and depth control
 - Create **sitemaps** even for websites with hundreds of thousands of pages
 - Get **answers** from web pages using AI-powered extraction
+- **Search** the web with natural language queries and optionally embed scraped content per link
   <br>
 
 ---
@@ -161,6 +162,7 @@ Both SDK clients provide the same clean, pythonic interface organized into logic
 | `crawls`   | Website traversal     | `create()`, `info()`, `pages()` |
 | `maps`     | Link extraction       | `create()`, `urls()`            |
 | `answers`  | AI-powered extraction | `create()`, `get()`             |
+| `searches` | Web search            | `create()`, `get()`             |
 | `retrieve` | Content retrieval     | `get()`                         |
 
 Each operation returns stateful objects with ergonomic methods for follow-up operations.
@@ -337,6 +339,60 @@ answer = client.answers.get(answer_id=created_answer.id)
 print(f"Answer: {answer.answer}")
 ```
 
+### Search
+
+Search the web with a natural language query and get back a deduplicated list of relevant links. Optionally scrape every returned URL in one round-trip and embed `markdown_content` / `html_content` directly on each link.
+
+```python
+from olostep import Olostep
+
+client = Olostep(api_key="your-api-key")
+
+# Basic search
+search = client.searches.create("Best Answer Engine Optimization startups")
+print(f"{len(search.links)} links")
+for link in search.links:
+    print(link["url"], "-", link["title"])
+
+# Limit + domain filtering
+filtered = client.searches.create(
+    query="OpenAI Sora shutdown analysis",
+    limit=5,
+    include_domains=["bbc.com", "nytimes.com"],
+    exclude_domains=["pinterest.com"],
+)
+
+# Search + inline scrape (markdown content embedded on each link)
+enriched = client.searches.create(
+    query="What's going on with OpenAI's Sora shutting down?",
+    limit=5,
+    scrape_options={"formats": ["markdown"], "timeout": 25},
+)
+for link in enriched.links:
+    chars = len(link.get("markdown_content") or "")
+    print(link["url"], "-", chars, "chars")
+
+# Idempotent get (no rebill, no rescrape)
+fetched = client.searches.get(search_id=search.id)
+```
+
+Async usage:
+
+```python
+from olostep import AsyncOlostep
+
+async with AsyncOlostep(api_key="your-api-key") as client:
+    search = await client.searches.create(
+        query="best vector databases",
+        limit=10,
+        scrape_options={"formats": ["markdown"], "timeout": 25},
+    )
+    for link in search.links:
+        print(link["url"])
+```
+
+`scrape_options.formats` only supports `"html"` and `"markdown"`. `timeout` bounds the entire scrape phase (1-60 seconds) - links that don't finish in time return with `markdown_content` / `html_content` set to `None`.
+
 ### Content Retrieval
 
 ```python
@@ -425,6 +481,7 @@ pytest
 # Run specific test categories
 pytest tests/unit/
 
+pytest tests/docs_commands/ -v
 # DO NOT RUN THE API CONTRACT TEST!
 ```
 
