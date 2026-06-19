@@ -18,7 +18,7 @@ from ..backend.api_endpoints import (
     MONITOR_UPDATE,
 )
 from ..backend.caller import EndpointCaller
-from ..frontend.client_state import MonitorResult, MonitorEventResult, MonitorListResult
+from ..frontend.client_state import MonitorEventResult, MonitorListResult, MonitorResult
 
 logger = get_logger("frontend.monitor_menu")
 
@@ -32,9 +32,8 @@ class MonitorMenu:
     ``active`` once the backing schedule is ready (usually within a minute).
     """
 
-    def __init__(self, caller: EndpointCaller, validate_request: bool = True) -> None:
+    def __init__(self, caller: EndpointCaller) -> None:
         self._caller = caller
-        self._validate_request = validate_request
 
     async def create(
         self,
@@ -46,7 +45,6 @@ class MonitorMenu:
         webhook: dict[str, Any] | None = None,
         output_schema: dict[str, Any] | None = None,
         metadata: dict[str, str] | None = None,
-        validate_request: bool | None = None,
     ) -> MonitorResult:
         """Create a recurring web monitor.
 
@@ -72,7 +70,6 @@ class MonitorMenu:
             output_schema: Optional JSON Schema for structured extraction from
                 the monitored page.
             metadata: Key/value labels for tagging this monitor.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorResult: The newly created monitor (status will be ``provisioning``).
@@ -118,13 +115,11 @@ class MonitorMenu:
         self,
         *,
         include_deleted: bool = False,
-        validate_request: bool | None = None,
     ) -> MonitorListResult:
         """List all monitors for this API key.
 
         Args:
             include_deleted: When True, soft-deleted monitors are included.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorListResult: Wrapper with ``.monitors`` list and ``.count``.
@@ -146,7 +141,6 @@ class MonitorMenu:
         *,
         include_total_count: bool = True,
         include_diagram: bool = False,
-        validate_request: bool | None = None,
     ) -> MonitorResult:
         """Retrieve a single monitor by ID.
 
@@ -156,7 +150,6 @@ class MonitorMenu:
                 in the response. Defaults to True.
             include_diagram: When True, the response includes a ``mermaid_diagram``
                 string for the monitor's workflow DAG.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorResult: The monitor with ``last_run`` and optionally ``total_count``.
@@ -186,7 +179,6 @@ class MonitorMenu:
         notification: dict[str, Any] | None = None,
         webhook: dict[str, Any] | None = _UNSET,  # type: ignore[assignment]
         metadata: dict[str, str] | None = None,
-        validate_request: bool | None = None,
     ) -> MonitorResult:
         """Update a monitor's settings.
 
@@ -202,7 +194,6 @@ class MonitorMenu:
             webhook: Replacement webhook config. Pass ``None`` explicitly to remove
                 an existing webhook. Omit entirely to leave the webhook unchanged.
             metadata: Metadata patch — empty-string values delete individual keys.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorResult: The updated monitor.
@@ -230,14 +221,11 @@ class MonitorMenu:
     async def pause(
         self,
         monitor_id: str,
-        *,
-        validate_request: bool | None = None,
     ) -> MonitorResult:
         """Pause a monitor, disabling future scheduled runs.
 
         Args:
             monitor_id: The monitor ID to pause.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorResult: The monitor with ``status: paused``.
@@ -253,14 +241,11 @@ class MonitorMenu:
     async def resume(
         self,
         monitor_id: str,
-        *,
-        validate_request: bool | None = None,
     ) -> MonitorResult:
         """Resume a paused monitor, re-enabling scheduled runs.
 
         Args:
             monitor_id: The monitor ID to resume.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorResult: The monitor with ``status: active``.
@@ -276,8 +261,6 @@ class MonitorMenu:
     async def delete(
         self,
         monitor_id: str,
-        *,
-        validate_request: bool | None = None,
     ) -> MonitorResult:
         """Soft-delete a monitor and remove its schedule and shadow agent.
 
@@ -286,7 +269,6 @@ class MonitorMenu:
 
         Args:
             monitor_id: The monitor ID to delete.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorResult: The monitor with ``status: deleted``.
@@ -306,7 +288,6 @@ class MonitorMenu:
         limit: int | None = None,
         cursor: str | None = None,
         count_only: bool = False,
-        validate_request: bool | None = None,
     ) -> MonitorEventResult:
         """List snapshot events for a monitor, newest first.
 
@@ -318,7 +299,6 @@ class MonitorMenu:
             limit: Number of events to return (1–100). Default: 25.
             cursor: Pagination cursor from a previous response's ``next_cursor`` field.
             count_only: When True, returns only ``total_count`` without event data.
-            validate_request: Override the client-level validation setting.
 
         Returns:
             MonitorEventResult: Wrapper with ``.data`` list, ``.has_more``,
