@@ -97,6 +97,7 @@ class ScrapeResult:
             self.metadata = response.metadata
             self.retrieve_id = response.retrieve_id
             self.credits_consumed = response.credits_consumed
+            self.storage = response.storage
 
             results = response.result  # result is nested for these endpoints
         elif isinstance(response, RetrieveResponse):

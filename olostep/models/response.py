@@ -75,6 +75,14 @@ class ScrapeOutputs(OlostepResponseBaseModel):
 
 
 # Scrapes - Response Models
+class ScrapeStorageResponse(OlostepResponseBaseModel):
+    """Storage retention info returned on every scrape response."""
+
+    expires_in: str = "7d"
+    """Effective retention duration. One of: ``"7d"``, ``"10d"``, ``"30d"``,
+    ``"60d"``, ``"90d"``, ``"180d"``, ``"365d"``, ``"never"``."""
+
+
 class CreateScrapeResponse(OlostepResponseBaseModel):
     """Response from POST /scrapes (create scrape)."""
 
@@ -86,6 +94,8 @@ class CreateScrapeResponse(OlostepResponseBaseModel):
     url: str
     result: ScrapeOutputs
     credits_consumed: int | None = None
+    storage: ScrapeStorageResponse | None = None
+    """Storage retention config. Always present; defaults to ``{"expires_in": "7d"}``."""
     # image_queued: bool | None = None
 
 
