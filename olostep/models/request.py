@@ -392,10 +392,6 @@ class ScrapeStorage(OlostepBaseModel):
     """Retention duration. One of: ``"7d"``, ``"10d"``, ``"30d"``, ``"60d"``,
     ``"90d"``, ``"180d"``, ``"365d"``, ``"never"``."""
 
-    _ALLOWED_VALUES: frozenset[str] = frozenset(
-        {"7d", "10d", "30d", "60d", "90d", "180d", "365d", "never"}
-    )
-
     @field_validator("expires_in")
     @classmethod
     def validate_expires_in(cls, v: str) -> str:
