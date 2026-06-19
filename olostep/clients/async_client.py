@@ -7,6 +7,7 @@ from ..config import API_KEY_ENV, BASE_API_URL
 from ..frontend.answers_menu import AnswersMenu
 from ..frontend.batch_menu import BatchMenu
 from ..frontend.crawl_menu import CrawlMenu
+from ..frontend.monitor_menu import MonitorMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.scrape_menu import ScrapeMenu
 from ..frontend.searches_menu import SearchesMenu
@@ -95,6 +96,7 @@ class AsyncOlostep:
         self.answers = AnswersMenu(self._caller)
         self.searches = SearchesMenu(self._caller)
         self.retrieve = RetrieveMenu(self._caller)
+        self.monitors = MonitorMenu(self._caller)
 
     async def __aenter__(self) -> "AsyncOlostep":
         return self

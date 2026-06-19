@@ -668,6 +668,7 @@ class Olostep:
         self.answers = _SyncProxy(self, "answers")
         self.searches = _SyncProxy(self, "searches")
         self.retrieve = _SyncProxy(self, "retrieve")
+        self.monitors = _SyncProxy(self, "monitors")
 
     def __dir__(self) -> list[str]:
         """

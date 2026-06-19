@@ -462,3 +462,122 @@ class SearchesResponse(OlostepResponseBaseModel):
     query: str
     credits_consumed: int = 0
     result: SearchesResult
+
+
+# =============================================================================
+# =============================================================================
+# MONITORS API MODELS
+# =============================================================================
+# =============================================================================
+
+
+class MonitorSchedule(OlostepResponseBaseModel):
+    """Schedule configuration returned on a monitor object."""
+
+    frequency: str | None = None
+    cron: str | None = None
+    timezone: str | None = None
+    next_run_at: str | None = None  # ISO 8601; null when not active
+
+
+class MonitorTracked(OlostepResponseBaseModel):
+    """Tracked target information returned on a monitor object."""
+
+    type: str | None = None
+    urls: list[str] | None = None
+    web_query: str | None = None
+
+
+class MonitorNotificationChannel(OlostepResponseBaseModel):
+    """A single notification channel entry."""
+
+    type: str  # "email" | "slack" | "sms"
+    target: str
+    events: list[str] | None = None
+
+
+class MonitorNotification(OlostepResponseBaseModel):
+    """Notification configuration on a monitor object."""
+
+    events: list[str] | None = None
+    channels: list[MonitorNotificationChannel] | None = None
+
+
+class MonitorWebhook(OlostepResponseBaseModel):
+    """Webhook configuration on a monitor object."""
+
+    url: str
+
+
+class MonitorLastRun(OlostepResponseBaseModel):
+    """Most recent run summary, included on GET /monitors/{id}."""
+
+    id: str
+    status: str  # "completed" | "failed"
+    change_detected: bool
+    ran_at: str | None = None  # ISO 8601
+
+
+class MonitorAgentRef(OlostepResponseBaseModel):
+    """Reference to the shadow agent backing this monitor."""
+
+    id: str | None = None
+
+
+class MonitorSourcePolicy(OlostepResponseBaseModel):
+    """Source URL policy on a monitor object."""
+
+    include_urls: list[str] | None = None
+    exclude_urls: list[str] | None = None
+    include_domains: list[str] | None = None
+    exclude_domains: list[str] | None = None
+
+
+class MonitorResponse(OlostepResponseBaseModel):
+    """Response for a single monitor (create, get, update, pause, resume, delete)."""
+
+    id: str
+    object: str = "monitor"
+    query: str
+    status: str  # provisioning | active | paused | failed | deleted
+    tracked: MonitorTracked | None = None
+    source_policy: MonitorSourcePolicy | None = None
+    schedule: MonitorSchedule | None = None
+    notification: MonitorNotification | None = None
+    webhook: MonitorWebhook | None = None
+    output_schema: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = None
+    agent: MonitorAgentRef | None = None
+    last_run: MonitorLastRun | None = None
+    total_count: int | None = None
+    mermaid_diagram: str | None = None
+    error_message: str | None = None
+    created: int | None = None   # Unix seconds
+    updated: int | None = None   # Unix seconds
+
+
+class MonitorListResponse(OlostepResponseBaseModel):
+    """Response from GET /monitors (list monitors)."""
+
+    monitors: list[MonitorResponse] = []
+    count: int = 0
+
+
+class MonitorEvent(OlostepResponseBaseModel):
+    """A single snapshot event entry from GET /monitors/{id}/events."""
+
+    id: str
+    run_id: str | None = None
+    created: int | None = None   # Unix seconds
+    changed: bool | None = None
+    summary: str | None = None
+    snapshot_url: str | None = None  # pre-signed S3 URL
+
+
+class MonitorEventsResponse(OlostepResponseBaseModel):
+    """Response from GET /monitors/{id}/events."""
+
+    data: list[MonitorEvent] = []
+    has_more: bool = False
+    next_cursor: str | None = None
+    total_count: int | None = None
