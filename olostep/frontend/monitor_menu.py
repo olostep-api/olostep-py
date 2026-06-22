@@ -18,7 +18,12 @@ from ..backend.api_endpoints import (
     MONITOR_UPDATE,
 )
 from ..backend.caller import EndpointCaller
-from ..frontend.client_state import MonitorEventResult, MonitorListResult, MonitorResult
+from ..frontend.client_state import (
+    MonitorDeleteResult,
+    MonitorEventResult,
+    MonitorListResult,
+    MonitorResult,
+)
 
 logger = get_logger("frontend.monitor_menu")
 
@@ -261,25 +266,25 @@ class MonitorMenu:
     async def delete(
         self,
         monitor_id: str,
-    ) -> MonitorResult:
+    ) -> MonitorDeleteResult:
         """Soft-delete a monitor and remove its schedule and shadow agent.
 
-        The monitor moves to ``status: deleted``. Deleted monitors are excluded
-        from list results unless ``include_deleted=True`` is passed.
+        The monitor is excluded from list results unless ``include_deleted=True``
+        is passed. The API returns a confirmation, not the monitor object.
 
         Args:
             monitor_id: The monitor ID to delete.
 
         Returns:
-            MonitorResult: The monitor with ``status: deleted``.
+            MonitorDeleteResult: The deleted monitor's ID and a confirmation message.
         """
-        from ..models.response import MonitorResponse
+        from ..models.response import MonitorDeleteResponse
 
-        data: MonitorResponse = await self._caller.invoke(
+        data: MonitorDeleteResponse = await self._caller.invoke(
             MONITOR_DELETE,
             path_params={"monitor_id": monitor_id},
         )
-        return MonitorResult(data)
+        return MonitorDeleteResult(data)
 
     async def events(
         self,

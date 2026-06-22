@@ -49,6 +49,7 @@ from ..models.response import (
     # Maps
     MapResponse,
     # Monitors
+    MonitorDeleteResponse,
     MonitorEventsResponse,
     MonitorListResponse,
     MonitorResponse,
@@ -525,7 +526,7 @@ MONITOR_DELETE = EndpointContract(
     method="DELETE",
     path="/monitors/{monitor_id}",
     request_model=None,
-    response_model=MonitorResponse,
+    response_model=MonitorDeleteResponse,
     examples=[
         {
             "description": "Delete a monitor",

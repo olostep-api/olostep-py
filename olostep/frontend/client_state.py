@@ -35,6 +35,7 @@ from ..models.response import (
     CreateScrapeResponse,
     GetScrapeResponse,
     MapResponse,
+    MonitorDeleteResponse,
     MonitorEventsResponse,
     MonitorListResponse,
     MonitorResponse,
@@ -1342,6 +1343,27 @@ class MonitorResult:
         if self.schedule and self.schedule.frequency:
             freq = f", frequency={self.schedule.frequency!r}"
         return f"Monitor {self.id} [{self.status}]{freq}: {self.query[:60]}"
+
+
+class MonitorDeleteResult:
+    """Result object for DELETE /monitors/{id}.
+
+    Delete returns a confirmation, not the monitor itself.
+
+    Attributes:
+        monitor_id: The deleted monitor's identifier.
+        message: Human-readable confirmation message from the API.
+    """
+
+    def __init__(self, response: MonitorDeleteResponse) -> None:
+        self.monitor_id = response.monitor_id
+        self.message = response.message
+
+    def __repr__(self) -> str:
+        return f"MonitorDeleteResult(monitor_id={self.monitor_id!r})"
+
+    def __str__(self) -> str:
+        return f"Monitor {self.monitor_id} deleted: {self.message}"
 
 
 class MonitorListResult:

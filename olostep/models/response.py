@@ -563,6 +563,13 @@ class MonitorListResponse(OlostepResponseBaseModel):
     count: int = 0
 
 
+class MonitorDeleteResponse(OlostepResponseBaseModel):
+    """Response from DELETE /monitors/{id}."""
+
+    message: str
+    monitor_id: str
+
+
 class MonitorEvent(OlostepResponseBaseModel):
     """A single snapshot event entry from GET /monitors/{id}/events."""
 

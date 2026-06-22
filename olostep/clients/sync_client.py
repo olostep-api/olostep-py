@@ -86,6 +86,7 @@ from ..frontend.client_state import (
     Sitemap,
 )
 from ..frontend.crawl_menu import CrawlMenu
+from ..frontend.monitor_menu import MonitorMenu
 from ..frontend.retrieve_menu import RetrieveMenu
 from ..frontend.scrape_menu import ScrapeMenu
 from ..frontend.searches_menu import SearchesMenu
@@ -125,6 +126,7 @@ class _SyncProxy:
         "retrieve": RetrieveMenu,  # Maps to RetrieveMenu async class
         "answers": AnswersMenu,  # Maps to AnswersMenu async class
         "searches": SearchesMenu,  # Maps to SearchesMenu async class
+        "monitors": MonitorMenu,  # Maps to MonitorMenu async class
     }
 
     def __init__(self, outer: "Olostep", endpoint_name: str, method_name: str | None = None) -> None:
