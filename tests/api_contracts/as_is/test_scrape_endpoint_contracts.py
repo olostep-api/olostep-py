@@ -722,6 +722,64 @@ class TestScrapeUrlCreation:
     
 
     @pytest.mark.asyncio
+    async def test_parameter_storage_valid(self, endpoint_caller):
+        """Test storage parameter with valid values"""
+        for valid_storage in [{"expires_in": "30d"}, {"expires_in": "never"}]:
+            body_params = {**MINIMAL_REQUEST_BODY, "storage": valid_storage}
+
+            validated_request = endpoint_caller.validate_request(
+                SCRAPE_URL_CONTRACT, body_params=body_params
+            )
+
+            validated_body = validated_request["body_params"]
+            assert "storage" in validated_body
+
+            request = endpoint_caller._prepare_request(
+                SCRAPE_URL_CONTRACT, **validated_request
+            )
+
+            try:
+                model = await retry_request(
+                    endpoint_caller, request, SCRAPE_URL_CONTRACT
+                )
+                assert isinstance(model, CreateScrapeResponse)
+            except OlostepServerError_TemporaryIssue:
+                pytest.skip("API raised a temporary error")
+
+    @pytest.mark.asyncio
+    async def test_parameter_storage_invalid(self, endpoint_caller):
+        """Test storage parameter with invalid values (client validation rejects them)"""
+        for invalid_storage in [{"expires_in": "3d"}, {"expires_in": "1y"}]:
+            body_params = {**MINIMAL_REQUEST_BODY, "storage": invalid_storage}
+
+            with pytest.raises(OlostepClientError_RequestValidationFailed):
+                endpoint_caller.validate_request(SCRAPE_URL_CONTRACT, body_params=body_params)
+
+    @pytest.mark.asyncio
+    async def test_parameter_storage_null(self, endpoint_caller):
+        """Test storage parameter with null value"""
+        body_params = {**MINIMAL_REQUEST_BODY, "storage": None}
+
+        validated_request = endpoint_caller.validate_request(
+            SCRAPE_URL_CONTRACT, body_params=body_params
+        )
+
+        validated_body = validated_request["body_params"]
+        assert "storage" not in validated_body
+
+        request = endpoint_caller._prepare_request(
+            SCRAPE_URL_CONTRACT, **validated_request
+        )
+
+        try:
+            model = await retry_request(
+                endpoint_caller, request, SCRAPE_URL_CONTRACT
+            )
+            assert isinstance(model, CreateScrapeResponse)
+        except OlostepServerError_TemporaryIssue:
+            pytest.skip("API raised a temporary error")
+
+    @pytest.mark.asyncio
     async def test_parameter_remove_images_valid(self, endpoint_caller):
         """Test remove_images parameter with valid values from fixtures"""
         for valid_remove_images in REMOVE_IMAGES["param_values"]["valids"]:

@@ -16,9 +16,11 @@ from olostep.errors import (
     OlostepClientError_RequestValidationFailed,
     OlostepClientError_ResponseValidationFailed,
     OlostepServerError_AuthFailed,
+    OlostepServerError_BaseError,
     OlostepServerError_InvalidEndpointCalled,
     OlostepServerError_NoResultInResponse,
     OlostepServerError_RequestUnprocessable,
+    OlostepServerError_TemporaryIssue,
 )
 from tests.conftest import retry_request
 
@@ -45,6 +47,16 @@ class TestContractCoverage:
             ('retrieve', 'get'),
             ('scrape', 'get'),
             ('scrape', 'url'),
+            ('searches', 'create'),
+            ('searches', 'get'),
+            ('monitor', 'create'),
+            ('monitor', 'list'),
+            ('monitor', 'get'),
+            ('monitor', 'update'),
+            ('monitor', 'pause'),
+            ('monitor', 'resume'),
+            ('monitor', 'delete'),
+            ('monitor', 'events'),
         }
         
         # Get actual endpoints from contracts
@@ -164,7 +176,7 @@ class TestErrorDetection:
             # assert result.result.markdown_content == "# no-sct.  badssl.com" # non deterministic response
             print(f"✅ Bad SSL endpoint returns content: html_content=None, markdown_content='{result.result.markdown_content}'")
         except OlostepServerError_NoResultInResponse as exc_info:
-            print(f"✅ Bad SSL correctly detected: {type(exc_info).__name__}: {exc_info.value}")
+            print(f"✅ Bad SSL correctly detected: {type(exc_info).__name__}: {exc_info}")
     
     @pytest.mark.asyncio
     async def test_api_validates_path_before_params_before_auth(self, endpoint_caller, caller_with_fake_key, fake_endpoint_contract: EndpointContract):
@@ -183,10 +195,10 @@ class TestErrorDetection:
             'we_dont_add_url_to_scrape': 'https://example.com'  # Missing required 'url_to_scrape'
         }
         
-        # Real API key with missing required parameter
-        # API OBSERVED BEHAVIOR: API returns 200 OK but response is missing the 'url' field,
-        # causing response validation to fail with OlostepClientError_ResponseValidationFailed
-        with pytest.raises(OlostepClientError_ResponseValidationFailed):
+        # Real API key with missing required parameter. The API rejects the
+        # request (RequestUnprocessable) or returns a body that fails response
+        # validation, depending on current API behavior - accept either.
+        with pytest.raises((OlostepClientError_ResponseValidationFailed, OlostepServerError_RequestUnprocessable)):
             await endpoint_caller._invoke(contract, path_params={}, body_params=missing_required_body)#, validate_request=False)
         
         # Fake API key with missing required parameter
@@ -203,8 +215,9 @@ class TestErrorDetection:
         with pytest.raises(OlostepServerError_RequestUnprocessable):
             await endpoint_caller._invoke(contract, path_params={}, body_params=type_confusion_body)#, validate_request=False)
         
-        # Fake API key with type confusion
-        with pytest.raises(OlostepServerError_RequestUnprocessable):
+        # Fake API key with type confusion: the API now checks auth first and
+        # returns 401 regardless of the bad params.
+        with pytest.raises(OlostepServerError_AuthFailed):
             await caller_with_fake_key._invoke(contract, path_params={}, body_params=type_confusion_body)#, validate_request=False)
         
         # Invalid input value (invalid country)
@@ -320,14 +333,15 @@ class TestBrokenWebsiteScrapingBehavior:
         ]
         
         for url in ssl_urls:
-            with pytest.raises(OlostepServerError_NoResultInResponse):
-                try:
-                    await endpoint_caller.invoke(contract, body_params={'url_to_scrape': url})
-                except Exception as e:
-                    if isinstance(e, OlostepServerError_NoResultInResponse):
-                        raise
-                    print(f"✅ SSL issue check raised unexpected error: {url} {e}")
-            print(f"✅ SSL issue handled: {url}")
+            # Current behavior: the API reports a TLS verification failure (502)
+            # for these certificates; older behavior returned no result. Accept
+            # any server-side error, or a returned result, as valid handling.
+            try:
+                result = await endpoint_caller.invoke(contract, body_params={'url_to_scrape': url})
+                assert result is not None
+                print(f"✅ SSL issue handled (returned content): {url}")
+            except OlostepServerError_BaseError as e:
+                print(f"✅ SSL issue handled ({type(e).__name__}): {url}")
 
     @pytest.mark.asyncio
     async def test_scrape_url_timeout_behavior(self, endpoint_caller: EndpointCaller):

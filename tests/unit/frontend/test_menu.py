@@ -12,6 +12,7 @@ from olostep.errors import (
     OlostepClientError_RequestValidationFailed,
     OlostepClientError_ResponseValidationFailed,
     OlostepServerError_BaseError,
+    OlostepServerError_RequestUnprocessable,
 )
 from olostep.frontend.client_state import (
     Batch,
@@ -91,24 +92,20 @@ class TestScrapeEndpoint:
 
     @pytest.mark.asyncio
     async def test_scrape_validation_disabled_garbage(self, async_client_real) -> None:
-        """Test scrape with garbage data and validation disabled.
-        
-        API OBSERVED BEHAVIOR: The API accepts invalid input when validation is disabled
-        and returns 200 OK with error content in the response body, rather than returning
-        an HTTP error status. The API processes malformed URLs and invalid parameter types
-        and includes error messages in the markdown_content field.
+        """Test scrape with garbage data and client validation disabled.
+
+        Current API behavior: with client validation disabled, the garbage
+        request reaches the API, which rejects the malformed URL with a 4xx
+        (invalid_request_error / dns_resolution_failed) instead of returning
+        200 with error content.
         """
-        # API accepts invalid input and returns 200 with error content in response
-        result = await async_client_real.scrapes.create(
-            url_to_scrape="http-bs://invalid-url-that-does-not-exist.com",
-            validate_request=False,
-            # These are garbage values that should be sent as-is
-            wait_before_scraping="invalid_string"
-        )
-        # API returns 200 but with error content in the response
-        assert result.id is not None
-        # Error message is in the markdown_content
-        assert "Malformed URL" in result.markdown_content or result.markdown_content is not None
+        with pytest.raises(OlostepServerError_RequestUnprocessable):
+            await async_client_real.scrapes.create(
+                url_to_scrape="http-bs://invalid-url-that-does-not-exist.com",
+                validate_request=False,
+                # Garbage values sent as-is (no client validation)
+                wait_before_scraping="invalid_string",
+            )
 
     @pytest.mark.asyncio
     async def test_scrape_validation_enabled_garbage(self, async_client_real) -> None:
