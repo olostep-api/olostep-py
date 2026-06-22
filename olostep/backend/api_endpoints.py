@@ -48,6 +48,11 @@ from ..models.response import (
     GetScrapeResponse,
     # Maps
     MapResponse,
+    # Monitors
+    MonitorDeleteResponse,
+    MonitorEventsResponse,
+    MonitorListResponse,
+    MonitorResponse,
     # Retrieve
     RetrieveResponse,
     # Searches
@@ -420,6 +425,175 @@ SEARCHES_GET = EndpointContract(
 
 
 # =============================================================================
+# MONITORS
+# =============================================================================
+
+MONITOR_CREATE = EndpointContract(
+    key=("monitor", "create"),
+    name="Create Monitor",
+    description=(
+        "Create a recurring web monitor from a natural-language query. "
+        "Returns 202 with status 'provisioning'; transitions to 'active' once setup completes."
+    ),
+    method="POST",
+    path="/monitors",
+    request_model=None,
+    response_model=MonitorResponse,
+    examples=[
+        {
+            "description": "Minimal monitor",
+            "request": {"query": "Watch the Stripe status page for incidents"},
+        },
+        {
+            "description": "Monitor with notification and custom frequency",
+            "request": {
+                "query": "Has the pricing on stripe.com changed?",
+                "frequency": "every day at 8am",
+                "source_policy": {"include_urls": ["https://stripe.com/pricing"]},
+                "notification": {
+                    "channels": [{"type": "email", "target": "you@example.com"}]
+                },
+            },
+        },
+    ],
+)
+
+MONITOR_LIST = EndpointContract(
+    key=("monitor", "list"),
+    name="List Monitors",
+    description="Retrieve all monitors for this API key. Active monitors only by default.",
+    method="GET",
+    path="/monitors",
+    request_model=None,
+    response_model=MonitorListResponse,
+    examples=[
+        {"description": "List active monitors", "query_params": {}},
+        {
+            "description": "Include deleted monitors",
+            "query_params": {"include_deleted": "true"},
+        },
+    ],
+)
+
+MONITOR_GET = EndpointContract(
+    key=("monitor", "get"),
+    name="Get Monitor",
+    description=(
+        "Retrieve a single monitor by ID, including last_run and total_count. "
+        "Pass include-diagram=true to include a Mermaid DAG diagram."
+    ),
+    method="GET",
+    path="/monitors/{monitor_id}",
+    request_model=None,
+    response_model=MonitorResponse,
+    examples=[
+        {
+            "description": "Get monitor with all defaults",
+            "path_params": {"monitor_id": "monitor_abc123"},
+        },
+        {
+            "description": "Get monitor with Mermaid diagram",
+            "path_params": {"monitor_id": "monitor_abc123"},
+            "query_params": {"include-diagram": "true"},
+        },
+    ],
+)
+
+MONITOR_UPDATE = EndpointContract(
+    key=("monitor", "update"),
+    name="Update Monitor",
+    description=(
+        "Update frequency, notification, webhook, or metadata on a monitor. "
+        "Frequency changes recreate the underlying schedule. Returns 409 while provisioning."
+    ),
+    method="POST",
+    path="/monitors/{monitor_id}",
+    request_model=None,
+    response_model=MonitorResponse,
+    examples=[
+        {
+            "description": "Change frequency",
+            "path_params": {"monitor_id": "monitor_abc123"},
+            "request": {"frequency": "every 4 hours"},
+        },
+    ],
+)
+
+MONITOR_DELETE = EndpointContract(
+    key=("monitor", "delete"),
+    name="Delete Monitor",
+    description="Soft-delete a monitor and remove its schedule and shadow agent.",
+    method="DELETE",
+    path="/monitors/{monitor_id}",
+    request_model=None,
+    response_model=MonitorDeleteResponse,
+    examples=[
+        {
+            "description": "Delete a monitor",
+            "path_params": {"monitor_id": "monitor_abc123"},
+        },
+    ],
+)
+
+MONITOR_PAUSE = EndpointContract(
+    key=("monitor", "pause"),
+    name="Pause Monitor",
+    description="Pause a monitor, disabling future scheduled runs.",
+    method="POST",
+    path="/monitors/{monitor_id}/pause",
+    request_model=None,
+    response_model=MonitorResponse,
+    examples=[
+        {
+            "description": "Pause a monitor",
+            "path_params": {"monitor_id": "monitor_abc123"},
+        },
+    ],
+)
+
+MONITOR_RESUME = EndpointContract(
+    key=("monitor", "resume"),
+    name="Resume Monitor",
+    description="Resume a paused monitor, re-enabling scheduled runs.",
+    method="POST",
+    path="/monitors/{monitor_id}/resume",
+    request_model=None,
+    response_model=MonitorResponse,
+    examples=[
+        {
+            "description": "Resume a monitor",
+            "path_params": {"monitor_id": "monitor_abc123"},
+        },
+    ],
+)
+
+MONITOR_EVENTS = EndpointContract(
+    key=("monitor", "events"),
+    name="List Monitor Events",
+    description=(
+        "List paginated snapshot events for a monitor, newest first. "
+        "Each event has change detection result and a pre-signed snapshot_url."
+    ),
+    method="GET",
+    path="/monitors/{monitor_id}/events",
+    request_model=None,
+    response_model=MonitorEventsResponse,
+    examples=[
+        {
+            "description": "First page of events",
+            "path_params": {"monitor_id": "monitor_abc123"},
+            "query_params": {"limit": 25},
+        },
+        {
+            "description": "Paginate with cursor",
+            "path_params": {"monitor_id": "monitor_abc123"},
+            "query_params": {"cursor": "eyJj..."},
+        },
+    ],
+)
+
+
+# =============================================================================
 # REGISTRY
 # =============================================================================
 
@@ -440,5 +614,13 @@ CONTRACTS: dict[tuple[str, str], EndpointContract] = {
         ANSWERS_GET,
         SEARCHES_CREATE,
         SEARCHES_GET,
+        MONITOR_CREATE,
+        MONITOR_LIST,
+        MONITOR_GET,
+        MONITOR_UPDATE,
+        MONITOR_DELETE,
+        MONITOR_PAUSE,
+        MONITOR_RESUME,
+        MONITOR_EVENTS,
     ]
 }

@@ -1,4 +1,3 @@
-from olostep.models.common import Country
 from olostep.models.request import BatchItemsQueryStatus, LinksOnPage
 
 ########################################
@@ -44,7 +43,11 @@ COUNTRY = {
     "param_name": "country",
     "param_type": str,
     "param_values": {
-        "valids": [c.value for c in Country] + ["RANDOM"],
+        # Node countries the API actually accepts (see scrape fixture).
+        "valids": [
+            "US", "CA", "GB", "IT", "IN", "RU", "JP", "MX", "AU",
+            "ID", "UA", "MY", "PH", "SG", "KR", "TW", "TH", "RANDOM",
+        ],
         "invalids": ["INVALID", "XX", 1000, {"invalid": "object"}],
     },
 }

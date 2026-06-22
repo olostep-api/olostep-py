@@ -35,6 +35,10 @@ from ..models.response import (
     CreateScrapeResponse,
     GetScrapeResponse,
     MapResponse,
+    MonitorDeleteResponse,
+    MonitorEventsResponse,
+    MonitorListResponse,
+    MonitorResponse,
     RetrieveResponse,
     SearchesResponse,
 )
@@ -97,6 +101,7 @@ class ScrapeResult:
             self.metadata = response.metadata
             self.retrieve_id = response.retrieve_id
             self.credits_consumed = response.credits_consumed
+            self.storage = response.storage
 
             results = response.result  # result is nested for these endpoints
         elif isinstance(response, RetrieveResponse):
@@ -1286,6 +1291,129 @@ class Sitemap:
             }
             data: MapResponse = await caller.invoke(c, body_params=req)
             current_sitemap = Sitemap(caller, data, current_sitemap._original_url)
+
+
+class MonitorResult:
+    """Result object for a single monitor (create, get, update, pause, resume, delete).
+
+    Attributes:
+        id: Monitor identifier (starts with ``monitor_``).
+        object: Always ``"monitor"``.
+        query: Natural-language query describing what to watch.
+        status: One of ``provisioning``, ``active``, ``paused``, ``failed``, ``deleted``.
+        schedule: Schedule config including frequency, cron, and next_run_at.
+        notification: Notification channels and event triggers.
+        webhook: Webhook configuration (if set).
+        output_schema: JSON Schema for structured extraction (if set).
+        metadata: User-defined key/value labels.
+        last_run: Most recent run summary (GET only; None on create/update).
+        total_count: Total snapshot events (GET only; None on create/update).
+        created: Unix-second creation timestamp.
+        updated: Unix-second last-updated timestamp.
+        error_message: Set when status is ``failed``.
+    """
+
+    def __init__(self, response: MonitorResponse) -> None:
+        self.id = response.id
+        self.object = response.object
+        self.query = response.query
+        self.status = response.status
+        self.tracked = response.tracked
+        self.source_policy = response.source_policy
+        self.schedule = response.schedule
+        self.notification = response.notification
+        self.webhook = response.webhook
+        self.output_schema = response.output_schema
+        self.metadata = response.metadata or {}
+        self.agent = response.agent
+        self.last_run = response.last_run
+        self.total_count = response.total_count
+        self.mermaid_diagram = response.mermaid_diagram
+        self.error_message = response.error_message
+        self.created = response.created
+        self.updated = response.updated
+
+    def __repr__(self) -> str:
+        return (
+            f"MonitorResult(id={self.id!r}, status={self.status!r}, "
+            f"query={self.query[:50]!r}{'...' if len(self.query) > 50 else ''})"
+        )
+
+    def __str__(self) -> str:
+        freq = ""
+        if self.schedule and self.schedule.frequency:
+            freq = f", frequency={self.schedule.frequency!r}"
+        return f"Monitor {self.id} [{self.status}]{freq}: {self.query[:60]}"
+
+
+class MonitorDeleteResult:
+    """Result object for DELETE /monitors/{id}.
+
+    Delete returns a confirmation, not the monitor itself.
+
+    Attributes:
+        monitor_id: The deleted monitor's identifier.
+        message: Human-readable confirmation message from the API.
+    """
+
+    def __init__(self, response: MonitorDeleteResponse) -> None:
+        self.monitor_id = response.monitor_id
+        self.message = response.message
+
+    def __repr__(self) -> str:
+        return f"MonitorDeleteResult(monitor_id={self.monitor_id!r})"
+
+    def __str__(self) -> str:
+        return f"Monitor {self.monitor_id} deleted: {self.message}"
+
+
+class MonitorListResult:
+    """Result object for GET /monitors (list).
+
+    Attributes:
+        monitors: List of MonitorResult objects.
+        count: Total number of monitors returned.
+    """
+
+    def __init__(self, response: MonitorListResponse) -> None:
+        self.monitors = [MonitorResult(m) for m in response.monitors]
+        self.count = response.count
+
+    def __repr__(self) -> str:
+        return f"MonitorListResult(count={self.count})"
+
+    def __iter__(self):
+        return iter(self.monitors)
+
+    def __len__(self) -> int:
+        return len(self.monitors)
+
+
+class MonitorEventResult:
+    """Result object for GET /monitors/{id}/events.
+
+    Attributes:
+        data: List of event dicts with id, run_id, created, changed, summary, snapshot_url.
+        has_more: True when more events exist beyond this page.
+        next_cursor: Cursor for the next page (pass as ``cursor=`` in the next call).
+        total_count: Total snapshot count; only present on the first page or count_only=True.
+    """
+
+    def __init__(self, response: MonitorEventsResponse) -> None:
+        self.data = [e.model_dump(exclude_none=True) for e in response.data]
+        self.has_more = response.has_more
+        self.next_cursor = response.next_cursor
+        self.total_count = response.total_count
+
+    def __repr__(self) -> str:
+        more = ", has_more=True" if self.has_more else ""
+        return f"MonitorEventResult(events={len(self.data)}{more})"
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __len__(self) -> int:
+        return len(self.data)
 
 
 def _format_time_delta(timestamp: int) -> str:

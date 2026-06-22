@@ -137,3 +137,41 @@ jobs:
         env:
           OLOSTEP_API_KEY: ${{ secrets.OLOSTEP_API_KEY }}
         run: poetry run pytest -n 16 --reruns 3 --reruns-delay 1 tests/integration/test_async_client_api.py
+
+  # Runs the contract, unit, and docs test layers. The integration jobs
+  # above only cover two files; new endpoints/features add their tests
+  # under tests/api_contracts/as_is, so without this job a feature PR can
+  # go green without any of its own tests running.
+  contract_and_unit_tests:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run contract, unit, and docs tests
+        env:
+          OLOSTEP_API_KEY: ${{ secrets.OLOSTEP_API_KEY }}
+        run: poetry run pytest -n 16 --reruns 3 --reruns-delay 1 tests/api_contracts/as_is tests/unit tests/docs_commands

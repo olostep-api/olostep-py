@@ -11,6 +11,10 @@ from .frontend.client_state import (
     Crawl,
     CrawlInfo,
     CrawlPage,
+    MonitorDeleteResult,
+    MonitorEventResult,
+    MonitorListResult,
+    MonitorResult,
     ScrapeResult,
     Sitemap,
 )
@@ -25,6 +29,7 @@ from .models.request import (
     LLMExtract,
     Parser,
     RetrieveFormat,
+    ScrapeStorage,
     ScreenSize,
     ScrollAction,
     Transformer,
@@ -54,6 +59,10 @@ __all__ = [
     "Crawl",
     "CrawlInfo",
     "Sitemap",
+    "MonitorResult",
+    "MonitorListResult",
+    "MonitorEventResult",
+    "MonitorDeleteResult",
     # Types
     "Format",
     "Country",
@@ -65,6 +74,7 @@ __all__ = [
     "Parser",
     "LLMExtract",
     "LinksOnPage",
+    "ScrapeStorage",
     "ScreenSize",
     "Transformer",
     # Error classes

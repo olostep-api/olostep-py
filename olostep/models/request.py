@@ -381,6 +381,29 @@ class ScreenSize(OlostepBaseModel):
         return values
 
 
+class ScrapeStorage(OlostepBaseModel):
+    """Storage retention configuration for a scrape.
+
+    Controls how long Olostep retains the scraped content on S3.
+    Defaults to ``"7d"`` when omitted.
+    """
+
+    expires_in: str
+    """Retention duration. One of: ``"7d"``, ``"10d"``, ``"30d"``, ``"60d"``,
+    ``"90d"``, ``"180d"``, ``"365d"``, ``"never"``."""
+
+    @field_validator("expires_in")
+    @classmethod
+    def validate_expires_in(cls, v: str) -> str:
+        allowed = {"7d", "10d", "30d", "60d", "90d", "180d", "365d", "never"}
+        if v not in allowed:
+            raise ValueError(
+                f"Invalid storage.expires_in '{v}'. "
+                f"Allowed values: {', '.join(sorted(allowed))}."
+            )
+        return v
+
+
 class ScrapeUrlBodyParams(BodyParams):
     """Body parameters for POST /scrapes."""
 
@@ -399,6 +422,8 @@ class ScrapeUrlBodyParams(BodyParams):
     llm_extract: LLMExtract | None = None
     links_on_page: LinksOnPage | None = None
     screen_size: ScreenSize | None = None
+    storage: ScrapeStorage | None = None
+    """Optional storage retention config. Omit to use the default (7 days)."""
     metadata: dict[str, Any] | None = (
         None  # Docs mention that this is not yet supported
     )
