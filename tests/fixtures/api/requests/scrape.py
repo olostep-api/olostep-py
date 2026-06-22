@@ -1,6 +1,5 @@
 from typing import Any
 
-from olostep.models.common import Country
 from olostep.models.request import Format, LinksOnPage, ScreenSize
 
 ########################################
@@ -79,7 +78,12 @@ COUNTRY = {
     "param_name": "country",
     "param_type": str,
     "param_values": {
-        "valids": [c.value for c in Country] + ["RANDOM"],
+        # Node countries the API actually accepts. The SDK Country type allows
+        # any ISO code, but the scrape API only proxies through these locations.
+        "valids": [
+            "US", "CA", "GB", "IT", "IN", "RU", "JP", "MX", "AU",
+            "ID", "UA", "MY", "PH", "SG", "KR", "TW", "TH", "RANDOM",
+        ],
         "invalids": ["invalid", 1000, "ZZ"],
     },
 }
