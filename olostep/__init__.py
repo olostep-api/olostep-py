@@ -11,6 +11,10 @@ from .frontend.client_state import (
     Crawl,
     CrawlInfo,
     CrawlPage,
+    MonitorDeleteResult,
+    MonitorEventResult,
+    MonitorListResult,
+    MonitorResult,
     ScrapeResult,
     Sitemap,
 )
@@ -55,6 +59,10 @@ __all__ = [
     "Crawl",
     "CrawlInfo",
     "Sitemap",
+    "MonitorResult",
+    "MonitorListResult",
+    "MonitorEventResult",
+    "MonitorDeleteResult",
     # Types
     "Format",
     "Country",
