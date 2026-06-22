@@ -42,11 +42,8 @@ class TestScrapeUrlBodyParamsStorage:
     """Validate storage field on ScrapeUrlBodyParams."""
 
     def test_storage_defaults_to_none(self):
-        params = ScrapeUrlBodyParams(
-            body_params=None,  # type: ignore[arg-type]
-            url_to_scrape="https://example.com",  # type: ignore[call-arg]
-        )
-        assert True  # model construction tested via fixture below
+        params = ScrapeUrlBodyParams(url_to_scrape="https://example.com")  # type: ignore[call-arg]
+        assert params.storage is None
 
     def test_body_params_storage_present(self):
         from olostep.models.request import ScrapeUrlBodyParams
