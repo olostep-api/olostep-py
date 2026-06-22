@@ -25,6 +25,7 @@ from .models.request import (
     LLMExtract,
     Parser,
     RetrieveFormat,
+    ScrapeStorage,
     ScreenSize,
     ScrollAction,
     Transformer,
@@ -65,6 +66,7 @@ __all__ = [
     "Parser",
     "LLMExtract",
     "LinksOnPage",
+    "ScrapeStorage",
     "ScreenSize",
     "Transformer",
     # Error classes

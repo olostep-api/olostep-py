@@ -70,6 +70,7 @@ class ScrapeMenu:
         llm_extract: LLMExtract | dict[str, Any] | None = None,
         links_on_page: LinksOnPage | dict[str, Any] | None = None,
         screen_size: ScreenSize | dict[str, int] | str | None = None,
+        storage: dict[str, str] | None = None,
         metadata: dict[str, Any] | None = None,
         validate_request: bool | None = None,
     ) -> ScrapeResult:
@@ -106,6 +107,10 @@ class ScrapeMenu:
                 Can be a LinksOnPage object or dictionary with link extraction settings.
             screen_size: Browser viewport configuration for rendering.
                 Can be a ScreenSize object, dictionary, or string identifier.
+            storage: Storage retention config. Pass ``{"expires_in": "30d"}`` to keep
+                results for 30 days. Allowed values: ``"7d"``, ``"10d"``, ``"30d"``,
+                ``"60d"``, ``"90d"``, ``"180d"``, ``"365d"``, ``"never"``.
+                Defaults to ``"7d"`` when omitted.
             metadata: Custom metadata to associate with the scrape (not yet supported by API).
             validate_request: Override the global validation setting for this request.
                 If None, uses the instance's default validation setting.
@@ -152,6 +157,7 @@ class ScrapeMenu:
             "llm_extract": llm_extract,
             "links_on_page": links_on_page,
             "screen_size": coerce_to_key_in_dict(screen_size, "screen_type"),
+            "storage": storage,
             "metadata": metadata,
         }
 
