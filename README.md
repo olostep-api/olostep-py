@@ -164,6 +164,7 @@ Both SDK clients provide the same clean, pythonic interface organized into logic
 | `answers`  | AI-powered extraction | `create()`, `get()`             |
 | `searches` | Web search            | `create()`, `get()`             |
 | `retrieve` | Content retrieval     | `get()`                         |
+| `monitors` | Scheduled change monitoring | `create()`, `get()`, `list()`, `pause()`, `resume()`, `delete()`, `events()` |
 
 Each operation returns stateful objects with ergonomic methods for follow-up operations.
 
@@ -392,6 +393,32 @@ async with AsyncOlostep(api_key="your-api-key") as client:
 ```
 
 `scrape_options.formats` only supports `"html"` and `"markdown"`. `timeout` bounds the entire scrape phase (1-60 seconds) - links that don't finish in time return with `markdown_content` / `html_content` set to `None`.
+
+### Scheduled Monitors
+
+Watch a page or a query on a schedule and get notified when something changes. A monitor provisions in the background and runs on its own:
+
+```python
+# Create a monitor from a natural-language query
+monitor = client.monitors.create(
+    "Alert me when the Stripe status page reports an incident",
+    frequency="every 30 minutes",
+    notification={"channels": [{"type": "email", "target": "you@example.com"}]},
+)
+print(monitor.id, monitor.status)  # monitor_..., "provisioning"
+
+# Read, list, pause, and resume
+info = client.monitors.get(monitor.id)
+monitors = client.monitors.list()
+client.monitors.pause(monitor.id)
+client.monitors.resume(monitor.id)
+
+# Review the change history, then delete when you are done
+events = client.monitors.events(monitor.id)
+client.monitors.delete(monitor.id)
+```
+
+The same calls work on `AsyncOlostep` with `await`.
 
 ### Content Retrieval
 
