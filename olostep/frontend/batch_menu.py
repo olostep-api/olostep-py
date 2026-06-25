@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Any, AsyncIterator
 
 from .._log import get_logger
-from ..backend.api_endpoints import BATCH_INFO, BATCH_START
+from ..backend.api_endpoints import BATCH_INFO, BATCH_SCRAPED_STATS, BATCH_START
 from ..backend.caller import EndpointCaller
 from ..frontend.client_state import Batch, BatchInfo, BatchItemResult
 from ..frontend.input_coersion import (
@@ -17,7 +17,7 @@ from ..frontend.input_coersion import (
 )
 from ..models.common import Country
 from ..models.request import BatchItem, LinksOnPage, Parser
-from ..models.response import BatchCreateResponse, BatchInfoResponse
+from ..models.response import BatchCreateResponse, BatchInfoResponse, BatchScrapedStatsResponse
 
 logger = get_logger("frontend.batch_menu")
 
@@ -139,6 +139,57 @@ class BatchMenu:
         )
 
         return BatchInfo(res)
+
+    async def get_scraped_stats(
+        self,
+        *,
+        window: float | None = None,
+        parser: str | None = None,
+    ) -> BatchScrapedStatsResponse:
+        """Get scraped item counts and success rates for your team.
+
+        Returns statistics on how many URLs were successfully scraped within
+        a configurable time window. Useful for monitoring batch throughput
+        and tracking scrape success rates over time.
+
+        Args:
+            window: Time window in hours to look back from now. Defaults to 12.
+                Maximum 744 (31 days).
+            parser: Filter results to a specific parser ID. Omit to aggregate
+                across all parsers.
+
+        Returns:
+            BatchScrapedStatsResponse: Statistics including batch count, total items,
+                scraped item count, and success percentage for the requested window.
+
+        Raises:
+            Exception: If the API request fails.
+
+        Examples:
+            # Last 12 hours (default)
+            stats = await client.batches.get_scraped_stats()
+            print(f"Scraped {stats.scraped_pct}% of {stats.items} URLs")
+
+            # Last 48 hours
+            stats = await client.batches.get_scraped_stats(window=48)
+
+            # Filtered by parser
+            stats = await client.batches.get_scraped_stats(
+                window=24, parser="amazon-product"
+            )
+        """
+        query_params: dict[str, Any] = {}
+        if window is not None:
+            query_params["window"] = window
+        if parser is not None:
+            query_params["parser"] = parser
+
+        res: BatchScrapedStatsResponse = await self._caller.invoke(
+            BATCH_SCRAPED_STATS,
+            query_params=query_params,
+            validate_request=self._validate_request,
+        )
+        return res
 
     async def items(
         self,
