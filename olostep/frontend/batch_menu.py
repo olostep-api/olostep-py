@@ -17,7 +17,11 @@ from ..frontend.input_coersion import (
 )
 from ..models.common import Country
 from ..models.request import BatchItem, LinksOnPage, Parser
-from ..models.response import BatchCreateResponse, BatchInfoResponse, BatchScrapedStatsResponse
+from ..models.response import (
+    BatchCreateResponse,
+    BatchInfoResponse,
+    BatchScrapedStatsResponse,
+)
 
 logger = get_logger("frontend.batch_menu")
 
