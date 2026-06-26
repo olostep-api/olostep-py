@@ -19,9 +19,6 @@ from .frontend.client_state import (
     Sitemap,
 )
 
-# Response models
-from .models.response import BatchScrapedStatsResponse
-
 # Type system
 from .models.common import Country
 from .models.request import (
@@ -38,6 +35,7 @@ from .models.request import (
     Transformer,
     WaitAction,
 )
+from .models.response import BatchScrapedStatsResponse
 
 # Configuration
 from .retry_strategy import RetryStrategy
