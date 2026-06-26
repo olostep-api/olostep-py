@@ -220,6 +220,22 @@ class BatchItemsResponse(OlostepResponseBaseModel):
     cursor: int | None = None
 
 
+class BatchScrapedStatsResponse(OlostepResponseBaseModel):
+    """Response from GET /batches/stats/scraped."""
+
+    object: str = "batch.scraped_stats"
+    window: float
+    start_time: int
+    end_time: int
+    start_time_iso: str
+    end_time_iso: str
+    parser: str | None = None
+    batches: int
+    items: int
+    scraped_items: int
+    scraped_pct: float
+
+
 # =============================================================================
 # =============================================================================
 # CRAWLS API MODELS

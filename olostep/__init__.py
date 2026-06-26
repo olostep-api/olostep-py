@@ -35,6 +35,7 @@ from .models.request import (
     Transformer,
     WaitAction,
 )
+from .models.response import BatchScrapedStatsResponse
 
 # Configuration
 from .retry_strategy import RetryStrategy
@@ -63,6 +64,7 @@ __all__ = [
     "MonitorListResult",
     "MonitorEventResult",
     "MonitorDeleteResult",
+    "BatchScrapedStatsResponse",
     # Types
     "Format",
     "Country",

@@ -39,6 +39,7 @@ from ..models.response import (
     BatchCreateResponse,
     BatchInfoResponse,
     BatchItemsResponse,
+    BatchScrapedStatsResponse,
     CrawlInfoResponse,
     CrawlPagesResponse,
     # Crawls
@@ -214,6 +215,30 @@ BATCH_ITEMS = EndpointContract(
             "description": "Get items with pagination",
             "path_params": {"batch_id": "batch_12345"},
             "query_params": {"limit": 10, "cursor": 0},
+        },
+    ],
+)
+
+BATCH_SCRAPED_STATS = EndpointContract(
+    key=("batch", "scraped_stats"),
+    name="Get Batch Scraped Stats",
+    description="Returns scraped item counts and success rates for the authenticated team over a configurable time window.",
+    method="GET",
+    path="/batches/stats/scraped",
+    request_model=None,
+    response_model=BatchScrapedStatsResponse,
+    examples=[
+        {
+            "description": "Get scraped stats for last 12 hours (default)",
+            "query_params": {},
+        },
+        {
+            "description": "Get scraped stats for last 48 hours",
+            "query_params": {"window": 48},
+        },
+        {
+            "description": "Get scraped stats filtered by parser",
+            "query_params": {"window": 24, "parser": "amazon-product"},
         },
     ],
 )
