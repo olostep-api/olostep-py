@@ -169,9 +169,14 @@ class BatchInfoResponse(OlostepResponseBaseModel):
     total_urls: int
     completed_urls: int
     number_retried: int
-    parser: str
+    parser: str | None = None  # The API omits it for batches created without a parser
     start_date: str
     country: Country | None = None
+
+    @field_validator("parser", mode="after")
+    @classmethod
+    def parser_literal_none_string_to_none_type(cls, v: str | None) -> str | None:
+        return None if v == "none" else v
 
     @field_validator("country", mode="before")
     @classmethod
