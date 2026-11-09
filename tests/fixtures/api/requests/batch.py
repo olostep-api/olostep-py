@@ -95,13 +95,16 @@ LINKS_ON_PAGE = {
     },
 }
 
+# Pages that scrape quickly and reliably: the workflow test checks create -> status -> pagination,
+# not how hard a site is to scrape. Bot-protected news homepages made the batch take ~18 min
+# and drop URLs, so the test timed out at 300s.
 WORKFLOW_REQUEST_BODY = {
     "items": [
-        {"url": "https://www.bbc.com/", "custom_id": "bbc_home"},
-        {"url": "https://www.cnn.com/", "custom_id": "cnn_home"},
-        {"url": "https://www.reuters.com/", "custom_id": "reuters_home"},
-        {"url": "https://www.nytimes.com/", "custom_id": "nytimes_home"},
-        {"url": "https://www.washingtonpost.com/", "custom_id": "wapo_home"},
+        {"url": "https://example.com/", "custom_id": "example"},
+        {"url": "https://www.olostep.com/", "custom_id": "olostep_home"},
+        {"url": "https://docs.olostep.com/", "custom_id": "olostep_docs"},
+        {"url": "https://en.wikipedia.org/wiki/Web_scraping", "custom_id": "wikipedia"},
+        {"url": "https://httpbin.org/html", "custom_id": "httpbin"},
     ],
     # "country": "RANDOM",
 }

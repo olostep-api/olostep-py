@@ -188,14 +188,13 @@ class TestBatchEndpoint:
     @pytest.mark.asyncio
     async def test_batch_validation_disabled_garbage(self, async_client_real):
         """Test batch with garbage data and validation disabled.
-        
-        API OBSERVED BEHAVIOR: The API accepts invalid input when validation is disabled
-        and returns 200 OK, storing invalid values (like invalid country codes) as-is
-        in the response. However, the SDK's response model validation catches invalid
-        enum values in the response, causing OlostepClientError_ResponseValidationFailed.
+
+        API OBSERVED BEHAVIOR (2026-11): with validation disabled the garbage reaches the API,
+        which now rejects the invalid country. It used to accept it (200) and the SDK's response
+        validation failed instead. The batches endpoint currently answers 502 "upstream_error"
+        (scrapes answer 400); both map to OlostepServerError_RequestUnprocessable.
         """
-        # API accepts invalid input and returns 200, but SDK response validation fails
-        with pytest.raises(OlostepClientError_ResponseValidationFailed):
+        with pytest.raises(OlostepServerError_RequestUnprocessable):
             await async_client_real.batches.create(
                 urls=["http-bs://invalid-url-that-does-not-exist.com"],
                 validate_request=False,

@@ -1352,7 +1352,7 @@ class TestBatchWorkflow:
                 )
                 assert isinstance(get_model, BatchInfoResponse)
                 
-                print(f"📊 Batch status: {get_model.status} (elapsed: {int(time.time() - start_time)}s)")
+                print(f"📊 Batch status: {get_model.status} (elapsed: {int(time.monotonic() - start_time)}s)")
                 
                 if get_model.status == "completed":
                     print("✅ Batch completed successfully!")
